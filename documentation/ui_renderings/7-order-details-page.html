@@ -1,0 +1,463 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Order Details - Luna</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#b9c7e1",
+                "secondary-container": "#d5e3fc",
+                "surface-variant": "#e4e2e4",
+                "on-error-container": "#93000a",
+                "border-standard": "#e2e8f0",
+                "status-warning": "#f59e0b",
+                "background": "#fbf9fa",
+                "surface-dim": "#dbd9db",
+                "tertiary": "#0d1e31",
+                "surface-container": "#efedef",
+                "surface-container-highest": "#e4e2e4",
+                "surface-bright": "#fbf9fa",
+                "primary-fixed": "#d5e3fd",
+                "on-secondary": "#ffffff",
+                "inverse-surface": "#303032",
+                "on-primary-fixed-variant": "#3a475c",
+                "status-success": "#10b981",
+                "on-tertiary-fixed": "#0b1c30",
+                "secondary-fixed": "#d5e3fc",
+                "on-tertiary-fixed-variant": "#38485d",
+                "primary-container": "#253347",
+                "status-error": "#ef4444",
+                "on-secondary-fixed-variant": "#3a485b",
+                "on-tertiary": "#ffffff",
+                "surface-tint": "#515f75",
+                "primary-fixed-dim": "#b9c7e1",
+                "outline-variant": "#c5c6cd",
+                "outline": "#75777d",
+                "surface-container-low": "#f5f3f5",
+                "on-primary": "#ffffff",
+                "secondary-fixed-dim": "#b9c7df",
+                "on-tertiary-container": "#8b9bb4",
+                "border-subtle": "#f1f5f9",
+                "surface-card": "#ffffff",
+                "on-primary-container": "#8d9bb3",
+                "error-container": "#ffdad6",
+                "on-secondary-container": "#57657a",
+                "on-primary-fixed": "#0d1c2f",
+                "tertiary-fixed": "#d3e4fe",
+                "tertiary-container": "#233347",
+                "error": "#ba1a1a",
+                "on-surface": "#1b1b1d",
+                "on-surface-variant": "#44474c",
+                "surface-container-high": "#eae7e9",
+                "tertiary-fixed-dim": "#b7c8e1",
+                "inverse-on-surface": "#f2f0f2",
+                "surface-base": "#f8fafc",
+                "on-error": "#ffffff",
+                "on-background": "#1b1b1d",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-fixed": "#0d1c2e",
+                "surface": "#fbf9fa",
+                "secondary": "#515f74",
+                "primary": "#0f1e31"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "button": "0.25rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "xl": "24px",
+                "xs": "4px",
+                "2xl": "32px",
+                "sm": "8px",
+                "3xl": "48px",
+                "lg": "16px",
+                "md": "12px",
+                "4xl": "64px",
+                "control": "40px"
+        },
+        "fontFamily": {
+                "display": [
+                        "Inter"
+                ],
+                "label-caps": [
+                        "Inter"
+                ],
+                "status-pill": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "product-title": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "display": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.03em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "status-pill": [
+                        "13px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "product-title": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "letterSpacing": "0",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        html {
+            scrollbar-gutter: stable;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+                .shipment-progress-line {
+                        animation: shipment-progress 3s ease-in-out forwards;
+                        transform-origin: left center;
+                }
+                .timeline-step {
+                        position: relative;
+                        z-index: 10;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                }
+                .timeline-status-dot {
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 9999px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 4px solid #ffffff;
+                        background: #ffffff;
+                        box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.15);
+                        transition: all 0.25s ease;
+                }
+                .timeline-status-dot .timeline-icon {
+                        opacity: 0;
+                        transform: scale(0.4);
+                        transition: all 0.25s ease;
+                }
+                .timeline-status-dot .timeline-pulse {
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 9999px;
+                        background: #0f1e31;
+                        opacity: 0;
+                        transform: scale(0.2);
+                        transition: all 0.25s ease;
+                }
+                .timeline-step.step-1 .timeline-status-dot {
+                        animation: step-1-state 3s ease-in-out forwards;
+                }
+                .timeline-step.step-1 .timeline-icon {
+                        animation: step-1-icon 3s ease-in-out forwards;
+                }
+                .timeline-step.step-2 .timeline-status-dot {
+                        animation: step-2-state 3s ease-in-out forwards;
+                }
+                .timeline-step.step-2 .timeline-icon {
+                        animation: step-2-icon 3s ease-in-out forwards;
+                }
+                .timeline-step.step-3 .timeline-status-dot {
+                        animation: step-3-state 3s ease-in-out forwards;
+                }
+                .timeline-step.step-3 .timeline-pulse {
+                        animation: step-3-pulse 3s ease-in-out forwards;
+                }
+                @keyframes shipment-progress {
+                        0% { transform: translateY(-50%) scaleX(0); }
+                        25% { transform: translateY(-50%) scaleX(0.33); }
+                        33% { transform: translateY(-50%) scaleX(0.33); }
+                        58% { transform: translateY(-50%) scaleX(0.66); }
+                        66% { transform: translateY(-50%) scaleX(0.66); }
+                        100% { transform: translateY(-50%) scaleX(0.66); }
+                }
+                @keyframes step-1-state {
+                        0%, 12% { background: #ffffff; border-color: #d1d5db; }
+                        20%, 100% { background: #0f1e31; border-color: #0f1e31; }
+                }
+                @keyframes step-1-icon {
+                        0%, 12% { opacity: 0; transform: scale(0.4); }
+                        20%, 100% { opacity: 1; transform: scale(1); }
+                }
+                @keyframes step-2-state {
+                        0%, 36% { background: #ffffff; border-color: #d1d5db; }
+                        43%, 100% { background: #0f1e31; border-color: #0f1e31; }
+                }
+                @keyframes step-2-icon {
+                        0%, 36% { opacity: 0; transform: scale(0.4); }
+                        43%, 100% { opacity: 1; transform: scale(1); }
+                }
+                @keyframes step-3-state {
+                        0%, 52% { background: #ffffff; border-color: #d1d5db; }
+                        60%, 100% { background: #ffffff; border-color: #0f1e31; }
+                }
+                @keyframes step-3-pulse {
+                        0%, 45% { opacity: 0; transform: scale(0.2); }
+                        60%, 100% { opacity: 1; transform: scale(1); }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                        .shipment-progress-line { animation: none; }
+                        .timeline-step.step-1 .timeline-status-dot,
+                        .timeline-step.step-1 .timeline-icon,
+                        .timeline-step.step-2 .timeline-status-dot,
+                        .timeline-step.step-2 .timeline-icon,
+                        .timeline-step.step-3 .timeline-status-dot,
+                        .timeline-step.step-3 .timeline-pulse { animation: none; }
+                }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-4xl">
+<!-- TopNavBar -->
+<header class="bg-[#fbf9fa] fixed top-0 w-full z-50 border-b border-[#e5e7eb] h-4xl flex justify-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="w-full flex justify-between items-center px-lg md:px-xl h-full max-w-[1280px] mx-auto relative">
+<a class="font-display text-display font-bold text-primary" href="1-front-page.html">Luna</a>
+<nav class="hidden md:flex gap-2xl h-full items-center absolute left-1/2 -translate-x-1/2">
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="1-front-page.html">Shop</a>
+<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="6-my-order-page.html">Orders</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="8-account-page.html">Account</a>
+</nav>
+<div class="flex items-center">
+<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='3-cart-page.html'">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-xs -right-xs bg-[#253347] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-lg md:px-xl py-3xl flex flex-col gap-xl">
+<!-- Order Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-lg md:space-y-0">
+<div>
+<h1 class="font-display text-headline-lg-mobile md:text-headline-lg text-on-surface">Order #LUNA-10482</h1>
+</div>
+<button class="h-control py-sm px-lg rounded-button bg-surface-card text-on-surface border border-outline font-label-caps text-label-caps hover:border-outline-variant transition-colors uppercase shadow-sm active:scale-[0.98]" onclick="window.print()">
+                Download Invoice
+            </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl">
+<!-- Left Column: Status & Tracking -->
+<div class="md:col-span-2 space-y-lg">
+<!-- Timeline Card -->
+<div class="bg-surface-card border border-border-standard rounded-lg p-xl shadow-sm">
+<h2 class="font-product-title text-product-title mb-xl text-on-surface">Track Shipment</h2>
+<!-- Horizontal Timeline -->
+<div class="relative grid grid-cols-4 items-center w-full">
+<!-- Pending Progress Line -->
+<div class="absolute top-[12px] left-[12.5%] w-[75%] border-t-2 border-dashed border-border-standard z-0 translate-y-[-50%]"></div>
+<!-- Active Progress Line -->
+<div class="absolute top-[12px] left-[12.5%] w-[75%] h-0.5 bg-primary z-0 shipment-progress-line"></div>
+<!-- Step 1: Order Placed (Completed) -->
+<div class="timeline-step step-1">
+<div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm">
+<span class="timeline-icon material-symbols-outlined text-[16px] text-on-primary" data-icon="check">check</span>
+</div>
+<span class="font-status-pill text-status-pill mt-sm text-on-surface text-center bg-surface-card px-sm">Order placed</span>
+</div>
+<!-- Step 2: Preparing (Completed) -->
+<div class="timeline-step step-2">
+<div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm">
+<span class="timeline-icon material-symbols-outlined text-[16px] text-on-primary" data-icon="check">check</span>
+</div>
+<span class="font-status-pill text-status-pill mt-sm text-on-surface text-center bg-surface-card px-sm">Preparing</span>
+</div>
+<!-- Step 3: Shipped (Active) -->
+<div class="timeline-step step-3">
+<div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm relative">
+<div class="timeline-pulse"></div>
+</div>
+<span class="font-status-pill text-status-pill mt-sm text-primary font-bold text-center bg-surface-card px-sm">Shipped</span>
+</div>
+<!-- Step 4: Delivered (Pending) -->
+<div class="timeline-step">
+<div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm bg-surface-card" style="border-color: #d1d5db; background: #ffffff;"></div>
+<span class="font-status-pill text-status-pill mt-sm text-on-surface-variant text-center bg-surface-card px-sm">Delivered</span>
+</div>
+</div>
+</div>
+<!-- Secondary Tracking Feed -->
+<div class="bg-surface-card border border-border-standard rounded-lg p-xl shadow-sm">
+<h3 class="font-product-title text-product-title mb-lg border-b border-border-standard pb-sm text-on-surface">Activity Log</h3>
+<ul class="space-y-lg">
+<li class="flex items-start gap-md">
+<span class="material-symbols-outlined text-outline mt-xs text-[20px]" data-icon="radio_button_checked">radio_button_checked</span>
+<div>
+<p class="font-body-md text-body-md text-on-surface">Payment processed</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">Aug 16, 10:05 AM</p>
+</div>
+</li>
+<li class="flex items-start gap-md">
+<span class="material-symbols-outlined text-outline mt-xs text-[20px]" data-icon="radio_button_checked">radio_button_checked</span>
+<div>
+<p class="font-body-md text-body-md text-on-surface">Order received</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">Aug 16, 10:00 AM</p>
+</div>
+</li>
+</ul>
+</div>
+<!-- Order Items -->
+<div class="bg-surface-card border border-border-standard rounded-lg p-xl shadow-sm">
+<h3 class="font-product-title text-product-title mb-lg border-b border-border-standard pb-sm text-on-surface">Items in your order</h3>
+<div class="space-y-lg">
+<!-- Product Card Horizontal -->
+<div class="flex gap-lg border border-border-standard rounded-lg p-lg hover:border-outline transition-colors bg-surface-base">
+<img class="w-4xl h-4xl object-cover rounded-lg bg-surface-container-low" data-alt="A clean, minimalist product shot of a high-end designer lamp on a pristine white surface, studio lighting casting soft shadows, modern corporate e-commerce aesthetic, light mode" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARAVUn7IsdR3GqowyD9v9LLr8leEKEtgpU7zXMV6HipVmwOdMP2hH3dLUsCYIu2LoelfY-eARRjZm6IhfTzOuaNeWdnFKIen1FgJiFnYYqXEOp64wEC2iWVDSaEXoP4ffYz60DCYAgO8lFRl1GOnLr6Zr3j1eA2ziz5DZrsiExNXPcR9OHyvopkklRt7t3l6Y1r5o6j8Nk7AbBLMBYhDLaeo8ZZA6z9LdXuhZscHauqgiY62PimUS6">
+<div class="flex-grow flex justify-between">
+<div>
+<h4 class="font-body-md text-body-md font-bold text-on-surface">Minimalist Desk Lamp</h4>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">Qty: 1 | Color: Matte White</p>
+</div>
+<div class="text-right">
+<p class="font-body-md text-body-md font-medium text-on-surface">$129.00</p>
+</div>
+</div>
+</div>
+<!-- Product Card Horizontal -->
+<div class="flex gap-lg border border-border-standard rounded-lg p-lg hover:border-outline transition-colors bg-surface-base">
+<img class="w-4xl h-4xl object-cover rounded-lg bg-surface-container-low" data-alt="A minimalist product photography shot of a sleek leather notebook lying flat on a stark white background, high key lighting, crisp details, elegant corporate aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1f-TbyRn0XETMqgP8GrhY3O1kuFywNv2fuDTBi34ecS_9BjoilMnrk4tq25DSrS_f0ecvvzgrD9qZxHu7I2tLGTNI2dynxBtfQX2uoSbRqpO_CBpphrsALGvxLT2QqUtESbVXS_vlfgwpbaaTwuHDs1460sy6DOYsL-EMaVruB8b3VWMq2CiIlmr_QQ-wZK4Avf8nnJYsbTdTuw1UXluNliChRAkr85rOsEThszr8P6YKGLu9nv3z">
+<div class="flex-grow flex justify-between">
+<div>
+<h4 class="font-body-md text-body-md font-bold text-on-surface">Leather Notebook</h4>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">Qty: 2 | Color: Onyx</p>
+</div>
+<div class="text-right">
+<p class="font-body-md text-body-md font-medium text-on-surface">$45.00</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Details & Summary -->
+<div class="space-y-lg">
+<!-- Order Summary -->
+<div class="bg-surface-card border border-border-standard rounded-lg p-xl shadow-sm">
+<h3 class="font-product-title text-product-title mb-lg border-b border-border-standard pb-sm text-on-surface">Order Summary</h3>
+<div class="space-y-sm font-body-md text-body-md mb-lg border-b border-border-standard pb-lg">
+<div class="flex justify-between text-on-surface-variant">
+<span class="">Subtotal</span>
+<span class="">$219.00</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span class="">Shipping</span>
+<span class="">$15.00</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span class="">Tax</span>
+<span class="">$18.72</span>
+</div>
+</div>
+<div class="flex justify-between items-center font-body-md text-body-md font-medium text-on-surface">
+<span class="">Total</span>
+<span class="font-semibold">$252.72</span>
+</div>
+</div>
+<!-- Shipping Info -->
+<div class="bg-surface-card border border-border-standard rounded-lg p-xl shadow-sm">
+<h3 class="font-product-title text-product-title mb-lg border-b border-border-standard pb-sm text-on-surface">Shipping Address</h3>
+<address class="not-italic font-body-md text-body-md text-on-surface-variant">
+                        Jane Doe<br>
+                        123 Corporate Blvd, Suite 400<br>
+                        San Francisco, CA 94107<br>
+                        United States
+                    </address>
+</div>
+<!-- Payment Info -->
+<div class="bg-surface-card border border-border-standard rounded-lg p-xl shadow-sm">
+<h3 class="font-product-title text-product-title mb-lg border-b border-border-standard pb-sm text-on-surface">Payment Method</h3>
+<div class="flex items-center gap-md font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-outline" data-icon="credit_card">credit_card</span>
+<span class="">Visa ending in 4242</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-border-standard w-full">
+<div class="w-full py-2xl px-lg md:px-xl flex flex-col md:flex-row justify-between items-center gap-lg max-w-[1280px] mx-auto">
+<div class="font-label-caps text-label-caps font-bold text-secondary">
+                                © 2024 Luna. Simulated platform for demonstration purposes.
+                        </div>
+<nav class="flex flex-wrap justify-center gap-lg font-status-pill text-status-pill">
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Terms of Service</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Contact Us</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Return Policy</a>
+</nav>
+</div>
+</footer>
+
+
+</body></html>

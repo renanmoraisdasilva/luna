@@ -1,0 +1,378 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Luna - Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#b9c7e1",
+                "secondary-container": "#d5e3fc",
+                "surface-variant": "#e4e2e4",
+                "on-error-container": "#93000a",
+                "border-standard": "#e2e8f0",
+                "status-warning": "#f59e0b",
+                "background": "#fbf9fa",
+                "surface-dim": "#dbd9db",
+                "tertiary": "#0d1e31",
+                "surface-container": "#efedef",
+                "surface-container-highest": "#e4e2e4",
+                "surface-bright": "#fbf9fa",
+                "primary-fixed": "#d5e3fd",
+                "on-secondary": "#ffffff",
+                "inverse-surface": "#303032",
+                "on-primary-fixed-variant": "#3a475c",
+                "status-success": "#10b981",
+                "on-tertiary-fixed": "#0b1c30",
+                "secondary-fixed": "#d5e3fc",
+                "on-tertiary-fixed-variant": "#38485d",
+                "primary-container": "#253347",
+                "status-error": "#ef4444",
+                "on-secondary-fixed-variant": "#3a485b",
+                "on-tertiary": "#ffffff",
+                "surface-tint": "#515f75",
+                "primary-fixed-dim": "#b9c7e1",
+                "outline-variant": "#c5c6cd",
+                "outline": "#75777d",
+                "surface-container-low": "#f5f3f5",
+                "on-primary": "#ffffff",
+                "secondary-fixed-dim": "#b9c7df",
+                "on-tertiary-container": "#8b9bb4",
+                "border-subtle": "#f1f5f9",
+                "surface-card": "#ffffff",
+                "on-primary-container": "#8d9bb3",
+                "error-container": "#ffdad6",
+                "on-secondary-container": "#57657a",
+                "on-primary-fixed": "#0d1c2f",
+                "tertiary-fixed": "#d3e4fe",
+                "tertiary-container": "#233347",
+                "error": "#ba1a1a",
+                "on-surface": "#1b1b1d",
+                "on-surface-variant": "#44474c",
+                "surface-container-high": "#eae7e9",
+                "tertiary-fixed-dim": "#b7c8e1",
+                "inverse-on-surface": "#f2f0f2",
+                "surface-base": "#f8fafc",
+                "on-error": "#ffffff",
+                "on-background": "#1b1b1d",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-fixed": "#0d1c2e",
+                "surface": "#fbf9fa",
+                "secondary": "#515f74",
+                "primary": "#0f1e31"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "button": "0.25rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "xl": "24px",
+                "xs": "4px",
+                "2xl": "32px",
+                "sm": "8px",
+                "3xl": "48px",
+                "lg": "16px",
+                "md": "12px",
+                "4xl": "64px",
+                "control": "40px"
+        },
+        "fontFamily": {
+                "display": [
+                        "Inter"
+                ],
+                "label-caps": [
+                        "Inter"
+                ],
+                "status-pill": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "product-title": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "display": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.03em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "status-pill": [
+                        "13px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "product-title": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "letterSpacing": "0",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        html {
+            scrollbar-gutter: stable;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-4xl">
+<!-- TopNavBar -->
+<header class="bg-[#fbf9fa] fixed top-0 w-full z-50 border-b border-[#e5e7eb] h-4xl flex justify-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="w-full flex justify-between items-center px-lg md:px-xl h-full max-w-[1280px] mx-auto relative">
+<a class="font-display text-display font-bold text-primary" href="1-front-page.html">Luna</a>
+<nav class="hidden md:flex gap-2xl h-full items-center absolute left-1/2 -translate-x-1/2">
+<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="1-front-page.html">Shop</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="6-my-order-page.html">Orders</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="8-account-page.html">Account</a>
+</nav>
+<div class="flex items-center">
+<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='3-cart-page.html'">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-xs -right-xs bg-[#253347] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-lg md:px-xl py-3xl flex flex-col gap-xl">
+<!-- Page Header -->
+<section class="flex flex-col gap-sm">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Shop</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Browse our collection of professional hardware and accessories.</p>
+</section>
+<!-- Toolbar -->
+<section class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-lg pb-lg border-b border-border-standard">
+<div class="flex flex-col md:flex-row gap-lg w-full lg:w-auto items-start md:items-center">
+<!-- Search -->
+<div class="relative w-full md:w-[280px]">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+<input class="w-full h-control pl-3xl pr-md py-sm border border-outline-variant rounded bg-surface-container-lowest focus:ring-1 focus:ring-primary focus:border-primary outline-none font-body-md text-body-md text-on-surface transition-shadow" placeholder="Search products..." type="text">
+</div>
+<!-- Category Filters -->
+<div class="flex gap-sm overflow-x-auto w-full md:w-auto pb-xs md:pb-0 hide-scrollbar">
+<button class="h-control px-lg py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps whitespace-nowrap transition-colors hover:opacity-90 uppercase">All</button>
+<button class="h-control px-lg py-sm rounded-button bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors whitespace-nowrap font-label-caps text-label-caps uppercase">Electronics</button>
+<button class="h-control px-lg py-sm rounded-button bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors whitespace-nowrap font-label-caps text-label-caps uppercase">Home</button>
+<button class="h-control px-lg py-sm rounded-button bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors whitespace-nowrap font-label-caps text-label-caps uppercase">Accessories</button>
+</div>
+</div>
+<!-- Sort -->
+<div class="flex items-center gap-sm w-full lg:w-auto shrink-0 mt-sm lg:mt-0">
+<span class="font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap uppercase">Sort by:</span>
+<div class="relative w-full lg:w-auto">
+<select class="w-full h-control lg:w-[200px] border border-outline-variant rounded bg-surface-container-lowest px-md py-sm pr-2xl focus:ring-1 focus:ring-primary focus:border-primary outline-none font-body-md text-body-md text-on-surface appearance-none cursor-pointer">
+<option>Recommended</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+</select>
+<span class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</section>
+<!-- Product Grid -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+<!-- Product 1 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col hover:shadow-lg transition-shadow duration-200 overflow-hidden relative">
+<div class="absolute top-sm left-sm bg-[#d1fae5] text-[#065f46] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Available
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="A sleek, minimalist wireless mechanical keyboard resting on a pristine white desk surface. The lighting is soft and diffused, emphasizing the matte finish of the keycaps and the subtle metallic edge of the chassis. High-end professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFGN799KVPKCnL1dAPhO45InPAFHAk3DHkvytGGtcgxWhI0qKED0ChyRprEryrbf-iUr8o1YIWRaY3BedJDBGDVD7QEOXKdeiV_Kf_P9yHpSZ0TJ3tcg4ZYFYB7JCkcQbcDASb1z1l3AmB9UfI8aJCZqQPWTKrbPNKzGs4vpW8BrlHtJ_ZRFUvz6NmLsZgQ83W3Iaz6jIUSLhkV1dbgJd1kPmvOEAeeYLir7I1qIIuIpFnUoCNsIYc">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<a class="font-product-title text-product-title text-on-surface hover:text-primary mb-xs" href="2-details-page.html">Wireless Mechanical Keyboard</a>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$129.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
+</div>
+</article>
+<!-- Product 2 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col hover:shadow-lg transition-shadow duration-200 overflow-hidden relative">
+<div class="absolute top-sm left-sm bg-[#d1fae5] text-[#065f46] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Available
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="Premium over-ear noise-cancelling headphones in a dark charcoal gray finish, resting on a concrete-textured surface. Studio lighting highlights the plush ear cushions and minimalist headband design. Clean, corporate audio equipment style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQK2OFRw0Ljw-V38W2TukdAmxoVerDg_GeYA3_ij3D5df2kVwqlPXVw_DDH5wfE3tUg7emwbXjt3Fk8AxUL9U3DB9XfWyP8G3DRi37tZmKq9KHLcCykmuDMpqm5KbtyPZlgmmjOI86Z0BTCaAoJkY4xpbei2hGbMo6h0qovDsyvufg4IkCDbjVLfaxepyiEraawQ9cdqTAMSJKqpJEYgLShslab6sf1j1NdUi1U6LKtcHclHHDuFKw">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<h3 class="font-product-title text-product-title text-on-surface mb-xs">Noise Cancelling Headphones</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$199.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
+</div>
+</article>
+<!-- Product 3 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col hover:shadow-lg transition-shadow duration-200 overflow-hidden relative">
+<div class="absolute top-sm left-sm bg-[#d1fae5] text-[#065f46] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Available
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="A compact, space-gray USB-C hub dock with multiple ports visible, placed alongside a thin silver laptop edge on a smooth, light gray workspace. Sharp focus on the machined aluminum texture. Utilitarian and architectural design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBB0LdfrTzB1Qx7Xp8tEz3iwbDbgR578KRVe-WGOh75GlveKfCuH2R6i4tPRiypK_rfo7pw6vFk8PH4y-o06WRwm_Bfth9C3ETppMqsxk_lhixDdSdNe9bFii_beO2IMiNWbgkW_nTqKE9l0d5HKxSu_1Nr0eIx9D34MqflMriBkx-wiNrt0GZeG3NJBTcPCPWevvMUXmJRDtf_TYZ0VqI8DFzkigLRKvOHQtXNJExCrsFWN2X9_LwS">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<h3 class="font-product-title text-product-title text-on-surface mb-xs">USB-C Dock</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$89.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
+</div>
+</article>
+<!-- Product 4 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col hover:shadow-lg transition-shadow duration-200 overflow-hidden relative">
+<div class="absolute top-sm left-sm bg-[#d1fae5] text-[#065f46] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Available
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="A slender, modern smart desk lamp emitting a warm, focused beam of light onto a clean white desktop. The lamp's body is matte black with a functional, articulated arm. The background is a slightly darker, muted gray to emphasize the illumination." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgg-c9yMTA-Yi4i7OS3mUxK2CC2hVQsuJvjbAZyokspYHmKNFDUK6nbqj4qXm12BPJ7GjIp5iEktDLRvnyYikWKJxoTMJ9730jEoLytzay8PwGjTzGJCAPV4NMI2RVIxdqY5A_8fq5JO1vjAOmKgUyPugbeEWtJCht8LSZPgyiln0A8GvQbB22UNYrmGd9IyyCoSs8CDXeoYR-bBb92EGEgk0HeqJbhhdm7GiCFlFlq5DHSItr-GS-">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<h3 class="font-product-title text-product-title text-on-surface mb-xs">Smart Desk Lamp</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$64.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
+</div>
+</article>
+<!-- Product 5 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col hover:shadow-lg transition-shadow duration-200 overflow-hidden relative">
+<div class="absolute top-sm left-sm bg-[#d1fae5] text-[#065f46] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Available
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="A rugged yet sleek portable SSD drive in a metallic finish, held slightly elevated over a minimal grid-patterned surface. High key lighting creates precise reflections on the device's beveled edges. Clean, robust data storage aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxwZG2Eig_kP--JzyyYXtXy9wLay8x4uUm57CVuHfO6r_4t-ewNX0ugu62BltW4q-NuhulOLk71tx4KaRLq8N51C2PSmma5yecdPYPlKcvmaJhVQkZv5VE82LU8O0RUDLFLBwfPAwdBgu7Sir-pyNQ0u6aIZcoW9aTDUx_gw5ji0dxgQ0N4qvGwFjrmAqjRF4eQcLwz1teyFLnbRLyW84DAhPCNQvkUj96GCvNqkuZtcYdpx-M9EOQ">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<h3 class="font-product-title text-product-title text-on-surface mb-xs">Portable SSD 1TB</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$109.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
+</div>
+</article>
+<!-- Product 6 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col overflow-hidden relative opacity-75 grayscale-[20%]">
+<div class="absolute top-sm left-sm bg-[#fee2e2] text-[#991b1b] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Unavailable
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover rounded-t-lg" data-alt="A sculpted, ergonomic computer mouse with a matte black finish and subtle thumb rest, positioned diagonally on a plain white background. The lighting is clinical and uniform, highlighting the organic curves designed for hand comfort." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOpMPUcagBTT-GKIAhsiSMIdA0Z43_w_Yiy6MoMTWTvnCUZJhK7mEC2VH7gQNxQpDJzJ076fKWuCr_GpqhestOqx98NbtI7uOIxwQJso4Jc6YskIIeMvzMAjDu34kFZ5wK49lMNtjaOgqAGs__oVQKKY_v7XxDz_T5BlYEIg4VvLOoDNSglLyNizuCYJpm6m1YP2gGx1pIKYeE8C7PKQxepTKgFXDRrTIuVRETpL7Cblhmv4oZ-Eqc">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<h3 class="font-product-title text-product-title text-on-surface mb-xs">Ergonomic Mouse</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$59.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-surface-variant text-on-surface-variant font-label-caps text-label-caps cursor-not-allowed uppercase" disabled="">Out of Stock</button>
+</div>
+</article>
+<!-- Product 7 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col hover:shadow-lg transition-shadow duration-200 overflow-hidden relative">
+<div class="absolute top-sm left-sm bg-[#d1fae5] text-[#065f46] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Available
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="An elegant, minimalist aluminum laptop stand holding a thin ultrabook. The setup is on an empty, light-toned wooden desk. The composition is strictly geometric, emphasizing the structural simplicity and elevation provided by the stand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3994kQRlemXWo_x5lvCTke4qHmpGnm7F6kB40ATMQcr62yPwYUkjfNS0mHUgmwlraQ6n9QMJc5rJoXxgJvhh34JKXa-oUzReQOBnv6dn8ecvvrlTjFh8i22eofenWQzfBVyLlWjpVzp4JsNxOifucGChwUsV-rHqPsEKQmq7kzU0WYswjAYFVTuRjTZc0Ee2ED7CJaI6mA-i_KucjEo7kkRDJQsLPoQ0kBVPrZRioO6yxFKAnxhdE">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<h3 class="font-product-title text-product-title text-on-surface mb-xs">Laptop Stand</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$42.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
+</div>
+</article>
+<!-- Product 8 -->
+<article class="group bg-surface-card border border-border-standard rounded-lg flex flex-col hover:shadow-lg transition-shadow duration-200 overflow-hidden relative">
+<div class="absolute top-sm left-sm bg-[#d1fae5] text-[#065f46] px-md py-xs rounded-full font-status-pill text-status-pill z-10 flex items-center gap-xs">
+Available
+                </div>
+<div class="h-[240px] bg-surface-container w-full relative overflow-hidden rounded-t-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="A professional high-definition webcam mounted on the top bezel of a sleek monitor. The camera lens reflects a subtle ring of light. The background is a soft, out-of-focus gray wall, ensuring the focus remains entirely on the hardware." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKX6_IITgy1kcsGtmE9ODLdQp2GAAfIk8KKrMbAhkjP17bRc3Tq960Wg02Uxpv3PMSWVUx0Fr8DEOx2IiN7623zce8jI3i-YsUoy_btcd5ZEDeocUDx1R9Msn2kGMGXPdBiw-c04hJjsOVbNZpJ5Z49SlYisii7BbCZSM7BDDXfjCK_Yqe4lk9Y6hJPHluLb7j_sLzl6yr0QzKET1CGxmcmyNiPfos4BVTR96bq6FhKVBlToKQ1kC8">
+</div>
+<div class="p-lg flex flex-col flex-grow">
+<h3 class="font-product-title text-product-title text-on-surface mb-xs">Webcam</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">$79.00</p>
+<button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
+</div>
+</article>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-border-standard w-full">
+<div class="w-full py-2xl px-lg md:px-xl flex flex-col md:flex-row justify-between items-center gap-lg max-w-[1280px] mx-auto">
+<div class="font-label-caps text-label-caps font-bold text-secondary">
+                © 2024 Luna. Simulated platform for demonstration purposes.
+            </div>
+<nav class="flex flex-wrap justify-center gap-lg font-status-pill text-status-pill">
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Terms of Service</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Contact Us</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Return Policy</a>
+</nav>
+</div>
+</footer>
+
+
+<script>
+        document.querySelectorAll('button').forEach((button) => {
+                if (button.textContent.trim() === 'Add to Cart') {
+                        button.onclick = () => { window.location.href = '3-cart-page.html'; };
+                }
+        });
+</script>
+</body></html>

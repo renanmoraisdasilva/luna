@@ -1,0 +1,224 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Luna - Order Confirmed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#1b1b1d",
+                        "on-surface-variant": "#44474c",
+                        "surface-container-highest": "#e4e2e4",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#303032",
+                        "secondary-fixed-dim": "#b9c7df",
+                        "surface-base": "#f8fafc",
+                        "on-surface": "#1b1b1d",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#d3e4fe",
+                        "surface-container-high": "#eae7e9",
+                        "surface-dim": "#dbd9db",
+                        "surface-tint": "#515f75",
+                        "inverse-primary": "#b9c7e1",
+                        "tertiary-container": "#233347",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary": "#0f1e31",
+                        "error-container": "#ffdad6",
+                        "background": "#fbf9fa",
+                        "status-error": "#ef4444",
+                        "inverse-on-surface": "#f2f0f2",
+                        "primary-container": "#253347",
+                        "surface-bright": "#fbf9fa",
+                        "surface-container": "#efedef",
+                        "surface-variant": "#e4e2e4",
+                        "secondary": "#515f74",
+                        "border-standard": "#e2e8f0",
+                        "on-tertiary-container": "#8b9bb4",
+                        "border-subtle": "#f1f5f9",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#d5e3fd",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-secondary-container": "#57657a",
+                        "on-secondary-fixed": "#0d1c2e",
+                        "on-primary-container": "#8d9bb3",
+                        "on-primary-fixed": "#0d1c2f",
+                        "surface": "#fbf9fa",
+                        "outline-variant": "#c5c6cd",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#b9c7e1",
+                        "on-secondary-fixed-variant": "#3a485b",
+                        "surface-card": "#ffffff",
+                        "on-primary-fixed-variant": "#3a475c",
+                        "status-success": "#10b981",
+                        "secondary-fixed": "#d5e3fc",
+                        "status-warning": "#f59e0b",
+                        "secondary-container": "#d5e3fc",
+                        "outline": "#75777d",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f5f3f5",
+                        "tertiary": "#0d1e31"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "button": "0.25rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "3xl": "48px",
+                        "lg": "16px",
+                        "xs": "4px",
+                        "xl": "24px",
+                        "md": "12px",
+                        "2xl": "32px",
+                        "4xl": "64px",
+                        "sm": "8px",
+                        "control": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "product-title": ["Inter"],
+                        "status-pill": ["Inter"],
+                        "display": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "product-title": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "status-pill": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        html {
+            scrollbar-gutter: stable;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased font-body-md text-body-md min-h-screen flex flex-col pt-4xl">
+<!-- Header / Nav -->
+<header class="bg-[#fbf9fa] fixed top-0 w-full z-50 border-b border-[#e5e7eb] h-4xl flex justify-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="w-full flex justify-between items-center px-lg md:px-xl h-full max-w-[1280px] mx-auto relative">
+<a class="font-display text-display font-bold text-primary" href="1-front-page.html">Luna</a>
+<nav class="hidden md:flex gap-2xl h-full items-center absolute left-1/2 -translate-x-1/2">
+<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="1-front-page.html">Shop</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="6-my-order-page.html">Orders</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="8-account-page.html">Account</a>
+</nav>
+<div class="flex items-center">
+<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='3-cart-page.html'">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-xs -right-xs bg-[#253347] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center py-3xl px-lg md:px-xl">
+<div class="w-full max-w-3xl flex flex-col items-center">
+<!-- Success Indicator -->
+<div class="mb-xl flex items-center justify-center w-24 h-24 rounded-full bg-status-success/10 text-status-success">
+<span class="material-symbols-outlined text-4xl" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Header Text -->
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-sm text-primary">Order placed successfully</h1>
+<p class="font-body-md text-body-md text-on-surface-variant text-center mb-xl">Order #LUNA-10482</p>
+<!-- Order Meta Card -->
+<div class="w-full bg-surface-card border border-border-standard rounded-lg p-xl mb-xl shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-lg">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Date</p>
+<p class="font-body-md text-body-md text-primary font-medium">Oct 24, 2026</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Total</p>
+<p class="font-body-md text-body-md text-primary font-medium">$193.00</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Items</p>
+<p class="font-body-md text-body-md text-primary font-medium">2 Items</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Shipping</p>
+<p class="font-body-md text-body-md text-primary font-medium">Standard</p>
+</div>
+</div>
+</div>
+<!-- Items Section -->
+<div class="w-full mb-xl">
+<h2 class="font-product-title text-product-title text-primary mb-lg border-b border-border-subtle pb-sm">Items in this order</h2>
+<div class="flex flex-col gap-lg">
+<!-- Item 1 -->
+<div class="flex items-center gap-xl bg-surface-card border border-border-standard rounded-lg p-md shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+<div class="w-20 h-20 bg-surface-container-low rounded-lg flex-shrink-0 relative overflow-hidden">
+<img class="object-cover w-full h-full absolute inset-0" data-alt="A high-quality, top-down product shot of a premium wireless mechanical keyboard with slate grey keycaps and a brushed aluminum base. The keyboard sits on a clean, light grey studio surface with soft, diffused lighting that highlights the texture of the keys and the sleek, modern corporate aesthetic. The image is brightly lit, crisp, and extremely professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMa9vGmYZgIz3EOvfVsaSNunbxSabhrDYFXrkOCiUncvFNyGlTXBJHS4yC20oa5Mm8eq29ZlD7c33G7wZ00cR3b6HKL746urnLa4uL5JY8tYNEVHMnEE2anWMX85sJedVVqr7LC3IYJmzfoWl1L0my19a86q_Nr2xhsqomUKIlgtwwm8fyr_vxgGg2dCr8XnIrQn0FZEEe6W84ND7pHcyts6hp9-jgsCJjl2Sssp4KLRd77JZUFDQl">
+</div>
+<div class="flex-grow">
+<h3 class="font-body-md text-body-md font-semibold text-primary">Wireless Mechanical Keyboard</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Qty: 1</p>
+</div>
+<div class="text-right">
+<p class="font-body-md text-body-md text-primary font-medium">$129.00</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center gap-xl bg-surface-card border border-border-standard rounded-lg p-md shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+<div class="w-20 h-20 bg-surface-container-low rounded-lg flex-shrink-0 relative overflow-hidden">
+<img class="object-cover w-full h-full absolute inset-0" data-alt="A clean, modern product photograph of a minimalist architectural desk lamp made of matte slate-blue metal. The lamp is positioned gracefully against a pure white background with subtle, soft shadows beneath its base. The lighting emphasizes its sleek, functional design and precise geometric lines, perfectly fitting a modern, premium corporate workspace aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzTmjtesXTbanGQ9-4SSFieyb0fioAXAwHPvX-MLiguJs-ym93Wn5xkJrQtBdx7Fci1u_nSBu-eeadM2GtW7BqB0jn1Cxmsgn84Wb2nYC6dzv6mNoeX75HdzkI3-S7z3ptPtct_wM0b9WobS0CJo_1CH6f3qLq5B1kENGPb7XdpCjlXBmJFLMj_ULC0Ql6FlG5xbVfXo5GS04dmgD_zOE7Zvoa7cEAM9ZBQT6vuMYFKdcniqFK_THp">
+</div>
+<div class="flex-grow">
+<h3 class="font-body-md text-body-md font-semibold text-primary">Architectural Desk Lamp</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Qty: 1</p>
+</div>
+<div class="text-right">
+<p class="font-body-md text-body-md text-primary font-medium">$64.00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="w-full flex flex-col md:flex-row gap-lg justify-center mt-xl">
+<button class="h-control py-sm px-xl rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase shadow-sm w-full md:w-auto" onclick="window.location.href='7-order-details-page.html'">
+                    View Order
+                </button>
+<button class="h-control py-sm px-xl rounded-button bg-surface-card text-primary font-label-caps text-label-caps border border-border-standard hover:bg-surface-container-low transition-colors active:scale-[0.98] uppercase w-full md:w-auto" onclick="window.location.href='1-front-page.html'">
+                    Continue Shopping
+                </button>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-border-standard w-full">
+<div class="w-full py-2xl px-lg md:px-xl flex flex-col md:flex-row justify-between items-center gap-lg max-w-[1280px] mx-auto">
+<div class="font-label-caps text-label-caps font-bold text-secondary">
+                © 2024 Luna. Simulated platform for demonstration purposes.
+            </div>
+<nav class="flex flex-wrap justify-center gap-lg font-status-pill text-status-pill">
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Terms of Service</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Contact Us</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Return Policy</a>
+</nav>
+</div>
+</footer>
+
+
+</body></html>

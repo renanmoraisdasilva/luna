@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Luna - Account</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "border-standard": "#e2e8f0",
+                    "on-primary": "#ffffff",
+                    "status-warning": "#f59e0b",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c5c6cd",
+                    "primary": "#0f1e31",
+                    "surface-container-highest": "#e4e2e4",
+                    "on-background": "#1b1b1d",
+                    "on-surface": "#1b1b1d",
+                    "status-success": "#10b981",
+                    "on-secondary-container": "#57657a",
+                    "secondary-fixed-dim": "#b9c7df",
+                    "surface-card": "#ffffff",
+                    "on-tertiary-fixed-variant": "#38485d",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#b7c8e1",
+                    "on-secondary-fixed": "#0d1c2e",
+                    "error": "#ba1a1a",
+                    "secondary-fixed": "#d5e3fc",
+                    "background": "#fbf9fa",
+                    "primary-fixed-dim": "#b9c7e1",
+                    "inverse-on-surface": "#f2f0f2",
+                    "surface-bright": "#fbf9fa",
+                    "inverse-surface": "#303032",
+                    "on-primary-fixed-variant": "#3a475c",
+                    "tertiary-container": "#233347",
+                    "on-primary-fixed": "#0d1c2f",
+                    "secondary": "#515f74",
+                    "border-subtle": "#f1f5f9",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#75777d",
+                    "on-tertiary-container": "#8b9bb4",
+                    "surface-dim": "#dbd9db",
+                    "surface-base": "#f8fafc",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#3a485b",
+                    "primary-container": "#253347",
+                    "primary-fixed": "#d5e3fd",
+                    "surface-container": "#efedef",
+                    "tertiary-fixed": "#d3e4fe",
+                    "on-error-container": "#93000a",
+                    "on-primary-container": "#8d9bb3",
+                    "surface-container-high": "#eae7e9",
+                    "surface-tint": "#515f75",
+                    "inverse-primary": "#b9c7e1",
+                    "surface-container-low": "#f5f3f5",
+                    "tertiary": "#0d1e31",
+                    "surface": "#fbf9fa",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#0b1c30",
+                    "surface-variant": "#e4e2e4",
+                    "status-error": "#ef4444",
+                    "secondary-container": "#d5e3fc",
+                    "on-surface-variant": "#44474c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                        "button": "0.25rem",
+                        "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "2xl": "32px",
+                    "xs": "4px",
+                    "lg": "16px",
+                    "4xl": "64px",
+                    "sm": "8px",
+                    "3xl": "48px",
+                    "md": "12px",
+                    "xl": "24px",
+                    "control": "40px"
+            },
+            "fontFamily": {
+                    "product-title": ["Inter", "sans-serif"],
+                    "status-pill": ["Inter", "sans-serif"],
+                    "label-caps": ["Inter", "sans-serif"],
+                    "body-md": ["Inter", "sans-serif"],
+                    "headline-lg-mobile": ["Inter", "sans-serif"],
+                    "headline-lg": ["Inter", "sans-serif"],
+                    "display": ["Inter", "sans-serif"]
+            },
+            "fontSize": {
+                    "product-title": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "status-pill": [
+                            "13px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "letterSpacing": "0",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "display": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.03em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        html {
+            scrollbar-gutter: stable;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+             font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-4xl">
+<!-- TopNavBar -->
+<header class="bg-[#fbf9fa] fixed top-0 w-full z-50 border-b border-[#e5e7eb] h-4xl flex justify-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="w-full flex justify-between items-center px-lg md:px-xl h-full max-w-[1280px] mx-auto relative">
+<!-- Brand -->
+<a class="font-display text-display font-bold text-primary" href="1-front-page.html">Luna</a>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex gap-2xl h-full items-center absolute left-1/2 -translate-x-1/2">
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="1-front-page.html">Shop</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="6-my-order-page.html">Orders</a>
+<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="8-account-page.html">Account</a>
+</nav>
+<!-- Trailing Icons -->
+<div class="flex items-center">
+<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='3-cart-page.html'">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-lg md:px-xl py-3xl">
+<div class="w-full max-w-[720px] mx-auto">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-xl">Account</h1>
+<!-- Profile Card -->
+<section class="bg-surface-card border border-border-standard rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] p-xl mb-xl">
+<h2 class="font-product-title text-product-title text-on-surface mb-lg pb-md border-b border-border-standard">Profile</h2>
+<form class="space-y-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-sm" for="firstName">First name</label>
+<input class="w-full h-control border border-border-standard rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all px-md py-sm font-body-md text-body-md text-on-surface bg-surface-card" id="firstName" type="text" value="Jane"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-sm" for="lastName">Last name</label>
+<input class="w-full h-control border border-border-standard rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all px-md py-sm font-body-md text-body-md text-on-surface bg-surface-card" id="lastName" type="text" value="Doe"/>
+</div>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-sm" for="email">Email</label>
+<input class="w-full h-control border border-border-standard rounded-lg px-md py-sm font-body-md text-body-md text-on-surface-variant bg-surface-container-low cursor-not-allowed" id="email" readonly="" type="email" value="jane.doe@example.com"/>
+</div>
+<div class="pt-md">
+<button class="h-control px-lg py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container transition-colors active:scale-[0.98] uppercase" type="submit">
+                            Save changes
+                        </button>
+</div>
+</form>
+</section>
+<!-- Security Card -->
+<section class="bg-surface-card border border-border-standard rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] p-xl">
+<h2 class="font-product-title text-product-title text-on-surface mb-lg pb-md border-b border-border-standard">Security</h2>
+<div class="space-y-xl">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-lg pb-xl border-b border-border-subtle">
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">Update your password to keep your account secure.</p>
+<button class="h-control px-lg py-sm rounded-button bg-surface-card text-on-surface border border-border-standard font-label-caps text-label-caps hover:bg-surface-container-high transition-colors whitespace-nowrap">
+                            Change password
+                        </button>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-lg">
+<p class="font-body-md text-body-md text-on-surface-variant">Sign out of your account on this device.</p>
+<button class="h-control px-lg py-sm rounded-button bg-surface-card text-status-error border border-status-error/30 font-label-caps text-label-caps hover:bg-error-container transition-colors whitespace-nowrap">
+                            Logout
+                        </button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-border-standard w-full">
+<div class="w-full py-2xl px-lg md:px-xl flex flex-col md:flex-row justify-between items-center gap-lg max-w-[1280px] mx-auto">
+<div class="font-label-caps text-label-caps font-bold text-secondary">
+                                © 2024 Luna. Simulated platform for demonstration purposes.
+                        </div>
+<nav class="flex flex-wrap justify-center gap-lg font-status-pill text-status-pill">
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Terms of Service</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Contact Us</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Return Policy</a>
+</nav>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Wireless Mechanical Keyboard - Luna</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#b9c7e1",
+                "secondary-container": "#d5e3fc",
+                "surface-variant": "#e4e2e4",
+                "on-error-container": "#93000a",
+                "border-standard": "#e2e8f0",
+                "status-warning": "#f59e0b",
+                "background": "#fbf9fa",
+                "surface-dim": "#dbd9db",
+                "tertiary": "#0d1e31",
+                "surface-container": "#efedef",
+                "surface-container-highest": "#e4e2e4",
+                "surface-bright": "#fbf9fa",
+                "primary-fixed": "#d5e3fd",
+                "on-secondary": "#ffffff",
+                "inverse-surface": "#303032",
+                "on-primary-fixed-variant": "#3a475c",
+                "status-success": "#10b981",
+                "on-tertiary-fixed": "#0b1c30",
+                "secondary-fixed": "#d5e3fc",
+                "on-tertiary-fixed-variant": "#38485d",
+                "primary-container": "#253347",
+                "status-error": "#ef4444",
+                "on-secondary-fixed-variant": "#3a485b",
+                "on-tertiary": "#ffffff",
+                "surface-tint": "#515f75",
+                "primary-fixed-dim": "#b9c7e1",
+                "outline-variant": "#c5c6cd",
+                "outline": "#75777d",
+                "surface-container-low": "#f5f3f5",
+                "on-primary": "#ffffff",
+                "secondary-fixed-dim": "#b9c7df",
+                "on-tertiary-container": "#8b9bb4",
+                "border-subtle": "#f1f5f9",
+                "surface-card": "#ffffff",
+                "on-primary-container": "#8d9bb3",
+                "error-container": "#ffdad6",
+                "on-secondary-container": "#57657a",
+                "on-primary-fixed": "#0d1c2f",
+                "tertiary-fixed": "#d3e4fe",
+                "tertiary-container": "#233347",
+                "error": "#ba1a1a",
+                "on-surface": "#1b1b1d",
+                "on-surface-variant": "#44474c",
+                "surface-container-high": "#eae7e9",
+                "tertiary-fixed-dim": "#b7c8e1",
+                "inverse-on-surface": "#f2f0f2",
+                "surface-base": "#f8fafc",
+                "on-error": "#ffffff",
+                "on-background": "#1b1b1d",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-fixed": "#0d1c2e",
+                "surface": "#fbf9fa",
+                "secondary": "#515f74",
+                "primary": "#0f1e31"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "button": "0.25rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "xl": "24px",
+                "xs": "4px",
+                "2xl": "32px",
+                "sm": "8px",
+                "3xl": "48px",
+                "lg": "16px",
+                "md": "12px",
+                "control": "40px",
+                "4xl": "64px"
+        },
+        "fontFamily": {
+                "display": [
+                        "Inter"
+                ],
+                "label-caps": [
+                        "Inter"
+                ],
+                "status-pill": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "product-title": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "display": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.03em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "status-pill": [
+                        "13px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "product-title": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "letterSpacing": "0",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        html {
+            scrollbar-gutter: stable;
+        }
+        /* Custom scrollbar for horizontal lists */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Product card hover effect */
+        .product-card {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .product-card:hover {
+            border-color: #D1D5DB;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col pt-4xl">
+<!-- TopNavBar -->
+<header class="bg-[#fbf9fa] fixed top-0 w-full z-50 border-b border-[#e5e7eb] h-4xl flex justify-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="w-full flex justify-between items-center px-lg md:px-xl h-full max-w-[1280px] mx-auto relative">
+<a class="font-display text-display font-bold text-primary" href="1-front-page.html">Luna</a>
+<nav class="hidden md:flex gap-2xl h-full items-center absolute left-1/2 -translate-x-1/2">
+<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="1-front-page.html">Shop</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="6-my-order-page.html">Orders</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="8-account-page.html">Account</a>
+</nav>
+<div class="flex items-center">
+<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='3-cart-page.html'">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-xs -right-xs bg-[#253347] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-lg md:px-xl py-3xl flex flex-col gap-xl">
+<!-- Breadcrumbs -->
+<nav aria-label="Breadcrumb" class="w-full flex items-center text-on-surface-variant font-label-caps text-label-caps gap-sm">
+<a class="hover:text-primary transition-colors" href="1-front-page.html">Home</a>
+<span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="1-front-page.html">Electronics</a>
+<span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-on-background font-medium">Wireless Mechanical Keyboard</span>
+</nav>
+<!-- Product Hero Section -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-xl lg:gap-2xl">
+<!-- Left: Images -->
+<div class="flex flex-col gap-lg">
+<div class="w-full aspect-[4/3] bg-surface-container-lowest border border-outline-variant rounded-lg flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover object-center" data-alt="A high-resolution, overhead shot of a sleek, modern wireless mechanical keyboard resting on a minimalist white desk. The keyboard features pristine white keycaps with subtle grey accents and a slim profile. Soft, diffuse natural light casts minimal shadows, emphasizing the clean, utilitarian aesthetic. The background is slightly out of focus, highlighting the keyboard's precision engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPVfBzVe_pOxSguS6-HVZOS8SwnynyNS0doly0v77IEYJuhNv575JVlHsgsbza_gJY_Rj8Cea_LrfNl4iw8u2Uszu3kRTqOdmaCnz__XY-X-Dme5tDx-fWewk36JWQ3__pqMf0Ouq-UzcqRimPWQBRdhyQn8ZYDTE-c6qWQq5CelfeujK1jY9xqQ6_VbRzSypfPBvqq3RtEjsTidIJ-pp-LFeyXj7E7MjJQpmKiDgny5XUD79GVvHu">
+</div>
+<!-- Thumbnails -->
+<div class="grid grid-cols-4 gap-sm">
+<button class="aspect-square bg-surface-container-lowest border border-primary rounded-lg overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<img class="w-full h-full object-cover object-center" data-alt="A close-up shot of the mechanical switches on a modern wireless keyboard, showcasing the detailed texture of the white keycaps and the switch mechanism underneath. The lighting is bright and clean, reinforcing a minimalist and highly functional design language." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2s40qtYwrfpHI4_FCJ9BqUO8qCytrCazeffngBI3ulVu42NPZxOr2gaNGCNzmyavVuW64v_BfkgEJYG0DA1KIRnBZYddZx4Lq2vNcbdqcv9rdhlLVUvJSsTHp8CFb4YJIU5skTSPxDjMTHjhf8Ks32iJbzO7s0mRIb8PUCfccTg7HzVWXCyAKwFbajrXvzUUOifKmBEQPTKYyFWdCDrHfz-48nrtmG-fQsHNqRVTwu95n_vWYip3G">
+</button>
+<button class="aspect-square bg-surface-container-lowest border border-outline-variant hover:border-primary opacity-70 hover:opacity-100 rounded-lg overflow-hidden cursor-pointer transition-all">
+<img class="w-full h-full object-cover object-center" data-alt="A side-profile view of a slim wireless mechanical keyboard on a white surface, demonstrating its low-profile ergonomic design. The clean lines and minimal styling are highlighted by bright, soft studio lighting, perfectly matching a professional, distraction-free environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNU5KJTXfFZQpudnJN2qctOIRImAP4XvMDJdSId5PB6nrbATjE6zQ2Ik_s4Ar0n9P7cZMkFBit5q5z0nSVYbGPtKbdVIhC4xgoC-OWlStkgLYHYQdqCyiES_Ktec9KkQRzezr06B2PwDAyrc5hCg1N4MWkRWA9Lcsbyfr4VM_IG1UzJf0tK85XN_B590HB0XuaFVDmuuBQsD9zdtpgEuO1jeHny8O6ZisNoYoXpBbKRjaOdHxHN4vB">
+</button>
+<button class="aspect-square bg-surface-container-lowest border border-outline-variant hover:border-primary opacity-70 hover:opacity-100 rounded-lg overflow-hidden cursor-pointer transition-all">
+<img class="w-full h-full object-cover object-center" data-alt="A detailed view of the USB-C charging port and power switch on the back edge of a modern white wireless mechanical keyboard. The focus is sharp on the metallic port, with a soft, minimalist white background. The lighting is crisp and even." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE--m5e0gMbuLGD2Z9qiZcSqmbvJfsWUhyAm92fk9qaGLMfn5Hcfzb7YZdXs7XXyKnartNNxLLy3k-RkTLi2R-cFwk0nndGH-HimQ3tUncU_K72Fv-HPL0dOvP8MtXXdLaBXNFnWy6dyLxq6AUw_rJW6RJGl-JwtZCcg5qMbDWDhQhUwyxH1ke-aBEnp-oQTnNJxCEnuvjjRljCYyovoSrORBLzKpyOIa3_m5U08zTEvCARqFr_KfD">
+</button>
+<button class="aspect-square bg-surface-container-lowest border border-outline-variant hover:border-primary opacity-70 hover:opacity-100 rounded-lg overflow-hidden cursor-pointer transition-all">
+<img class="w-full h-full object-cover object-center" data-alt="A lifestyle image showing hands typing on a pristine white wireless mechanical keyboard in a bright, modern home office setting. The desk is clean, featuring minimal accessories. The overall tone is productive, serene, and sophisticated, illuminated by natural daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJzcsZ3J1U6I5j3gAoG5x_IRsJMGUMn8U7aQ9V99q7B-bm5HdKAgDPmz_pLf07vJr8IGcrxX2CQ7VPRSMsGUqLaUU70QnYIZpTLJcN8vIMi1GDUOsG-so5NiovgA7GB0jGbCQ4tCil1-v9BeZz60LyapGXHOgkmGMMfyVlxzTeJl6q-xNheoUJxdim7ja70NEhMK8VdbQSlcuH6T1gslj_KGtcg9WxGlDQMmOj9AXRIMx_mZK6mofk">
+</button>
+</div>
+</div>
+<!-- Right: Details -->
+<div class="flex flex-col flex-start gap-xl">
+<div class="flex flex-col gap-sm">
+<!-- Badge -->
+<span class="inline-flex items-center gap-xs bg-surface-container-low text-status-success border border-outline-variant px-md py-xs rounded-full w-max font-status-pill text-status-pill">
+<span class="w-[8px] h-[8px] rounded-full bg-status-success"></span>
+                        Available
+                    </span>
+<h1 class="font-display text-display text-on-background">Wireless Mechanical Keyboard</h1>
+<p class="font-headline-lg text-headline-lg text-on-surface-variant">$129.00</p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant border-b border-outline-variant pb-xl">
+                    High-performance mechanical switches with a clean, minimalist aesthetic.
+                </p>
+<!-- Add to Cart / Quantity -->
+<div class="flex flex-col sm:flex-row gap-lg pt-sm">
+<div class="flex items-center border border-outline-variant rounded-button h-control w-full sm:w-auto">
+<button class="px-md h-full text-on-surface hover:bg-surface-container-low transition-colors flex items-center justify-center border-r border-outline-variant">
+<span class="material-symbols-outlined" data-icon="remove">remove</span>
+</button>
+<span class="px-xl h-full flex items-center justify-center font-body-md text-body-md w-[64px] text-center">1</span>
+<button class="px-md h-full text-on-surface hover:bg-surface-container-low transition-colors flex items-center justify-center border-l border-outline-variant">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+<button class="flex-1 h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase flex items-center justify-center gap-sm" onclick="window.location.href='3-cart-page.html'">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+                        Add to Cart
+                    </button>
+</div>
+</div>
+</section>
+<!-- Description -->
+<section class="flex flex-col gap-lg pt-xl border-t border-outline-variant">
+<div class="prose max-w-none text-on-surface-variant font-body-md text-body-md flex flex-col gap-lg">
+<p class="">
+                    Experience typing nirvana with our flagship Wireless Mechanical Keyboard. Designed from the ground up for professionals and creatives who demand both aesthetic purity and uncompromised performance. The ultra-slim aluminum chassis provides a solid, flex-free typing experience while occupying minimal space on your desk.
+                </p>
+<p class="">
+                    Featuring hot-swappable switches, dual-mode connectivity (Bluetooth 5.1 and 2.4GHz wireless), and up to 200 hours of battery life with backlighting off. The meticulously crafted PBT keycaps offer a premium textured feel that resists shine over time, ensuring your setup looks pristine for years to come.
+                </p>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-border-standard w-full">
+<div class="w-full py-2xl px-lg md:px-xl flex flex-col md:flex-row justify-between items-center gap-lg max-w-[1280px] mx-auto">
+<div class="font-label-caps text-label-caps font-bold text-secondary">
+                                © 2024 Luna. Simulated platform for demonstration purposes.
+                        </div>
+<nav class="flex flex-wrap justify-center gap-lg font-status-pill text-status-pill">
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Terms of Service</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Contact Us</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Return Policy</a>
+</nav>
+</div>
+</footer>
+
+
+</body></html>

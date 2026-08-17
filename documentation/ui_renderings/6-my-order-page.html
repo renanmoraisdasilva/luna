@@ -1,0 +1,297 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Luna - My Orders</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#b9c7e1",
+                "secondary-container": "#d5e3fc",
+                "surface-variant": "#e4e2e4",
+                "on-error-container": "#93000a",
+                "border-standard": "#e2e8f0",
+                "status-warning": "#f59e0b",
+                "background": "#fbf9fa",
+                "surface-dim": "#dbd9db",
+                "tertiary": "#0d1e31",
+                "surface-container": "#efedef",
+                "surface-container-highest": "#e4e2e4",
+                "surface-bright": "#fbf9fa",
+                "primary-fixed": "#d5e3fd",
+                "on-secondary": "#ffffff",
+                "inverse-surface": "#303032",
+                "on-primary-fixed-variant": "#3a475c",
+                "status-success": "#10b981",
+                "on-tertiary-fixed": "#0b1c30",
+                "secondary-fixed": "#d5e3fc",
+                "on-tertiary-fixed-variant": "#38485d",
+                "primary-container": "#253347",
+                "status-error": "#ef4444",
+                "on-secondary-fixed-variant": "#3a485b",
+                "on-tertiary": "#ffffff",
+                "surface-tint": "#515f75",
+                "primary-fixed-dim": "#b9c7e1",
+                "outline-variant": "#c5c6cd",
+                "outline": "#75777d",
+                "surface-container-low": "#f5f3f5",
+                "on-primary": "#ffffff",
+                "secondary-fixed-dim": "#b9c7df",
+                "on-tertiary-container": "#8b9bb4",
+                "border-subtle": "#f1f5f9",
+                "surface-card": "#ffffff",
+                "on-primary-container": "#8d9bb3",
+                "error-container": "#ffdad6",
+                "on-secondary-container": "#57657a",
+                "on-primary-fixed": "#0d1c2f",
+                "tertiary-fixed": "#d3e4fe",
+                "tertiary-container": "#233347",
+                "error": "#ba1a1a",
+                "on-surface": "#1b1b1d",
+                "on-surface-variant": "#44474c",
+                "surface-container-high": "#eae7e9",
+                "tertiary-fixed-dim": "#b7c8e1",
+                "inverse-on-surface": "#f2f0f2",
+                "surface-base": "#f8fafc",
+                "on-error": "#ffffff",
+                "on-background": "#1b1b1d",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-fixed": "#0d1c2e",
+                "surface": "#fbf9fa",
+                "secondary": "#515f74",
+                "primary": "#0f1e31"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "button": "0.25rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "xl": "24px",
+                "xs": "4px",
+                "2xl": "32px",
+                "sm": "8px",
+                "3xl": "48px",
+                "lg": "16px",
+                "md": "12px",
+                "4xl": "64px",
+                "control": "40px"
+        },
+        "fontFamily": {
+                "display": [
+                        "Inter"
+                ],
+                "label-caps": [
+                        "Inter"
+                ],
+                "status-pill": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "product-title": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "display": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.03em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "status-pill": [
+                        "13px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "product-title": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "letterSpacing": "0",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        html {
+                scrollbar-gutter: stable;
+        }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+</style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-4xl">
+<!-- TopNavBar Component -->
+<header class="bg-[#fbf9fa] fixed top-0 w-full z-50 border-b border-[#e5e7eb] h-4xl flex justify-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="w-full flex justify-between items-center px-lg md:px-xl h-full max-w-[1280px] mx-auto relative">
+<a class="font-display text-display font-bold text-primary" href="1-front-page.html">Luna</a>
+<nav class="hidden md:flex gap-2xl h-full items-center absolute left-1/2 -translate-x-1/2">
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="1-front-page.html">Shop</a>
+<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="6-my-order-page.html">Orders</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="8-account-page.html">Account</a>
+</nav>
+<div class="flex items-center">
+<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='3-cart-page.html'">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-xs -right-xs bg-[#253347] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-lg md:px-xl py-3xl flex flex-col gap-xl">
+<div>
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">My Orders</h1>
+</div>
+<!-- Orders List -->
+<div class="flex flex-col gap-xl">
+<!-- Order Card 1: Preparing -->
+<article class="bg-surface-card border border-border-standard rounded-lg p-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-lg hover:border-outline hover:shadow-sm transition-all duration-200">
+<div class="flex flex-col gap-sm flex-grow">
+<div class="flex items-center gap-md">
+<span class="font-product-title text-product-title text-on-surface">Order #LUNA-10482</span>
+<span class="inline-flex items-center px-md py-xs rounded-full bg-primary-fixed text-on-primary-fixed font-status-pill text-status-pill gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+              Preparing
+            </span>
+</div>
+<div class="flex flex-wrap items-center gap-x-lg gap-y-xs text-on-surface-variant font-body-md text-body-md">
+<span class="">Aug 16, 2026</span>
+<span class="w-1.5 h-1.5 rounded-full bg-border-standard"></span>
+<span class="">2 items</span>
+<span class="w-1.5 h-1.5 rounded-full bg-border-standard"></span>
+<span class="font-bold text-on-surface">$193.00</span>
+</div>
+</div>
+<div class="w-full md:w-auto mt-md md:mt-0">
+<button class="w-full md:w-auto h-control px-lg py-sm rounded-button bg-surface-card border border-border-standard text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-label-caps text-label-caps uppercase cursor-pointer active:scale-[0.98] shadow-sm" onclick="window.location.href='7-order-details-page.html'">
+            View Order
+          </button>
+</div>
+</article>
+<!-- Order Card 2: Delivered -->
+<article class="bg-surface-card border border-border-standard rounded-lg p-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-lg hover:border-outline hover:shadow-sm transition-all duration-200">
+<div class="flex flex-col gap-sm flex-grow">
+<div class="flex items-center gap-md">
+<span class="font-product-title text-product-title text-on-surface">Order #LUNA-10479</span>
+<span class="inline-flex items-center px-md py-xs rounded-full bg-surface-container-low text-on-surface-variant font-status-pill text-status-pill gap-xs border border-border-standard">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+              Delivered
+            </span>
+</div>
+<div class="flex flex-wrap items-center gap-x-lg gap-y-xs text-on-surface-variant font-body-md text-body-md">
+<span class="">Aug 10, 2026</span>
+<span class="w-1.5 h-1.5 rounded-full bg-border-standard"></span>
+<span class="">1 item</span>
+<span class="w-1.5 h-1.5 rounded-full bg-border-standard"></span>
+<span class="font-bold text-on-surface">$89.00</span>
+</div>
+</div>
+<div class="w-full md:w-auto mt-md md:mt-0">
+<button class="w-full md:w-auto h-control px-lg py-sm rounded-button bg-surface-card border border-border-standard text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-label-caps text-label-caps uppercase cursor-pointer active:scale-[0.98] shadow-sm">
+            View Order
+          </button>
+</div>
+</article>
+<!-- Order Card 3: Shipped -->
+<article class="bg-surface-card border border-border-standard rounded-lg p-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-lg hover:border-outline hover:shadow-sm transition-all duration-200">
+<div class="flex flex-col gap-sm flex-grow">
+<div class="flex items-center gap-md">
+<span class="font-product-title text-product-title text-on-surface">Order #LUNA-10463</span>
+<span class="inline-flex items-center px-md py-xs rounded-full bg-surface-container-low text-on-surface-variant font-status-pill text-status-pill gap-xs border border-border-standard">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+              Shipped
+            </span>
+</div>
+<div class="flex flex-wrap items-center gap-x-lg gap-y-xs text-on-surface-variant font-body-md text-body-md">
+<span class="">July 28, 2026</span>
+<span class="w-1.5 h-1.5 rounded-full bg-border-standard"></span>
+<span class="">3 items</span>
+<span class="w-1.5 h-1.5 rounded-full bg-border-standard"></span>
+<span class="font-bold text-on-surface">$312.00</span>
+</div>
+</div>
+<div class="w-full md:w-auto mt-md md:mt-0">
+<button class="w-full md:w-auto h-control px-lg py-sm rounded-button bg-surface-card border border-border-standard text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-label-caps text-label-caps uppercase cursor-pointer active:scale-[0.98] shadow-sm">
+            View Order
+          </button>
+</div>
+</article>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="bg-surface-container-low border-t border-border-standard w-full">
+<div class="w-full py-2xl px-lg md:px-xl flex flex-col md:flex-row justify-between items-center gap-lg max-w-[1280px] mx-auto">
+<div class="font-label-caps text-label-caps font-bold text-secondary">
+                                                                © 2024 Luna. Simulated platform for demonstration purposes.
+                                                </div>
+<nav class="flex flex-wrap justify-center gap-lg font-status-pill text-status-pill">
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Terms of Service</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Contact Us</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Return Policy</a>
+</nav>
+</div>
+</footer>
+
+
+</body></html>
