@@ -1,0 +1,94 @@
+name: Luna Docker Publish
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish Luna images to GHCR
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: frontend
+            dockerfile: infrastructure/frontend.Dockerfile
+            context: .
+            image: ghcr.io/${{ github.repository_owner }}/luna-frontend
+            args: |
+              IDENTITY_API_INTERNAL_URL=http://identity:8080
+              CATALOG_API_INTERNAL_URL=http://catalog:8080
+              ORDERS_API_INTERNAL_URL=http://orders:8080
+              PAYMENTS_API_INTERNAL_URL=http://payments:8080
+              INVENTORY_API_INTERNAL_URL=http://inventory:8080
+              SHIPPING_API_INTERNAL_URL=http://shipping:8080
+          - name: identity
+            dockerfile: infrastructure/service.Dockerfile
+            context: .
+            image: ghcr.io/${{ github.repository_owner }}/luna-identity
+            args: |
+              PROJECT=src/Services/Identity/Identity.csproj
+          - name: catalog
+            dockerfile: infrastructure/service.Dockerfile
+            context: .
+            image: ghcr.io/${{ github.repository_owner }}/luna-catalog
+            args: |
+              PROJECT=src/Services/Catalog/Catalog.csproj
+          - name: orders
+            dockerfile: infrastructure/service.Dockerfile
+            context: .
+            image: ghcr.io/${{ github.repository_owner }}/luna-orders
+            args: |
+              PROJECT=src/Services/Orders/Orders.csproj
+          - name: payments
+            dockerfile: infrastructure/service.Dockerfile
+            context: .
+            image: ghcr.io/${{ github.repository_owner }}/luna-payments
+            args: |
+              PROJECT=src/Services/Payments/Payments.csproj
+          - name: inventory
+            dockerfile: infrastructure/service.Dockerfile
+            context: .
+            image: ghcr.io/${{ github.repository_owner }}/luna-inventory
+            args: |
+              PROJECT=src/Services/Inventory/Inventory.csproj
+          - name: shipping
+            dockerfile: infrastructure/service.Dockerfile
+            context: .
+            image: ghcr.io/${{ github.repository_owner }}/luna-shipping
+            args: |
+              PROJECT=src/Services/Shipping/Shipping.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.name }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          build-args: ${{ matrix.args }}
+          tags: |
+            ${{ matrix.image }}:${{ github.sha }}
+            ${{ matrix.image }}:latest
