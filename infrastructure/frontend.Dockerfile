@@ -27,5 +27,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
+COPY infrastructure/docker-compose.prod.yml /opt/luna-deployment/docker-compose.prod.yml
+COPY infrastructure/update.sh /opt/luna-deployment/update.sh
 EXPOSE 3000
 CMD ["node", "server.js"]

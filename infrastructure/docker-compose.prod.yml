@@ -1,0 +1,62 @@
+services:
+  frontend:
+    image: ghcr.io/renanmoraisdasilva/luna-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/swagger').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+
+  identity:
+    image: ghcr.io/renanmoraisdasilva/luna-identity:latest
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Database: "${IDENTITY_DB_CONNECTION_STRING}"
+    healthcheck: &service_healthcheck
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 60s
+
+  catalog:
+    image: ghcr.io/renanmoraisdasilva/luna-catalog:latest
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Database: "${CATALOG_DB_CONNECTION_STRING}"
+    healthcheck: *service_healthcheck
+
+  orders:
+    image: ghcr.io/renanmoraisdasilva/luna-orders:latest
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Database: "${ORDERS_DB_CONNECTION_STRING}"
+    healthcheck: *service_healthcheck
+
+  payments:
+    image: ghcr.io/renanmoraisdasilva/luna-payments:latest
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Database: "${PAYMENTS_DB_CONNECTION_STRING}"
+    healthcheck: *service_healthcheck
+
+  inventory:
+    image: ghcr.io/renanmoraisdasilva/luna-inventory:latest
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Database: "${INVENTORY_DB_CONNECTION_STRING}"
+    healthcheck: *service_healthcheck
+
+  shipping:
+    image: ghcr.io/renanmoraisdasilva/luna-shipping:latest
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Database: "${SHIPPING_DB_CONNECTION_STRING}"
+    healthcheck: *service_healthcheck
