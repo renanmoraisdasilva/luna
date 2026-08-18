@@ -70,13 +70,15 @@ COMPOSE=(docker compose -p luna -f docker-compose.prod.yml)
 repair_stale_network() {
   if docker network inspect luna_default >/dev/null 2>&1; then
     current_label="$(docker network inspect luna_default --format '{{index .Labels "com.docker.compose.network"}}' 2>/dev/null || true)"
-    if [[ -n "$current_label" && "$current_label" != "luna" ]]; then
+    if [[ -z "$current_label" || "$current_label" != "luna" ]]; then
       echo "Removing stale Docker network luna_default (label: ${current_label:-<unset>})"
       docker network rm luna_default >/dev/null 2>&1 || true
     fi
   fi
 }
 
+echo "Reconciling existing Compose state..."
+"${COMPOSE[@]}" down --remove-orphans >/dev/null 2>&1 || true
 repair_stale_network
 
 echo "Pulling Luna images..."
