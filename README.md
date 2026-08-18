@@ -2,48 +2,272 @@
 
 ### Distributed Commerce & Logistics Simulation
 
-Luna is a production-inspired commerce and logistics platform built to explore the engineering challenges behind distributed systems.
+Luna is a production-inspired commerce and logistics platform built to explore what happens when a simple commerce workflow becomes a distributed system.
 
-It simulates the complete lifecycle of an order, from checkout and payment through inventory, fulfillment, shipping, and delivery, while intentionally introducing asynchronous processing, failures, delays, and service outages.
+The project simulates the journey of an order from browsing and checkout through payment, inventory, fulfillment, shipping, and delivery. As Luna evolves, it deliberately introduces the kinds of complexity that appear in real platforms: asynchronous workflows, delays, failures, retries, recovery, observability, and operational intervention.
 
-The goal is to build a system that behaves like a real distributed platform.
-
-## Run Phase 0
-
-Prerequisites: Docker Desktop.
-
-```bash
-docker compose -f infrastructure/docker-compose.yml up --build
-```
-
-Open the storefront at `http://localhost:3000`. Unified Swagger UI is available at `http://localhost:3000/swagger`. The backend services remain private to the Compose network and are reached through the frontend gateway.
-SQL Server is configured with one database per service. RabbitMQ is intentionally not included until Phase 2.
-
-See [Phase 0 Design](documentation/phase-0-design.md) and [Roadmap](documentation/roadmap.md) for the architectural decisions and progression.
+> **The goal is not to design the perfect distributed system upfront.**
+> Luna is built incrementally so that each new problem gives the architecture a reason to evolve.
 
 ---
 
-## What is Luna?
+## The Idea
 
-A customer can browse products, place orders, choose shipping options, and track deliveries.
-
-Behind the scenes, the order moves through several independently running services:
+At its simplest, Luna looks like this:
 
 ```text
 Customer
    │
    ▼
- Orders
+Catalog
    │
-   ├──────────────► Payments
-   │
-   └──────────────► Inventory
-                         │
-                         ▼
-                    Fulfillment
-                         │
-                         ▼
-                     Shipping
-                         │
-                         ▼
-                 Simulated Carrier
+   ▼
+Cart → Checkout → Order
+                    │
+             ┌──────┴──────┐
+             ▼             ▼
+          Payment       Inventory
+                            │
+                            ▼
+                       Fulfillment
+                            │
+                            ▼
+                         Shipping
+                            │
+                            ▼
+                         Delivery
+```
+
+Initially, these workflows are intentionally simple. Later phases introduce asynchronous communication, realistic timing, failures, retries, and recovery.
+
+The result is a system where you can observe not only **what happens when everything works**, but also what happens when things don't.
+
+---
+
+## Customer Experience
+
+Luna will provide a customer-facing storefront where customers can:
+
+- Browse products
+- Search and filter products
+- Add products to a cart
+- Choose shipping methods
+- Checkout and place orders
+- View order history
+- Follow order progress
+- Track deliveries
+
+An order will eventually progress through a lifecycle such as:
+
+```text
+Order Created
+      │
+      ▼
+   Payment
+      │
+      ▼
+Inventory Reserved
+      │
+      ▼
+ Fulfillment
+      │
+      ▼
+ Order Packed
+      │
+      ▼
+  Shipping
+      │
+      ▼
+ In Transit
+      │
+      ▼
+  Delivered
+```
+
+---
+
+## Operations
+
+As the system grows, Luna will also include an internal operations console.
+
+The goal is to make the platform observable from a business perspective, not just a technical one.
+
+For example:
+
+```text
+Infrastructure
+
+Orders        ● HEALTHY
+Payments      ● HEALTHY
+Inventory     ● HEALTHY
+Shipping      ● HEALTHY
+
+
+Business
+
+⚠ Payment failures increasing
+⚠ Order stuck in fulfillment
+⚠ Shipment delayed
+⚠ Work building up
+```
+
+Eventually, the operations experience will also allow deliberate failures and simulation controls so that the behavior of the distributed system can be explored interactively.
+
+---
+
+## The Journey
+
+Luna is built in stages. Each phase introduces a new capability or a new problem to solve.
+
+```text
+Simple Commerce
+       │
+       ▼
+Async Workflows
+       │
+       ▼
+Realistic Simulation
+       │
+       ▼
+Reliability & Recovery
+       │
+       ▼
+Transactional Consistency
+       │
+       ▼
+Observability
+       │
+       ▼
+Operations
+       │
+       ▼
+Resilience & Chaos
+       │
+       ▼
+Production Scenarios
+```
+
+The current roadmap progresses through:
+
+| Phase | Focus |
+| --- | --- |
+| 0 | Architecture & Foundation |
+| 1 | Basic Commerce Flow |
+| 2 | Messaging & Async Workflows |
+| 3 | Realistic Time & Simulation |
+| 4 | Reliability & Failure Handling |
+| 5 | Transactional Outbox |
+| 6 | Payment Abstraction |
+| 7 | Fulfillment Service |
+| 8 | Observability |
+| 9 | Operations Dashboard |
+| 10 | Redundancy & Resilience |
+| 11 | Chaos & Failure Simulation |
+| 12 | Security |
+| 13 | Testing & Quality |
+| 14 | Production-like Local Infrastructure |
+| 15 | AWS |
+| 16 | Production Scenarios & Edge Cases |
+
+See the [Roadmap](documentation/roadmap.md) for the complete progression.
+
+---
+
+## Run Luna
+
+### Prerequisites
+
+- Docker Desktop
+
+Start the Phase 0 environment from the repository root:
+
+```bash
+docker compose -f infrastructure/docker-compose.yml up --build
+```
+
+The storefront is available at:
+
+```text
+http://localhost:3000
+```
+
+The unified API explorer is available at:
+
+```text
+http://localhost:3000/swagger
+```
+
+Backend services are kept private to the Compose network and are reached through the frontend gateway.
+
+SQL Server runs locally with a separate database for each service.
+
+RabbitMQ is intentionally not part of Phase 0; it is introduced in Phase 2.
+
+---
+
+## Project Status
+
+🚧 **Early Development**
+
+**Phase 0 — Complete**
+
+The architecture and development foundation are established, including service boundaries, databases, containerization, configuration, API conventions, health checks, logging, testing foundations, and the frontend foundation.
+
+**Phase 1 — Next**
+
+The focus is the first complete customer commerce experience: catalog, anonymous cart, authentication where required, checkout, orders, payments, inventory, fulfillment, shipping, and the customer-facing order lifecycle.
+
+---
+
+## Documentation
+
+The repository separates **what Luna is**, **where it is going**, and **how each phase is designed**.
+
+- [Roadmap](documentation/roadmap.md) — Project vision and progression
+- [Phase 0 Design](documentation/phase-0-design.md) — Foundation and architectural decisions
+- [Phase 1 Design](documentation/phase-1-design.md) — Basic commerce flow and its decisions
+
+For frontend-specific implementation details, see the frontend documentation under `src/Frontend/`.
+
+---
+
+## Why Luna?
+
+Luna is primarily a learning and experimentation platform.
+
+The interesting part is not simply building an online store. It is progressively turning that store into a distributed platform and learning what changes when:
+
+- services operate independently
+- work happens asynchronously
+- failures occur during workflows
+- operations take time
+- messages can be delayed or duplicated
+- dependencies become unavailable
+- the system needs to recover
+- operators need to understand what is happening
+
+The architecture is therefore expected to evolve.
+
+```text
+Simple
+  │
+  ▼
+Useful
+  │
+  ▼
+Distributed
+  │
+  ▼
+Asynchronous
+  │
+  ▼
+Failure-prone
+  │
+  ▼
+Observable
+  │
+  ▼
+Resilient
+```
+
+Luna is intentionally built one step at a time.

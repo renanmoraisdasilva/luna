@@ -1,3 +1,8 @@
+networks:
+  luna:
+    name: luna_default
+    driver: bridge
+
 services:
   frontend:
     image: ghcr.io/renanmoraisdasilva/luna-frontend:latest
@@ -7,6 +12,8 @@ services:
     environment:
       HOSTNAME: 0.0.0.0
       PORT: 3000
+    networks:
+      - luna
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/swagger').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
@@ -19,6 +26,8 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "${IDENTITY_DB_CONNECTION_STRING}"
+    networks:
+      - luna
     healthcheck: &service_healthcheck
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
       interval: 10s
@@ -31,6 +40,8 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "${CATALOG_DB_CONNECTION_STRING}"
+    networks:
+      - luna
     healthcheck: *service_healthcheck
 
   orders:
@@ -38,6 +49,8 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "${ORDERS_DB_CONNECTION_STRING}"
+    networks:
+      - luna
     healthcheck: *service_healthcheck
 
   payments:
@@ -45,6 +58,8 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "${PAYMENTS_DB_CONNECTION_STRING}"
+    networks:
+      - luna
     healthcheck: *service_healthcheck
 
   inventory:
@@ -52,6 +67,8 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "${INVENTORY_DB_CONNECTION_STRING}"
+    networks:
+      - luna
     healthcheck: *service_healthcheck
 
   shipping:
@@ -59,4 +76,6 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "${SHIPPING_DB_CONNECTION_STRING}"
+    networks:
+      - luna
     healthcheck: *service_healthcheck
