@@ -65,7 +65,19 @@ echo "Pulling Luna deployment configuration..."
 docker pull "$DEPLOYMENT_IMAGE"
 sync_deployment_files
 
-COMPOSE=(docker compose -f docker-compose.prod.yml)
+COMPOSE=(docker compose -p luna -f docker-compose.prod.yml)
+
+repair_stale_network() {
+  if docker network inspect luna_default >/dev/null 2>&1; then
+    current_label="$(docker network inspect luna_default --format '{{index .Labels "com.docker.compose.network"}}' 2>/dev/null || true)"
+    if [[ -n "$current_label" && "$current_label" != "luna" ]]; then
+      echo "Removing stale Docker network luna_default (label: ${current_label:-<unset>})"
+      docker network rm luna_default >/dev/null 2>&1 || true
+    fi
+  fi
+}
+
+repair_stale_network
 
 echo "Pulling Luna images..."
 "${COMPOSE[@]}" pull
@@ -91,7 +103,7 @@ else
   echo "No image changes detected; reconciling Compose configuration..."
 fi
 
-"${COMPOSE[@]}" up -d --wait --remove-orphans "${SERVICES[@]}"
+"${COMPOSE[@]}" up -d --wait --force-recreate --remove-orphans "${SERVICES[@]}"
 echo "Luna deployment is up to date."
 
 docker image prune -f >/dev/null
