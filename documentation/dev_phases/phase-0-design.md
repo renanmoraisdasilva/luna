@@ -681,22 +681,26 @@ Deferred to later phases:
 
 Phase 0 is complete when:
 
-- [ ] Six service boundaries exist.
-- [ ] Frontend project exists.
-- [ ] Each service has independent persistence ownership.
-- [ ] Databases can be created and migrated independently.
-- [ ] Docker Compose starts the local environment.
-- [ ] Every service exposes a health endpoint.
-- [ ] REST/OpenAPI conventions are established.
-- [ ] Centralized exception handling exists.
-- [ ] Structured logging and correlation IDs work.
-- [ ] Configuration/secrets conventions are established.
-- [ ] Identity framework endpoints support registration/login and configured roles.
-- [ ] The customer frontend reaches backend APIs through the Next.js gateway.
-- [ ] Backend services are not directly published by default Compose configuration.
-- [ ] Unit and integration test foundations exist.
-- [ ] Service boundaries prevent direct database/internal-assembly dependencies.
-- [ ] Phase 1 can begin without redesigning the architecture.
+- [x] Six service boundaries exist.
+- [x] Frontend project exists.
+- [x] Each service has independent persistence ownership.
+- [x] Databases can be created and migrated independently.
+- [x] Docker Compose starts the local environment.
+- [x] Every service exposes a health endpoint.
+- [x] REST/OpenAPI conventions are established.
+- [x] Centralized exception handling exists.
+- [x] Structured logging and correlation IDs work.
+- [x] Configuration/secrets conventions are established.
+- [x] Identity framework endpoints support registration/login and configured roles.
+- [x] The customer frontend reaches backend APIs through the Next.js gateway.
+- [x] Backend services are not directly published by default Compose configuration.
+- [x] Unit and integration test foundations exist.
+- [x] Service boundaries prevent direct database/internal-assembly dependencies.
+- [x] Phase 1 can begin without redesigning the architecture.
+
+### Current status
+
+The repository now satisfies the Phase 0 baseline in both structure and runtime validation. The project has six independent backend services, a Next.js frontend gateway, a working Docker environment, health checks, Swagger/OpenAPI exposure, correlation-ID logging, identity endpoints, and a basic test foundation. This is ready to proceed into Phase 1 without redesigning the core architecture.
 
 ---
 
