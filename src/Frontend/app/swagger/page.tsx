@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import SwaggerExplorer from './SwaggerExplorer';
 
 export const metadata = {
@@ -9,9 +10,9 @@ export default function SwaggerPage() {
   return (
     <main className="swagger-page">
       <header className="swagger-header">
-        <a href="/">LUNA</a>
+        <Link href="/">LUNA</Link>
         <span>Unified API Explorer</span>
-        <a className="swagger-back" href="/">Back to storefront</a>
+        <Link className="swagger-back" href="/">Back to storefront</Link>
       </header>
       <SwaggerExplorer />
     </main>
