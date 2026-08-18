@@ -1,0 +1,19 @@
+import SwaggerExplorer from './SwaggerExplorer';
+
+export const metadata = {
+  title: 'Luna API Explorer',
+  description: 'Unified OpenAPI documentation for Luna services',
+};
+
+export default function SwaggerPage() {
+  return (
+    <main className="swagger-page">
+      <header className="swagger-header">
+        <a href="/">LUNA</a>
+        <span>Unified API Explorer</span>
+        <a className="swagger-back" href="/">Back to storefront</a>
+      </header>
+      <SwaggerExplorer />
+    </main>
+  );
+}

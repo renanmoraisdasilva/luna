@@ -1,0 +1,10 @@
+**/bin
+**/obj
+**/node_modules
+**/.next
+**/out
+.git
+.vs
+*.user
+*.suo
+documentation/ui_renderings

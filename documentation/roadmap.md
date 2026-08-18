@@ -125,6 +125,10 @@ The goal is to show not only whether a service is running, but whether the busin
 
 Luna is composed of independently deployable services. Each service owns its domain and persistence. Services do not directly access one another's databases; communication happens through APIs and asynchronous events.
 
+During the initial web application phases, Next.js acts as a thin frontend gateway. It is the public application entry point, while the backend services remain HTTP APIs on the private Docker network and are not publicly exposed by default. The gateway forwards service contracts without introducing BFF DTOs or aggregation. That decision can be revisited when the Operations Console exposes a concrete need for aggregated views.
+
+Authentication follows the same boundary: ASP.NET Core Identity owns users, passwords, roles, and account management; OpenIddict will eventually provide the OAuth 2.0/OpenID Connect authorization server; backend services validate access tokens but do not issue them. Next.js is the preferred OIDC client and server-side session boundary, keeping access tokens out of browser JavaScript by default.
+
 ### Bounded Contexts
 
 Planned contexts include:

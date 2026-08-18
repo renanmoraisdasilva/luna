@@ -1,0 +1,13 @@
+services:
+  identity:
+    ports: ["5001:8080"]
+  catalog:
+    ports: ["5002:8080"]
+  orders:
+    ports: ["5003:8080"]
+  payments:
+    ports: ["5004:8080"]
+  inventory:
+    ports: ["5005:8080"]
+  shipping:
+    ports: ["5006:8080"]

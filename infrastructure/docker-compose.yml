@@ -1,0 +1,80 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_password123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - luna-sqlserver:/var/opt/mssql
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: infrastructure/frontend.Dockerfile
+      args:
+        IDENTITY_API_INTERNAL_URL: http://identity:8080
+        CATALOG_API_INTERNAL_URL: http://catalog:8080
+        ORDERS_API_INTERNAL_URL: http://orders:8080
+        PAYMENTS_API_INTERNAL_URL: http://payments:8080
+        INVENTORY_API_INTERNAL_URL: http://inventory:8080
+        SHIPPING_API_INTERNAL_URL: http://shipping:8080
+    ports: ["3000:3000"]
+
+  identity:
+    build:
+      context: ..
+      dockerfile: infrastructure/service.Dockerfile
+      args: { PROJECT: src/Services/Identity/Identity.csproj }
+    command: ["Identity.dll"]
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True" }
+    depends_on: [sqlserver]
+
+  catalog:
+    build:
+      context: ..
+      dockerfile: infrastructure/service.Dockerfile
+      args: { PROJECT: src/Services/Catalog/Catalog.csproj }
+    command: ["Catalog.dll"]
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True" }
+    depends_on: [sqlserver]
+
+  orders:
+    build:
+      context: ..
+      dockerfile: infrastructure/service.Dockerfile
+      args: { PROJECT: src/Services/Orders/Orders.csproj }
+    command: ["Orders.dll"]
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True" }
+    depends_on: [sqlserver]
+
+  payments:
+    build:
+      context: ..
+      dockerfile: infrastructure/service.Dockerfile
+      args: { PROJECT: src/Services/Payments/Payments.csproj }
+    command: ["Payments.dll"]
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True" }
+    depends_on: [sqlserver]
+
+  inventory:
+    build:
+      context: ..
+      dockerfile: infrastructure/service.Dockerfile
+      args: { PROJECT: src/Services/Inventory/Inventory.csproj }
+    command: ["Inventory.dll"]
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True" }
+    depends_on: [sqlserver]
+
+  shipping:
+    build:
+      context: ..
+      dockerfile: infrastructure/service.Dockerfile
+      args: { PROJECT: src/Services/Shipping/Shipping.csproj }
+    command: ["Shipping.dll"]
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True" }
+    depends_on: [sqlserver]
+
+volumes:
+  luna-sqlserver:
