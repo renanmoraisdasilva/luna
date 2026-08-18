@@ -8,6 +8,10 @@ This directory contains Luna's container definitions and deployment scripts.
 - `docker-compose.dev.yml` exposes backend service ports for local development.
 - `docker-compose.prod.yml` is the tracked production Compose definition. The server receives this file from the published frontend image; server-only values stay in `/opt/luna/.env`.
 
+Important: the production server must have a real `/opt/luna/.env` file before running the updater. The updater sources this file and Compose uses it for `${...}` substitutions. If it is missing or malformed, the backend services will start with empty database connection strings and fail.
+
+A sample file is provided at `.env.example` for reference. Copy it to `/opt/luna/.env` on the server and replace the example values with the real database connection strings.
+
 Run the local stack:
 
 ```bash
