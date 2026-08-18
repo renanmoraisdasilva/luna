@@ -36,11 +36,12 @@ No complex commerce workflow is implemented yet. Phase 1 should be able to build
 1. [Testing](#15-testing)
 2. [Local Infrastructure](#16-local-infrastructure)
 3. [Technology Baseline](#17-technology-baseline)
+4. [CI/CD & Container Publishing](#18-cicd--container-publishing)
 
 ### Roadmap & Decisions
 
-1. [Intentionally Deferred](#18-intentionally-deferred)
-2. [Phase 0 Completion Criteria](#19-phase-0-completion-criteria)
+1. [Intentionally Deferred](#19-intentionally-deferred)
+2. [Phase 0 Completion Criteria](#20-phase-0-completion-criteria)
 3. [Confirmed Architectural Decisions](#confirmed-architectural-decisions)
 
 ---
@@ -652,7 +653,49 @@ The environment supports independent service configuration and database migratio
 
 ---
 
-## 18. Intentionally Deferred
+## 18. CI/CD & Container Publishing
+
+Phase 0 establishes the initial CI/CD foundation: code merged into `main` must be buildable, testable, and able to run as the full distributed system before container images are published.
+
+### Continuous Integration
+
+The `Luna CI` workflow runs on pull requests and pushes to `main`, and verifies:
+
+- .NET solution restore, Release build, unit tests, and integration tests
+- Frontend dependency install, lint, and production build
+- Docker Compose startup, frontend Swagger availability, and service health through the Next.js gateway
+
+Test projects stay separate from production projects and are organized by service/feature rather than one test project per service:
+
+```
+tests/
+├── Unit/
+│   └── Luna.UnitTests.csproj
+└── Integration/
+    └── Luna.IntegrationTests.csproj
+```
+
+### Container Publishing
+
+A separate `Luna Docker Publish` workflow publishes images only after `Luna CI` succeeds on `main`, checking out the exact commit CI tested rather than whatever is currently on `main`. Each service image (`luna-frontend`, `luna-identity`, `luna-catalog`, `luna-orders`, `luna-payments`, `luna-inventory`, `luna-shipping`) receives two tags: an immutable `<git-sha>` tag and a `latest` tag.
+
+### Registry
+
+Images are published to GitHub Container Registry as `ghcr.io/<repository-owner>/luna-<service>`. Images contain no runtime credentials or environment-specific secrets; runtime configuration remains the deployment environment's responsibility.
+
+### Phase 0 Scope
+
+The pipeline is intentionally simple: one CI workflow, one Docker publishing workflow, GitHub-hosted runners, GHCR, all images built from a successful `main` build, SHA/`latest` tags, and Docker Compose as the system-level smoke test.
+
+### Deferred CI/CD Improvements
+
+Deferred until they provide a concrete benefit: Docker layer caching, active health/readiness polling (replacing fixed Compose delays), building only changed services, multi-platform images, vulnerability scanning, image signing/attestation, automated deployment and rollback, environment-specific pipelines, release/version-based tags, infrastructure-as-code, and advanced CI parallelization.
+
+> **First verify the system, then publish the exact verified commit as container images. Add deployment and supply-chain complexity only when Luna's later phases require it.**
+
+---
+
+## 19. Intentionally Deferred
 
 Phase 0 deliberately does not solve distributed reliability or complex commerce workflows.
 
@@ -677,7 +720,7 @@ Deferred to later phases:
 
 ---
 
-## 19. Phase 0 Completion Criteria
+## 20. Phase 0 Completion Criteria
 
 Phase 0 is complete when:
 
