@@ -4,6 +4,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "rebuild:frontend": "docker compose -f ../../infrastructure/docker-compose.yml build frontend && docker compose -f ../../infrastructure/docker-compose.yml up -d --no-deps --force-recreate frontend",
+    "rebuild:identity": "docker compose -f ../../infrastructure/docker-compose.yml build identity && docker compose -f ../../infrastructure/docker-compose.yml up -d --no-deps --force-recreate identity",
+    "rebuild:catalog": "docker compose -f ../../infrastructure/docker-compose.yml build catalog && docker compose -f ../../infrastructure/docker-compose.yml up -d --no-deps --force-recreate catalog",
+    "rebuild:orders": "docker compose -f ../../infrastructure/docker-compose.yml build orders && docker compose -f ../../infrastructure/docker-compose.yml up -d --no-deps --force-recreate orders",
+    "rebuild:payments": "docker compose -f ../../infrastructure/docker-compose.yml build payments && docker compose -f ../../infrastructure/docker-compose.yml up -d --no-deps --force-recreate payments",
+    "rebuild:inventory": "docker compose -f ../../infrastructure/docker-compose.yml build inventory && docker compose -f ../../infrastructure/docker-compose.yml up -d --no-deps --force-recreate inventory",
+    "rebuild:shipping": "docker compose -f ../../infrastructure/docker-compose.yml build shipping && docker compose -f ../../infrastructure/docker-compose.yml up -d --no-deps --force-recreate shipping",
     "start": "next start",
     "lint": "eslint ."
   },

@@ -25,7 +25,14 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<LunaIdentityDbContext>();
     if (dbContext.Database.IsRelational())
     {
-        dbContext.Database.Migrate();
+        if (dbContext.Database.GetMigrations().Any())
+        {
+            dbContext.Database.Migrate();
+        }
+        else
+        {
+            dbContext.Database.EnsureCreated();
+        }
     }
 }
 app.UseSerilogRequestLogging();

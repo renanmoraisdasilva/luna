@@ -17,7 +17,7 @@ const nextConfig = {
 		}));
 		const serviceRewrites = serviceSpecs.map(([service, baseUrl]) => ({
 			source: `/api/services/${service}/:path*`,
-			destination: `${baseUrl}/:path*`,
+			destination: `${baseUrl}/api/v1/${service}/:path*`,
 		}));
 
 		return [...swaggerRewrites, ...serviceRewrites];

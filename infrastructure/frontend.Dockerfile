@@ -1,10 +1,12 @@
 FROM node:22-alpine AS dependencies
 WORKDIR /app
+RUN npm install -g npm@12.0.2
 COPY src/Frontend/package*.json ./
 RUN npm ci
 
 FROM node:22-alpine AS build
 WORKDIR /app
+RUN npm install -g npm@12.0.2
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY src/Frontend/ .
 ARG IDENTITY_API_INTERNAL_URL
@@ -23,6 +25,7 @@ RUN npm run build
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
+RUN npm install -g npm@12.0.2
 ENV NODE_ENV=production
 ENV PORT=3000
 COPY --from=build /app/.next/standalone ./
