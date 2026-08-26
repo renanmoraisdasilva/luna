@@ -159,8 +159,8 @@ The frontend is the only published application port in the default Docker Compos
 Next.js rewrites those paths to private Docker service URLs. For example:
 
 ```text
-Browser -> /api/services/catalog/api/v1/products
-Next.js -> http://catalog:8080/api/v1/products
+Browser -> /api/services/catalog/api/v1/catalog/products
+Next.js -> http://catalog:8080/api/v1/catalog/products
 ```
 
 The services remain HTTP APIs, but they are not publicly exposed by default. They can later be deliberately exposed through an API gateway or load balancer without changing their contracts.

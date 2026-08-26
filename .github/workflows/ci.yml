@@ -26,7 +26,20 @@ jobs:
         run: dotnet build Luna.sln --configuration Release --no-restore
 
       - name: Run unit tests
-        run: dotnet test tests/Unit/Luna.UnitTests.csproj --configuration Release --nologo
+        run: >-
+          dotnet test tests/Unit/Luna.UnitTests.csproj
+          --configuration Release
+          --nologo
+          --collect:"XPlat Code Coverage"
+          --settings tests/coverage.runsettings
+          --results-directory TestResults/Unit
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: TestResults/Unit/**/coverage.cobertura.xml
+          if-no-files-found: error
 
       - name: Run integration tests
         run: dotnet test tests/Integration/Luna.IntegrationTests.csproj --configuration Release --nologo

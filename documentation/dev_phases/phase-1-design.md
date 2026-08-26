@@ -38,6 +38,7 @@ Communication is synchronous HTTP. RabbitMQ, retries, dead-letter queues, transa
 
 ### Commerce Flow
 1. [Phase 1 Assumptions](#1-phase-1-assumptions)
+    - [Phase 1 Implementation Structure](#phase-1-implementation-structure)
 2. [Order Lifecycle](#2-order-lifecycle)
 3. [Checkout Workflow](#3-checkout-workflow)
 4. [Failure Behavior](#4-failure-behavior)
@@ -88,6 +89,176 @@ Communication is synchronous HTTP. RabbitMQ, retries, dead-letter queues, transa
 - Payments supports authorization only. Capture, void, and refunds are later capabilities.
 - Phase 1 uses synchronous HTTP between services.
 - RabbitMQ is introduced in Phase 2; messaging complements HTTP rather than replacing it.
+
+### Phase 1 Implementation Structure
+
+Phase 1 must build inside the service boundaries established in Phase 0. Each backend service keeps the following structure:
+
+```text
+Service/
+├── Controllers/
+├── Application/
+├── Domain/
+├── Infrastructure/
+└── Program.cs
+```
+
+This is a structural constraint, not a requirement to create a separate project for every folder or feature. Organize within these areas as the service grows, but do not introduce a second architectural style for individual services.
+
+#### Layer responsibilities
+
+**Controllers** contain HTTP concerns only:
+
+- Route and endpoint declarations
+- Request binding and basic transport validation
+- Authentication and authorization metadata
+- Mapping application results to HTTP status codes and response contracts
+
+Controllers delegate business operations to application commands, queries, or handlers. They do not contain EF queries, transaction management, inventory calculations, payment decisions, checkout orchestration, or domain state transitions.
+
+**Application** coordinates use cases. It receives commands or queries, calls domain behavior and infrastructure abstractions, coordinates transactions where required, and returns application results. Examples include creating or releasing an inventory reservation, authorizing a payment, calculating a shipping quote, and orchestrating checkout in Orders.
+
+**Domain** contains service-owned business concepts and rules. Entities, value objects, status transitions, and invariants belong here. Domain code must not depend on ASP.NET Core controllers, HTTP request types, or another service's database.
+
+**Infrastructure** contains persistence and external integration concerns. EF Core `DbContext`, entity configurations, migrations, seed data, HTTP clients, and service-specific adapters belong here. Infrastructure implements the interfaces required by the application layer; it does not become a place for unrelated business workflows.
+
+#### Read repository projection
+
+Phase 1 read repositories project database entities directly into application DTOs or read models. They do not materialize domain entities for the application handler to map afterward.
+
+The standard read flow is:
+
+```text
+Database
+   |
+   v
+EF Core projection
+   |
+   v
+Application DTO/read model
+   |
+   v
+Application handler
+   |
+   v
+Controller
+```
+
+For example, Catalog read repositories return `ProductResponse` and `CategoryResponse` directly:
+
+```text
+IProductReadRepository
+    |
+    v
+ProductReadRepository
+    |
+    v
+ProductResponse
+```
+
+```text
+ICategoryReadRepository
+    |
+    v
+CategoryReadRepository
+    |
+    v
+CategoryResponse
+```
+
+Repositories should express these projections as EF Core expressions so the database query selects only the fields required by the read model. Handlers remain responsible for application orchestration and return the repository result without repeating DTO construction or mapping logic.
+
+This convention keeps read-only application flows from exposing domain entities beyond the repository boundary, avoids unnecessary materialization of full entities and related objects, and gives all services one consistent read pattern. Read DTOs belong to the Application layer; the Infrastructure repository owns the EF Core query and its projection.
+
+Domain entities remain appropriate for write operations. A write use case may load domain state, execute business rules and state transitions, modify the entity, and persist the result.
+
+The Phase 1 rule is:
+
+> Reads project directly to application DTOs; writes use domain entities when domain behavior is required.
+
+#### Database schema lifecycle
+
+Each service evolves its production database through EF Core migrations stored under its Infrastructure database boundary:
+
+```text
+Infrastructure/
+└── Database/
+    ├── <Service>DbContext.cs
+    └── Migrations/
+        ├── <timestamp>_Initial<Service>.cs
+        ├── <timestamp>_<SchemaChange>.cs
+        └── <Service>DbContextModelSnapshot.cs
+```
+
+Service startup applies pending migrations with `MigrateAsync` before running separate baseline/application seed logic. `EnsureCreated` is not used for the application's real database. Migrations own schema evolution; seed code owns baseline data and may evolve independently from schema changes.
+
+#### Scope of the structure
+
+The structure applies to Catalog, Orders, Payments, Inventory, and Shipping. Fulfillment remains an application/domain module inside Orders in Phase 1 and does not receive a separate service or database.
+
+Phase 1 intentionally does not require dozens of abstractions, separate projects for each layer, or a shared cross-service domain library. The goal is a clear boundary that keeps business logic testable and makes later asynchronous processing, retries, idempotency, and recovery possible without rewriting controllers.
+
+The implementation rule is:
+
+> Do not introduce business logic, entities, EF configuration, seed data, or application workflows directly into controllers or root-level service files. Follow the `Controllers` / `Application` / `Domain` / `Infrastructure` structure for every service, and keep controllers thin.
+
+### Test Organization
+
+Tests follow the same service boundary as production code while remaining centralized under `tests/`:
+
+```text
+tests/
+├── Unit/
+│   ├── Catalog/
+│   ├── Orders/
+│   ├── Inventory/
+│   ├── Payments/
+│   ├── Shipping/
+│   └── Identity/
+├── Integration/
+│   ├── Catalog/
+│   ├── Orders/
+│   ├── Inventory/
+│   ├── Payments/
+│   ├── Shipping/
+│   └── Identity/
+└── Smoke/
+    └── PhaseZeroSmokeTests.cs
+```
+
+Unit tests are organized by service and named after the use case or handler they exercise, such as `GetProductsHandlerTests` and `GetCategoriesHandlerTests`. They test application behavior without requiring SQL Server or other external services.
+
+Integration tests are organized by service and exercise real service boundaries, persistence, or cross-service interactions as those capabilities are implemented. Smoke tests are separate from unit and integration tests and verify that the deployed or running system is basically alive.
+
+The test projects remain centralized by test type. Phase 1 does not create a separate test project for every service; service folders provide ownership and navigation without multiplying project overhead.
+
+### Coverage
+
+Luna collects line and branch coverage from automated tests at the test-project level. Coverlet produces Cobertura reports for the unit test project, and CI publishes those reports as build artifacts so coverage can be inspected over time. Generated EF Core migration source files are excluded through `tests/coverage.runsettings`; application infrastructure such as repositories, controllers, middleware, and database startup remains included.
+
+The same workflow is available locally through `scripts/test-coverage.sh`:
+
+```bash
+dotnet tool install -g dotnet-reportgenerator-globaltool
+./scripts/test-coverage.sh
+```
+
+The script runs the unit tests, collects Cobertura coverage, generates `coverage-report/index.html`, and opens the report. The global tool installation is needed once per development machine.
+
+Coverage is a quality signal and regression indicator, not a standalone quality target. Tests should prioritize meaningful business behavior and decision branches over achieving an arbitrary percentage. For example, Catalog repository coverage should exercise active-product filtering, search and category branches, ordering, DTO projection, image ordering, single-product lookup, and not-found behavior. Thin handlers should be tested for orchestration and parameter forwarding rather than inflated with assertions that duplicate repository behavior.
+
+Repository query behavior belongs in integration tests against real SQL Server or a SQL Server test container when the required fixture is available. EF Core translation, collation, relationships, ordering, and database behavior should not be approximated with mocks. Phase 1 does not enforce a minimum coverage threshold until the meaningful test surface and baseline coverage are established.
+
+The SQL Server integration-test fixture starts one disposable SQL Server container and applies the Catalog migrations once for the shared test database. Each test resets that database before arranging its data through a reliable reset tool such as Respawn:
+
+```text
+Shared fixture:
+Start container -> Apply migrations -> Reset data -> Run each test
+```
+
+**Shared integration-test databases are serialized.**
+
+Tests sharing a database fixture must disable parallelization for that collection because each test resets the shared database before execution. This prevents one test from resetting database state while another test is running.
 
 ---
 
@@ -560,9 +731,9 @@ The detailed field-level contract is maintained in each service's OpenAPI docume
 ## Catalog
 
 ```text
-GET /api/v1/products
-GET /api/v1/products/{id}
-GET /api/v1/categories
+GET /api/v1/catalog/products
+GET /api/v1/catalog/products/{id}
+GET /api/v1/catalog/categories
 ```
 
 Responsibilities:
@@ -573,6 +744,23 @@ Responsibilities:
 - Return current product prices
 - Return product images
 - Validate product existence, active status, and current price for checkout
+
+Catalog is exposed under the `/api/v1/catalog` service boundary. Resource-specific routes are defined by the controller actions so future Catalog resources can be added without changing the service prefix.
+
+### API errors
+
+All services return the same error shape:
+
+```json
+{
+    "code": "PRODUCT_NOT_FOUND",
+    "message": "The product could not be found."
+}
+```
+
+`ApiError` is defined locally in each service with this same shape. Phase 1 does not introduce a shared C# contracts or common library solely for errors. Each service owns its error definitions and stable error codes, such as Catalog's `PRODUCT_NOT_FOUND` and `CATEGORY_NOT_FOUND`.
+
+The error code is the stable client-facing identifier. The message is human-readable and may change without changing the meaning of the error.
 
 ## Orders
 
@@ -1213,6 +1401,14 @@ Phase 1 is complete when:
 - [ ] No service accesses another service's database.
 - [ ] Cross-service references use IDs.
 - [ ] Controllers contain HTTP concerns only.
+- [ ] Each backend service follows the `Controllers` / `Application` / `Domain` / `Infrastructure` structure.
+- [ ] Business workflows, domain rules, persistence, and seed data are kept out of controllers and root-level service files.
+- [ ] Application database schemas are created and evolved through EF Core migrations.
+- [ ] Service startup applies pending migrations before running separate seed logic.
+- [ ] `EnsureCreated` is not used for the application's real database.
+- [ ] Tests are organized by test type and service under the centralized `tests/` structure.
+- [ ] Unit tests are named after the handler or use case they exercise.
+- [ ] Smoke tests are separate from unit and integration tests.
 - [ ] Backend services remain private behind the Next.js gateway.
 
 ### Authentication
@@ -1271,3 +1467,12 @@ Phase 1 is complete when:
 33. **Frontend routes and search/filter state are URL-addressable where appropriate.**
 34. **Frontend state is not authoritative for business data.**
 35. **Phase 1 deliberately does not solve retries, idempotency, outbox, messaging, compensation, or distributed recovery.**
+36. **Every backend service follows the `Controllers` / `Application` / `Domain` / `Infrastructure` structure; controllers remain thin and delegate business operations to the application layer.**
+37. **Phase 1 favors clear layer boundaries without requiring separate projects or excessive abstractions.**
+38. **Tests are organized centrally by test type and service boundary; Phase 1 does not create a test project for every service.**
+39. **Unit tests are named for their handler or use case, integration tests cover service boundaries, and smoke tests verify basic system health separately.**
+40. **Each service uses EF Core migrations for application database schema evolution; startup applies pending migrations before separate seed logic runs.**
+41. **`EnsureCreated` is not used for an application's real database.**
+42. **Read repositories project directly to Application DTOs/read models; write operations use Domain entities when domain behavior is required.**
+43. **Luna collects line and branch coverage in CI with Coverlet; coverage guides regression detection and test priorities but does not have an arbitrary minimum threshold in Phase 1.**
+44. **Phase 1 integration fixtures favor isolated databases and straightforward setup; shared databases with reliable reset are a later optimization if test-suite growth makes setup cost significant.**

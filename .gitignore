@@ -8,3 +8,5 @@ out/
 !.env.example
 .vs/
 *.user
+TestResults/
+coverage-report/

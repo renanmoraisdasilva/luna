@@ -328,11 +328,56 @@ Use real databases and RabbitMQ through Testcontainers. Cover duplicate events, 
 
 ### Phase 14: Production-like Local Infrastructure
 
-**Goal:** Run the complete platform through Docker with a reverse proxy, API gateway, service instances, databases, RabbitMQ, observability, CI/CD, migrations, backups, and production-like configuration.
+**Goal:** Run Luna in a production-like local environment and learn how infrastructure is provisioned and configured.
+
+This phase includes Docker and Docker Compose, a reverse proxy or gateway, multiple service instances, databases, RabbitMQ, observability, CI/CD, backups, production-like configuration, and self-hosted infrastructure automation with Terraform and Ansible.
+
+The learning progression is:
+
+```text
+Terraform
+        ↓ Provision infrastructure
+Ansible
+        ↓ Configure Linux hosts
+Docker
+        ↓
+Docker Compose
+        ↓
+Luna
+```
 
 ### Phase 15: AWS
 
-**Goal:** Explore AWS equivalents such as SQS, Lambda, S3, CloudWatch, ECS, RDS, and API Gateway using the local architecture as a reference.
+**Goal:** Explore how the production-like local architecture maps to AWS and learn infrastructure-as-code and managed container deployment.
+
+Terraform provisions and configures the AWS infrastructure:
+
+```text
+Terraform
+        ↓ AWS infrastructure
+        ├── VPC
+        ├── Networking
+        ├── IAM
+        ├── ECS/Fargate
+        ├── RDS
+        ├── S3
+        ├── SQS
+        ├── API Gateway
+        └── CloudWatch
+```
+
+The local-to-cloud translation is:
+
+| Local | AWS |
+| --- | --- |
+| Docker Compose | ECS/Fargate |
+| SQL Server container | RDS |
+| RabbitMQ | SQS |
+| S3-like storage | S3 |
+| Reverse proxy | ALB/API Gateway |
+| Local configuration and secrets | Secrets Manager |
+| Logs | CloudWatch |
+| Terraform | Terraform |
 
 The point is to understand how cloud infrastructure provides capabilities the local system already demonstrates.
 
@@ -703,11 +748,11 @@ Expand unit, integration, contract, end-to-end, and failure testing.
 
 Phase 14 — Production-like Local Infrastructure
 
-Run the complete platform as a production-like local environment.
+Run the complete platform as a production-like local environment and learn self-hosted infrastructure automation with Terraform, Ansible, Docker, and Docker Compose.
 
 Phase 15 — AWS
 
-Explore cloud equivalents and deployment strategies.
+Translate the local architecture to AWS with Terraform, VPC networking, IAM, ECS/Fargate, RDS, S3, SQS, API Gateway, and CloudWatch.
 
 Phase 16 — Production Scenarios & Edge Cases
 
