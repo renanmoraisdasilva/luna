@@ -1,3 +1,4 @@
+using Luna.Contracts.Correlation;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Context;
@@ -23,8 +24,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.Use(async (context, next) =>
 {
-    var correlationId = context.Request.Headers["X-Correlation-ID"].FirstOrDefault() ?? Guid.NewGuid().ToString("D");
-    context.Response.Headers["X-Correlation-ID"] = correlationId;
+    var correlationId = context.Request.Headers[CorrelationHeaders.CorrelationId].FirstOrDefault() ?? Guid.NewGuid().ToString("D");
+    context.Response.Headers[CorrelationHeaders.CorrelationId] = correlationId;
     using (LogContext.PushProperty("CorrelationId", correlationId))
     {
         try { await next(); }

@@ -1,3 +1,4 @@
+using Luna.Contracts.Correlation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
@@ -20,19 +21,12 @@ builder.Services.AddAuthorization();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
+await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<LunaIdentityDbContext>();
     if (dbContext.Database.IsRelational())
     {
-        if (dbContext.Database.GetMigrations().Any())
-        {
-            dbContext.Database.Migrate();
-        }
-        else
-        {
-            dbContext.Database.EnsureCreated();
-        }
+        await dbContext.Database.MigrateAsync();
     }
 }
 app.UseSerilogRequestLogging();
@@ -42,8 +36,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.Use(async (context, next) =>
 {
-    var correlationId = context.Request.Headers["X-Correlation-ID"].FirstOrDefault() ?? Guid.NewGuid().ToString("D");
-    context.Response.Headers["X-Correlation-ID"] = correlationId;
+    var correlationId = context.Request.Headers[CorrelationHeaders.CorrelationId].FirstOrDefault() ?? Guid.NewGuid().ToString("D");
+    context.Response.Headers[CorrelationHeaders.CorrelationId] = correlationId;
     using (LogContext.PushProperty("CorrelationId", correlationId))
     {
         try
