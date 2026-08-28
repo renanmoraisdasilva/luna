@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Luna.Catalog.Application</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Catalog.Domain\Catalog.Domain.csproj" />
+    <ProjectReference Include="..\Catalog.Contracts\Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Contracts\Luna.Contracts\Luna.Contracts.csproj" />
+  </ItemGroup>
+</Project>

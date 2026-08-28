@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Luna.Catalog.Application.Products;
+using Luna.Catalog.Contracts.Products;
 using Luna.Contracts.Pagination;
 using Xunit;
 

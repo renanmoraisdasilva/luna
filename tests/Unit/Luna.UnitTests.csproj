@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Services/Catalog/Catalog.csproj" />
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" />
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Contracts/Catalog.Contracts.csproj" />
     <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
   </ItemGroup>
 

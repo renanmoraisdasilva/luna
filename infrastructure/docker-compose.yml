@@ -36,8 +36,8 @@ services:
     build:
       context: ..
       dockerfile: infrastructure/service.Dockerfile
-      args: { PROJECT: src/Services/Catalog/Catalog.csproj }
-    command: ["Catalog.dll"]
+      args: { PROJECT: src/Services/Catalog/Catalog.Api/Catalog.Api.csproj }
+    command: ["Catalog.Api.dll"]
     environment: { ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True" }
     depends_on: [sqlserver]
 

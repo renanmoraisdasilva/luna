@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Luna.Catalog.Domain;
+using Luna.Catalog.Contracts.Categories;
 using Luna.Contracts.Pagination;
 using Luna.Catalog.Infrastructure.Repositories;
 using Xunit;

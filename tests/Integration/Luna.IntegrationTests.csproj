@@ -8,10 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Services/Catalog/Catalog.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" />
+    <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
