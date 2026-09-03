@@ -84,14 +84,11 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Start compose stack
-        run: docker compose -f infrastructure/docker-compose.yml up -d --build
-
-      - name: Wait for services
-        run: sleep 20
+        run: docker compose -f infrastructure/docker-compose.yml up -d --build --wait --wait-timeout 120
 
       - name: Check frontend and health endpoints
         run: |
-          curl -fsS http://localhost:3000/swagger
+          curl -fsS http://localhost:3000/swagger > /dev/null
           for svc in identity catalog orders payments inventory shipping; do
             curl -fsS "http://localhost:3000/api/services/$svc/health"
           done

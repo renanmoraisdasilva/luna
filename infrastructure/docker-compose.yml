@@ -38,6 +38,12 @@ services:
     ports: ["3000:3000"]
     environment:
       CATALOG_API_INTERNAL_URL: http://catalog:8080
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/swagger').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 10s
 
   identity:
     build:
