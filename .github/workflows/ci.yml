@@ -88,9 +88,9 @@ jobs:
 
       - name: Check frontend and health endpoints
         run: |
-          curl -fsS http://localhost:3000/swagger > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 --retry-all-errors http://localhost:3000/api/health
           for svc in identity catalog orders payments inventory shipping; do
-            curl -fsS "http://localhost:3000/api/services/$svc/health"
+            curl --fail --silent --show-error --retry 5 --retry-delay 2 --retry-all-errors "http://localhost:3000/api/services/$svc/health"
           done
 
       - name: Tear down compose stack

@@ -44,7 +44,7 @@ services:
     networks:
       - luna
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/swagger').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 3s
       retries: 12
