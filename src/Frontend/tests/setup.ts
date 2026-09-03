@@ -7,6 +7,11 @@ vi.mock('next/link', () => ({
     React.createElement('a', { ...props, href }, children),
 }));
 
+vi.mock('next/image', () => ({
+  default: ({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & { src: string }) =>
+    React.createElement('img', { ...props, src, alt }),
+}));
+
 vi.mock('next/navigation', () => ({
   usePathname: () => '/shop',
   useRouter: () => ({ push: vi.fn() }),

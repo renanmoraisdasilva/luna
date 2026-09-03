@@ -3,16 +3,15 @@ import { vi } from 'vitest';
 import type { CatalogCategory, CatalogProduct, PaginatedResponse } from '../../../types/catalog';
 
 const mocks = vi.hoisted(() => ({
-  useProductsQuery: vi.fn(),
-  useCategoriesQuery: vi.fn(),
+  getProducts: vi.fn(),
+  getCategories: vi.fn(),
   push: vi.fn(),
   query: '',
 }));
 
-vi.mock('../../../lib/queries/catalog', () => ({
-  CATALOG_PAGE_SIZE: 12,
-  useProductsQuery: mocks.useProductsQuery,
-  useCategoriesQuery: mocks.useCategoriesQuery,
+vi.mock('../../../lib/api/catalog', () => ({
+  getProducts: mocks.getProducts,
+  getCategories: mocks.getCategories,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -41,70 +40,55 @@ function response(items: CatalogProduct[] = [product], totalCount = items.length
   return { items, page: 1, pageSize: 12, totalCount };
 }
 
-function renderShop() {
-  mocks.useCategoriesQuery.mockReturnValue({ data: { items: categories } });
-  mocks.useProductsQuery.mockReturnValue({ isPending: false, isError: false, data: response(), refetch: vi.fn() });
-  render(<ShopPage />);
+async function renderShop(
+  searchParams: Record<string, string> = {},
+  products = response(),
+) {
+  mocks.getProducts.mockResolvedValue(products);
+  mocks.getCategories.mockResolvedValue({ items: categories, page: 1, pageSize: 100, totalCount: categories.length });
+  const page = await ShopPage({ searchParams: Promise.resolve(searchParams) });
+
+  return render(page);
 }
 
 describe('ShopPage', () => {
   beforeEach(() => {
+    mocks.getProducts.mockReset();
+    mocks.getCategories.mockReset();
     mocks.push.mockReset();
     mocks.query = '';
   });
 
-  it('renders products returned by the Catalog query', () => {
-    renderShop();
+  it('renders products returned by the Catalog API', async () => {
+    await renderShop();
 
     expect(screen.getByRole('heading', { name: 'Shop' })).toBeInTheDocument();
     expect(screen.getByText('Wireless Mechanical Keyboard')).toBeInTheDocument();
     expect(screen.getByText('$129.00')).toBeInTheDocument();
+    expect(mocks.getProducts).toHaveBeenCalledWith({ search: '', category: '', page: 1, pageSize: 12 });
   });
 
-  it('renders loading, error, and empty states', () => {
-    mocks.useCategoriesQuery.mockReturnValue({ data: { items: [] } });
-
-    mocks.useProductsQuery.mockReturnValue({ isPending: true, isError: false, data: undefined });
-    const { unmount } = render(<ShopPage />);
-    expect(screen.getByRole('region', { name: 'Loading products' })).toBeInTheDocument();
-    unmount();
-
-    const refetch = vi.fn();
-    mocks.useProductsQuery.mockReturnValue({ isPending: false, isError: true, data: undefined, refetch });
-    render(<ShopPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
-    expect(refetch).toHaveBeenCalledOnce();
-  });
-
-  it('renders an empty result without treating it as an error', () => {
-    mocks.useCategoriesQuery.mockReturnValue({ data: { items: [] } });
-    mocks.useProductsQuery.mockReturnValue({ isPending: false, isError: false, data: response([], 0), refetch: vi.fn() });
-
-    render(<ShopPage />);
+  it('renders an empty result without pagination', async () => {
+    await renderShop({}, response([], 0));
 
     expect(screen.getByText('No products found.')).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Pagination' })).not.toBeInTheDocument();
   });
 
-  it('updates search and category in the URL while resetting the page', () => {
-    renderShop();
+  it('updates search through client-side navigation', async () => {
+    await renderShop();
 
-    fireEvent.change(screen.getByPlaceholderText('Search products...'), { target: { value: 'keyboard' } });
-    fireEvent.submit(screen.getByPlaceholderText('Search products...'));
+    const searchInput = screen.getByPlaceholderText('Search products...');
+    fireEvent.change(searchInput, { target: { value: 'keyboard' } });
+    fireEvent.submit(searchInput);
+
     expect(mocks.push).toHaveBeenLastCalledWith('/shop?search=keyboard&page=1');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Electronics' }));
-    expect(mocks.push).toHaveBeenLastCalledWith('/shop?category=electronics&page=1');
   });
 
-  it('preserves active filters when changing page', () => {
+  it('preserves active filters in pagination links', async () => {
     mocks.query = 'search=keyboard&category=electronics&page=1';
-    mocks.useCategoriesQuery.mockReturnValue({ data: { items: categories } });
-    mocks.useProductsQuery.mockReturnValue({ isPending: false, isError: false, data: response([product], 24), refetch: vi.fn() });
+    await renderShop({ search: 'keyboard', category: 'electronics', page: '1' }, { ...response([product], 24), page: 1 });
 
-    render(<ShopPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-    expect(mocks.push).toHaveBeenCalledWith('/shop?search=keyboard&category=electronics&page=2');
+    expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute('href', '/shop?search=keyboard&category=electronics&page=2');
   });
 });

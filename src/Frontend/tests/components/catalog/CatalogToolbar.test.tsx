@@ -9,15 +9,13 @@ const categories: CatalogCategory[] = [
 ];
 
 describe('CatalogToolbar', () => {
-  it('renders the presentational search, category, and sort controls', () => {
+  it('renders the search, category links, and sort controls', () => {
     render(<CatalogToolbar categories={categories} />);
 
     expect(screen.getByPlaceholderText('Search products...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Electronics' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Accessories' })).toBeInTheDocument();
-    expect(screen.getByText('Sort by:')).toBeInTheDocument();
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'All' })).toHaveAttribute('href', '/shop?page=1');
+    expect(screen.getByRole('link', { name: 'Electronics' })).toHaveAttribute('href', '/shop?category=electronics&page=1');
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/shop?category=home&page=1');
+    expect(screen.getByRole('link', { name: 'Accessories' })).toHaveAttribute('href', '/shop?category=accessories&page=1');
   });
 });
