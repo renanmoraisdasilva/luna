@@ -82,14 +82,46 @@ public static class CatalogSeed
             "https://images.unsplash.com/photo-1504851149312-7a075b496cc7?auto=format&fit=crop&w=1200&q=85",
             "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85",
             "https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1593642532973-d31b6557fa68?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1504274066651-8d31a536b11a?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1516594915697-87eb3d9c14ea?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1200&q=85",
         };
-        db.ProductImages.AddRange(products.Select((product, index) => new ProductImage
+        db.ProductImages.AddRange(products.SelectMany((product, index) => new[]
         {
-            Id = Guid.Parse($"{index + 1:00000000}-0000-0000-0000-000000000001"),
-            ProductId = product.Id,
-            ImageUrl = imageUrls[index],
-            AltText = product.Name,
-            DisplayOrder = 0,
+            new ProductImage
+            {
+                Id = Guid.Parse($"{index * 2 + 1:00000000}-0000-0000-0000-000000000001"),
+                ProductId = product.Id,
+                ImageUrl = imageUrls[index * 2],
+                AltText = product.Name,
+                DisplayOrder = 0,
+            },
+            new ProductImage
+            {
+                Id = Guid.Parse($"{index * 2 + 2:00000000}-0000-0000-0000-000000000001"),
+                ProductId = product.Id,
+                ImageUrl = imageUrls[index * 2 + 1],
+                AltText = $"{product.Name} alternate view",
+                DisplayOrder = 1,
+            },
         }));
 
         await db.SaveChangesAsync(cancellationToken);
