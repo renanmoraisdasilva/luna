@@ -185,6 +185,24 @@ Start the Phase 0 environment from the repository root:
 docker compose -f infrastructure/docker-compose.yml up --build
 ```
 
+For local frontend development without rebuilding the frontend container on every change, start the backend services with the development Compose override:
+
+```bash
+docker compose \
+-f infrastructure/docker-compose.yml \
+-f infrastructure/docker-compose.dev.yml \
+up --build \
+sqlserver identity catalog orders payments inventory shipping
+```
+
+Then run the frontend from `src/Frontend`:
+
+```bash
+npm run dev
+```
+
+The development override publishes the backend services on ports `5001` through `5006`, matching the frontend's local `.env` rewrite destinations. Use `--force-recreate` if the services were previously started with the default Compose file. Restart `npm run dev` after changing `.env` because Next.js reads the rewrite destinations at startup.
+
 The storefront is available at:
 
 ```text

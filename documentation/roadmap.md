@@ -16,6 +16,7 @@
   - [Shipping](#shipping)
 - [Technology](#technology)
 - [Development Philosophy](#development-philosophy)
+- [Clean Architecture and DDD](#clean-architecture-and-ddd)
 - [Phase 0 Design](phase-0-design.md)
 - [Phase 1 Design](phase-1-design.md)
 - [Implementation Roadmap](#implementation-roadmap)
@@ -238,17 +239,40 @@ Simple synchronous workflow
 
 Each stage should build on the previous one without requiring large-scale rewrites. Testing begins in Phase 1 and expands as the system's risk and blast radius grow.
 
+## Clean Architecture and DDD
+
+Apply Clean Architecture and Domain-Driven Design as a dedicated learning and implementation topic across Luna's services.
+
+The focus is to:
+
+- Keep presentation, application, domain, and infrastructure responsibilities clear, with dependencies directed toward the business core.
+- Model each bounded context using its own ubiquitous language and domain concepts instead of sharing one universal model across services.
+- Gradually turn data-oriented classes into meaningful domain models: entities, value objects, aggregates, aggregate roots, domain services, and domain events.
+- Treat aggregate roots as the entry point for enforcing business invariants; for example, `Product` owns and protects its `ProductImage` collection.
+- Continue the existing CQRS-style separation between read and write paths, using projections for read-heavy endpoints where that tradeoff is intentional.
+- Document architectural decisions and deliberate deviations, such as Infrastructure projecting directly to service contract DTOs to avoid unnecessary entity materialization and in-memory mapping.
+
+**Outcome:** Luna's code and service boundaries should communicate the business clearly, protect domain rules, and make architectural tradeoffs explicit.
+
 ## Implementation Roadmap
 
 ### Phase 0: Architecture and Foundation
 
-**Goal:** Establish service boundaries, projects, databases, Docker, configuration, health endpoints, logging, correlation IDs, API conventions, migrations, and testing conventions.
+**Goal:** Establish service boundaries, projects, databases, Docker, configuration, health endpoints, logging, correlation IDs, API conventions, migrations, testing conventions, and the Clean Architecture/DDD foundations described above.
 
 **Milestone:** All services run independently and communicate through defined APIs and events.
 
 ### Phase 1: Basic Commerce Flow
 
 **Goal:** Build the customer storefront and complete the happy-path lifecycle: catalog, cart, checkout, order, payment, inventory, fulfillment, shipping, and delivery.
+
+Frontend rendering and data-fetching boundaries:
+
+- Catalog and product content -> Next.js Server Components.
+- Cart -> Client Components + TanStack Query.
+- Checkout interactions -> Client Components + TanStack Query.
+- Shipping quotes -> Client Components + TanStack Query.
+- Interactive inventory availability -> Client Components + TanStack Query.
 
 **Milestone:** A customer can place an order and eventually see it delivered.
 

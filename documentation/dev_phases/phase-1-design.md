@@ -875,6 +875,20 @@ Next.js:
 
 A full BFF is not introduced in Phase 1.
 
+### Rendering and data-fetching strategy
+
+Phase 1 uses the rendering model that best fits each part of the customer experience:
+
+| Feature | Default approach | Reason |
+|---|---|---|
+| Catalog and product content | Next.js Server Components | Read-heavy content benefits from server rendering and shareable URL state. |
+| Cart | Client Components + TanStack Query | Cart updates are interactive and require mutation/loading state. |
+| Checkout interactions | Client Components + TanStack Query | Form submission and checkout progress are interactive server-state workflows. |
+| Shipping quotes | Client Components + TanStack Query | Quotes are requested as the customer changes checkout choices. |
+| Interactive inventory availability | Client Components + TanStack Query | Availability can change and should be refetched as server state. |
+
+This is a rendering and data-ownership guideline, not a requirement that every route use only one model. URL parameters remain the source of truth for shareable catalog filters, while the backend remains authoritative for cart, checkout, shipping, and inventory data.
+
 ---
 
 # 10. Frontend Routes
@@ -1424,6 +1438,8 @@ Phase 1 is complete when:
 - [ ] Routes for shop, product details, cart, checkout, orders, account, and login exist.
 - [ ] API access uses centralized typed clients.
 - [ ] TanStack Query manages server state.
+- [ ] Catalog and product content use Server Components where practical.
+- [ ] Cart, checkout, shipping quotes, and interactive inventory availability use Client Components with TanStack Query.
 - [ ] Loading and mutation states are handled.
 - [ ] Backend errors are translated into customer-friendly messages.
 - [ ] Checkout cannot be double-submitted through the UI.
