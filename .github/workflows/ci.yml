@@ -93,6 +93,12 @@ jobs:
             curl --fail --silent --show-error --retry 5 --retry-delay 2 --retry-all-errors "http://localhost:3000/api/services/$svc/health"
           done
 
+      - name: Show compose diagnostics
+        if: failure()
+        run: |
+          docker compose -f infrastructure/docker-compose.yml ps
+          docker compose -f infrastructure/docker-compose.yml logs --tail=200 frontend
+
       - name: Tear down compose stack
         if: always()
         run: docker compose -f infrastructure/docker-compose.yml down -v
