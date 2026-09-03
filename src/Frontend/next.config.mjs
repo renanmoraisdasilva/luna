@@ -10,6 +10,9 @@ const serviceSpecs = [
 
 const nextConfig = {
 	output: 'standalone',
+	images: {
+		remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }],
+	},
 	async rewrites() {
 		const swaggerRewrites = serviceSpecs.map(([service, baseUrl]) => ({
 			source: `/api/swagger/${service}`,
