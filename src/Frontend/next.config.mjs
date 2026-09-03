@@ -18,12 +18,16 @@ const nextConfig = {
 			source: `/api/swagger/${service}`,
 			destination: `${baseUrl}/swagger/v1/swagger.json`,
 		}));
+		const serviceHealthRewrites = serviceSpecs.map(([service, baseUrl]) => ({
+			source: `/api/services/${service}/health`,
+			destination: `${baseUrl}/health`,
+		}));
 		const serviceRewrites = serviceSpecs.map(([service, baseUrl]) => ({
 			source: `/api/services/${service}/:path*`,
 			destination: `${baseUrl}/api/v1/${service}/:path*`,
 		}));
 
-		return [...swaggerRewrites, ...serviceRewrites];
+		return [...swaggerRewrites, ...serviceHealthRewrites, ...serviceRewrites];
 	},
 };
 export default nextConfig;
