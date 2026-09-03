@@ -36,6 +36,19 @@ export async function getProducts(
   return response.data;
 }
 
+export async function getProduct(id: string): Promise<CatalogProduct | null> {
+  try {
+    const response = await catalogApi.get<CatalogProduct>(`/products/${id}`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
 export async function getCategories(): Promise<PaginatedResponse<CatalogCategory>> {
   const response = await catalogApi.get<PaginatedResponse<CatalogCategory>>('/categories', {
     params: { Page: 1, PageSize: 100 },

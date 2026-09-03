@@ -7,8 +7,12 @@ import Icon from './Icon';
 const navigationLinks = [
   { label: 'Shop', href: '/shop' },
   { label: 'Orders', href: '/orders' },
-  { label: 'Account', href: '/account' },
   { label: 'Swagger', href: '/swagger' },
+];
+
+const utilityLinks = [
+  { label: 'Login', icon: 'account' as const, href: '/login' },
+  { label: 'Cart', icon: 'cart' as const, href: '/cart' },
 ];
 
 export default function Header() {
@@ -33,10 +37,12 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center">
-          <Link className="relative flex cursor-pointer items-center justify-center rounded-button p-xs text-primary transition-colors duration-200 hover:bg-surface-container-low" href="/cart" aria-label="Cart">
-            <Icon name="cart" />
-          </Link>
+        <div className="flex items-center gap-sm">
+          {utilityLinks.map((link) => {
+            return <Link className={'relative flex items-center justify-center rounded-button p-xs text-primary transition-colors hover:bg-surface-container-low'} href={link.href} aria-label={link.label} key={link.label}>
+              <Icon name={link.icon} />
+            </Link>;
+          })}
         </div>
       </div>
     </header>

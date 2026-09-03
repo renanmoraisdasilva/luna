@@ -21,6 +21,7 @@ const config: Config = {
         'on-background': '#1b1b1d',
         'on-surface': '#1b1b1d',
         'on-surface-variant': '#44474c',
+        'status-success': '#10b981',
         'border-standard': '#e2e8f0',
         'border-subtle': '#f1f5f9',
         'outline': '#75777d',
