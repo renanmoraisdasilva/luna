@@ -6,7 +6,7 @@ import type {
 } from '../../types/catalog';
 
 const catalogBaseUrl = typeof window === 'undefined'
-  ? `${process.env.CATALOG_API_INTERNAL_URL ?? 'http://localhost:5002'}/api/v1/catalog`
+  ? `${process.env.CATALOG_API_INTERNAL_URL}/api/v1/catalog`
   : '/api/services/catalog';
 
 export const catalogApi = axios.create({
