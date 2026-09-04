@@ -20,6 +20,7 @@
 - [15. Failure Model](#15-failure-model)
 - [16. Explicitly Out of Scope](#16-explicitly-out-of-scope)
 - [17. Acceptance Criteria](#17-acceptance-criteria)
+- [23. Implementation Checklist](#23-implementation-checklist)
 
 ## Purpose
 
@@ -899,3 +900,96 @@ The phase is also complete when:
 * [ ] Phase 2 can introduce asynchronous messaging without redesigning the basic commerce model
 
 ---
+
+# 23. Implementation Checklist
+
+## Catalog
+
+- [x] SPEC-CAT-001 - Browse products
+- [x] SPEC-CAT-002 - Search products
+- [x] SPEC-CAT-003 - Filter by category
+- [x] SPEC-CAT-004 - Product details
+
+## Cart
+
+- [ ] SPEC-CART-001 - Add item
+- [ ] SPEC-CART-002 - Change quantity
+- [ ] SPEC-CART-003 - Remove item
+- [ ] SPEC-CART-004 - Current pricing
+- [ ] SPEC-CART-005 - Inventory is not reserved
+
+## Authentication
+
+- [ ] SPEC-AUTH-001 - Customer authentication
+- [ ] SPEC-AUTH-002 - Roles
+- [ ] SPEC-AUTH-003 - Session boundary
+
+## Checkout
+
+- [ ] SPEC-CHK-001 - Checkout requires authentication
+- [ ] SPEC-CHK-002 - Validate products
+- [ ] SPEC-CHK-003 - Calculate shipping
+- [ ] SPEC-CHK-004 - Create pending order
+- [ ] SPEC-CHK-005 - Reserve inventory
+- [ ] SPEC-CHK-006 - Authorize payment
+- [ ] SPEC-CHK-007 - Confirm order
+
+## Order lifecycle
+
+- [ ] SPEC-ORD-001 - Valid transitions
+- [ ] SPEC-ORD-002 - Payment failure
+- [ ] SPEC-ORD-003 - Shipment failure
+- [ ] SPEC-ORD-004 - Customer cancellation
+
+## Inventory
+
+- [ ] SPEC-INV-001 - Available quantity
+- [ ] SPEC-INV-002 - Successful reservation
+- [ ] SPEC-INV-003 - Insufficient inventory
+- [ ] SPEC-INV-004 - Concurrent reservation
+- [ ] SPEC-INV-005 - Release reservation
+
+## Pricing
+
+- [ ] SPEC-PRICE-001 - Catalog owns current price
+- [ ] SPEC-PRICE-002 - Cart does not snapshot price
+- [ ] SPEC-PRICE-003 - Order snapshots price
+
+## Shipping
+
+- [ ] SPEC-SHIP-001 - Shipping methods
+- [ ] SPEC-SHIP-002 - Quote ownership
+- [ ] SPEC-SHIP-003 - Shipping snapshot
+- [ ] SPEC-SHIP-004 - Shipment
+
+## Payments
+
+- [ ] SPEC-PAY-001 - Authorization only
+- [ ] SPEC-PAY-002 - Deterministic provider
+- [ ] SPEC-PAY-003 - Payment success
+- [ ] SPEC-PAY-004 - Payment failure
+
+## Fulfillment
+
+- [ ] SPEC-FUL-001 - Fulfillment remains inside Orders
+- [ ] SPEC-FUL-002 - Prepare order
+
+## Frontend
+
+- [ ] SPEC-FE-001 - Customer routes
+- [ ] SPEC-FE-002 - Public catalog behavior
+- [ ] SPEC-FE-003 - Interactive behavior
+- [ ] SPEC-FE-004 - Error behavior
+
+## Database
+
+- [ ] SPEC-DB-001 - Migrations
+- [ ] SPEC-DB-002 - Migration startup
+- [ ] SPEC-DB-003 - Cross-service relationships
+
+## Testing
+
+- [ ] SPEC-TEST-001 - Business behavior
+- [ ] SPEC-TEST-002 - Catalog reads
+- [ ] SPEC-TEST-003 - Cross-service behavior
+- [ ] SPEC-TEST-004 - Coverage

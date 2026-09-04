@@ -16,6 +16,7 @@
 - [12. Testing Architecture](#12-testing-architecture)
 - [13. Architectural Decisions](#13-architectural-decisions)
 - [14. Deferred Architecture](#14-deferred-architecture)
+- [15. Architecture Implementation Checklist](#15-architecture-implementation-checklist)
 
 # 1. Architectural Goals
 
@@ -250,6 +251,32 @@ Shipping: ShippingMethod, ShippingQuote, Shipment, TrackingEvent
 
 Fulfillment remains a module inside Orders during Phase 1.
 
+## Domain-Driven Design Boundaries
+
+Aggregate roots protect invariants within each bounded context. An aggregate is changed through its root; child entities should not be modified independently.
+
+```text
+Catalog:   Product -> ProductImage
+Orders:    Cart -> CartItem
+           Order -> OrderItem, ShippingAddress
+Inventory: Stock -> InventoryReservation
+Payments:  Payment -> PaymentAttempt
+Shipping:  Shipment -> TrackingEvent
+```
+
+Important ownership rules include:
+
+* `Product` owns its images, including image ordering and lifecycle.
+* `Cart` owns item quantities and add/remove behavior.
+* `Order` owns item price snapshots, address snapshots, and valid status transitions.
+* `Stock` owns availability and reservation invariants, including concurrency-safe reserve and release behavior.
+* `Payment` owns authorization state and payment-attempt history.
+* `Shipment` owns its tracking lifecycle.
+
+The most useful value objects are `Money`, `Sku`, `CategorySlug`, `Quantity`, and `ShippingAddress`. They should be introduced when related write behavior requires stronger validation; they are not required for every read model.
+
+Domain services are reserved for behavior that does not naturally belong to one aggregate, such as shipping-rate calculation. Checkout coordination is an Orders application responsibility, not a domain service, because it coordinates Catalog, Shipping, Inventory, Payments, and Fulfillment. HTTP clients, provider adapters, EF Core repositories, and read projections remain outside the domain layer.
+
 # 7. Read and Write Architecture
 
 ## Read and Write Behavior
@@ -428,3 +455,42 @@ The repository also separates unit, integration, and smoke tests under the centr
 # 14. Deferred Architecture
 
 Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, idempotency, compensation, distributed tracing, advanced metrics, operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
+
+# 15. Architecture Implementation Checklist
+
+## Service boundaries
+
+- [ ] Orders is the only service that orchestrates checkout.
+- [ ] Each service owns its domain, application logic, persistence, migrations, and API.
+- [ ] Services communicate through contracts and APIs rather than internal implementation details.
+- [ ] No service directly accesses another service's database.
+
+## Domain-Driven Design
+
+- [x] Aggregate roots are identified and documented for each implemented bounded context.
+- [x] `Product` owns `ProductImage` and controls image ordering and lifecycle.
+- [ ] `Cart` owns `CartItem` and controls quantity and item changes.
+- [ ] `Order` owns `OrderItem` and `ShippingAddress` snapshots and controls valid state transitions.
+- [ ] `Stock` owns inventory reservations and enforces availability and concurrency invariants.
+- [ ] `Payment` owns payment attempts and authorization state.
+- [ ] `Shipment` owns tracking events and its shipment lifecycle.
+- [ ] Aggregate child entities cannot be modified independently through application use cases.
+- [ ] Value objects are introduced where they protect meaningful domain rules, especially money, quantity, SKU, and address data.
+- [ ] Domain services are used only for behavior that does not naturally belong to one aggregate.
+- [ ] Checkout coordination remains in the Orders application layer rather than becoming a domain service.
+
+## Layering and persistence
+
+- [ ] Controllers remain limited to HTTP concerns and response mapping.
+- [ ] Application services coordinate use cases and cross-service calls.
+- [ ] Domain code owns business rules and state transitions.
+- [ ] Infrastructure contains EF Core, migrations, HTTP clients, and external-provider adapters.
+- [ ] Read repositories project directly to read DTOs without unnecessarily materializing aggregates.
+- [ ] Write operations load and modify aggregates when business behavior is required.
+
+## Verification
+
+- [ ] Aggregate invariants have focused unit tests.
+- [ ] Persistence behavior has integration tests against real database infrastructure.
+- [ ] Cross-service workflows have integration or end-to-end coverage.
+- [ ] Architecture changes are reviewed against the bounded-context and ownership rules above.
