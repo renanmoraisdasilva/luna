@@ -35,7 +35,7 @@ jobs:
           --results-directory TestResults/Unit
 
       - name: Upload unit test coverage
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: unit-test-coverage
           path: TestResults/Unit/**/coverage.cobertura.xml
