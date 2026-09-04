@@ -78,7 +78,6 @@ repair_stale_network() {
 }
 
 echo "Reconciling existing Compose state..."
-"${COMPOSE[@]}" down --remove-orphans >/dev/null 2>&1 || true
 repair_stale_network
 
 echo "Pulling Luna images..."

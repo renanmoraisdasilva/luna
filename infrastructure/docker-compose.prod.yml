@@ -57,7 +57,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-identity:latest
     restart: unless-stopped
     environment:
-      ConnectionStrings__Database: "${IDENTITY_DB_CONNECTION_STRING}"
+      ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
@@ -75,7 +75,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-catalog:latest
     restart: unless-stopped
     environment:
-      ConnectionStrings__Database: "${CATALOG_DB_CONNECTION_STRING}"
+      ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -87,7 +87,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-orders:latest
     restart: unless-stopped
     environment:
-      ConnectionStrings__Database: "${ORDERS_DB_CONNECTION_STRING}"
+      ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -99,7 +99,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-payments:latest
     restart: unless-stopped
     environment:
-      ConnectionStrings__Database: "${PAYMENTS_DB_CONNECTION_STRING}"
+      ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -111,7 +111,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-inventory:latest
     restart: unless-stopped
     environment:
-      ConnectionStrings__Database: "${INVENTORY_DB_CONNECTION_STRING}"
+      ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -123,7 +123,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-shipping:latest
     restart: unless-stopped
     environment:
-      ConnectionStrings__Database: "${SHIPPING_DB_CONNECTION_STRING}"
+      ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
     depends_on:
       sqlserver:
         condition: service_healthy

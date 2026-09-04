@@ -56,7 +56,7 @@ services:
       args: { PROJECT: src/Services/Identity/Identity.csproj }
     command: ["Identity.dll"]
     environment:
-      ConnectionStrings__Database: "${IDENTITY_DB_CONNECTION_STRING}"
+      ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
@@ -68,7 +68,7 @@ services:
       dockerfile: infrastructure/service.Dockerfile
       args: { PROJECT: src/Services/Catalog/Catalog.Api/Catalog.Api.csproj }
     command: ["Catalog.Api.dll"]
-    environment: { ConnectionStrings__Database: "${CATALOG_DB_CONNECTION_STRING}" }
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -79,7 +79,7 @@ services:
       dockerfile: infrastructure/service.Dockerfile
       args: { PROJECT: src/Services/Orders/Orders.csproj }
     command: ["Orders.dll"]
-    environment: { ConnectionStrings__Database: "${ORDERS_DB_CONNECTION_STRING}" }
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -90,7 +90,7 @@ services:
       dockerfile: infrastructure/service.Dockerfile
       args: { PROJECT: src/Services/Payments/Payments.csproj }
     command: ["Payments.dll"]
-    environment: { ConnectionStrings__Database: "${PAYMENTS_DB_CONNECTION_STRING}" }
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -101,7 +101,7 @@ services:
       dockerfile: infrastructure/service.Dockerfile
       args: { PROJECT: src/Services/Inventory/Inventory.csproj }
     command: ["Inventory.dll"]
-    environment: { ConnectionStrings__Database: "${INVENTORY_DB_CONNECTION_STRING}" }
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -112,7 +112,7 @@ services:
       dockerfile: infrastructure/service.Dockerfile
       args: { PROJECT: src/Services/Shipping/Shipping.csproj }
     command: ["Shipping.dll"]
-    environment: { ConnectionStrings__Database: "${SHIPPING_DB_CONNECTION_STRING}" }
+    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:
         condition: service_healthy
