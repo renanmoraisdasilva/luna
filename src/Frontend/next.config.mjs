@@ -14,15 +14,16 @@ const nextConfig = {
 		remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }],
 	},
 	async rewrites() {
-		const swaggerRewrites = serviceSpecs.map(([service, baseUrl]) => ({
+		const configuredServices = serviceSpecs.filter(([, baseUrl]) => baseUrl);
+		const swaggerRewrites = configuredServices.map(([service, baseUrl]) => ({
 			source: `/api/swagger/${service}`,
 			destination: `${baseUrl}/swagger/v1/swagger.json`,
 		}));
-		const serviceHealthRewrites = serviceSpecs.map(([service, baseUrl]) => ({
+		const serviceHealthRewrites = configuredServices.map(([service, baseUrl]) => ({
 			source: `/api/services/${service}/health`,
 			destination: `${baseUrl}/health`,
 		}));
-		const identityBaseUrl = serviceSpecs.find(([service]) => service === 'identity')?.[1];
+		const identityBaseUrl = configuredServices.find(([service]) => service === 'identity')?.[1];
 		const identityDiscoveryRewrites = identityBaseUrl
 			? [
 					{
@@ -35,7 +36,7 @@ const nextConfig = {
 					},
 				]
 			: [];
-		const serviceRewrites = serviceSpecs.map(([service, baseUrl]) => ({
+		const serviceRewrites = configuredServices.map(([service, baseUrl]) => ({
 			source: `/api/services/${service}/:path*`,
 			destination: `${baseUrl}/api/v1/${service}/:path*`,
 		}));
