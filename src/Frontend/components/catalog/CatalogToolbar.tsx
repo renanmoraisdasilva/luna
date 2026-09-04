@@ -47,8 +47,8 @@ export default function CatalogToolbar({
         <div className="hide-scrollbar flex w-full gap-sm overflow-x-auto pb-xs md:w-auto md:pb-0">
           <Link
             className={!category
-              ? 'h-control whitespace-nowrap rounded-button bg-primary px-lg py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:opacity-90'
-              : 'h-control whitespace-nowrap rounded-button bg-surface-container px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-container-high'}
+              ? 'inline-flex h-control items-center justify-center whitespace-nowrap rounded-button bg-primary px-lg py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:opacity-90'
+              : 'inline-flex h-control items-center justify-center whitespace-nowrap rounded-button bg-surface-container px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-container-high'}
             href={categoryUrl('')}
           >
             All
@@ -56,8 +56,8 @@ export default function CatalogToolbar({
           {categories.map((item) => (
             <Link
               className={category === item.slug
-                ? 'h-control whitespace-nowrap rounded-button bg-primary px-lg py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:opacity-90'
-                : 'h-control whitespace-nowrap rounded-button bg-surface-container px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-container-high'}
+                ? 'inline-flex h-control items-center justify-center whitespace-nowrap rounded-button bg-primary px-lg py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:opacity-90'
+                : 'inline-flex h-control items-center justify-center whitespace-nowrap rounded-button bg-surface-container px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-container-high'}
               key={item.id}
               href={categoryUrl(item.slug)}
             >

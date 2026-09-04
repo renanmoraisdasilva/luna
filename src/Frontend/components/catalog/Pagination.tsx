@@ -19,7 +19,7 @@ export default function Pagination({
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const canGoPrevious = page > 1;
   const canGoNext = page < totalPages;
-  const buttonClass = 'h-control rounded-button border border-outline-variant bg-surface-container-lowest px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-container';
+  const buttonClass = 'inline-flex h-control items-center justify-center rounded-button border border-outline-variant bg-surface-container-lowest px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-container';
   const disabledClass = `${buttonClass} cursor-not-allowed opacity-50`;
 
   return (

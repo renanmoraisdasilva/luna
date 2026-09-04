@@ -11,7 +11,7 @@ const navigationLinks = [
 ];
 
 const utilityLinks = [
-  { label: 'Login', icon: 'account' as const, href: '/login' },
+  { label: 'Account', icon: 'account' as const, href: '/account' },
   { label: 'Cart', icon: 'cart' as const, href: '/cart' },
 ];
 
