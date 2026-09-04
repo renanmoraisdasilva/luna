@@ -1,8 +1,7 @@
-using Luna.Contracts.Correlation;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+using Luna.Identity;
+using Luna.Identity.Application;
+using Luna.Identity.Infrastructure;
 using Serilog;
-using Serilog.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) => configuration
@@ -12,53 +11,18 @@ builder.Host.UseSerilog((context, configuration) => configuration
     .WriteTo.Console());
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<LunaIdentityDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<LunaIdentityDbContext>();
+builder.Services.AddSwaggerGen(options =>
+    options.DocumentFilter<OpenIddictSwaggerDocumentFilter>());
+builder.Services.AddIdentityInfrastructure(builder.Configuration);
+builder.Services.AddScoped<RegisterCustomerHandler>();
 builder.Services.AddAuthorization();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<LunaIdentityDbContext>();
-    if (dbContext.Database.IsRelational())
-    {
-        await dbContext.Database.MigrateAsync();
-    }
-}
-app.UseSerilogRequestLogging();
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseAuthentication();
-app.UseAuthorization();
-app.Use(async (context, next) =>
-{
-    var correlationId = context.Request.Headers[CorrelationHeaders.CorrelationId].FirstOrDefault() ?? Guid.NewGuid().ToString("D");
-    context.Response.Headers[CorrelationHeaders.CorrelationId] = correlationId;
-    using (LogContext.PushProperty("CorrelationId", correlationId))
-    {
-        try
-        {
-            await next();
-        }
-        catch (Exception exception)
-        {
-            Log.Error(exception, "Unhandled request exception");
-            if (!context.Response.HasStarted)
-            {
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsJsonAsync(new { code = "INTERNAL_ERROR", message = "An unexpected error occurred.", correlationId });
-            }
-        }
-    }
-});
+await app.Services.MigrateAndSeedIdentityAsync();
+app.UseIdentityPipeline();
 app.MapControllers();
-app.MapGroup("/api/v1/identity").MapIdentityApi<IdentityUser>();
 app.MapHealthChecks("/health");
 app.Run();
 
 public partial class Program { }
-public sealed class LunaIdentityDbContext(DbContextOptions<LunaIdentityDbContext> options) : Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext<IdentityUser>(options);
