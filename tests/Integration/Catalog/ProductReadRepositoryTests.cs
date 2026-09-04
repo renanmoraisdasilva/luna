@@ -17,11 +17,8 @@ public sealed class ProductReadRepositoryTests(CatalogSqlServerFixture fixture)
         var category = new Category { Id = Guid.NewGuid(), Name = "Electronics", Slug = "electronics" };
         var firstProduct = CreateProduct(category, "Keyboard", isActive: true);
         var secondProduct = CreateProduct(category, "Mouse", isActive: true);
-        firstProduct.Images =
-        [
-            new ProductImage { Id = Guid.NewGuid(), ImageUrl = "second.jpg", AltText = "Second", DisplayOrder = 1 },
-            new ProductImage { Id = Guid.NewGuid(), ImageUrl = "first.jpg", AltText = "First", DisplayOrder = 0 }
-        ];
+        firstProduct.AddImage("second.jpg", "Second", displayOrder: 1);
+        firstProduct.AddImage("first.jpg", "First", displayOrder: 0);
         db.AddRange(category, firstProduct, secondProduct);
         await db.SaveChangesAsync();
 

@@ -35,6 +35,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
                 .WithMany(category => category.Products)
                 .HasForeignKey(product => product.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.Navigation(product => product.Images)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
         modelBuilder.Entity<ProductImage>(entity =>

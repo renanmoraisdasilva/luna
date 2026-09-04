@@ -103,26 +103,21 @@ public static class CatalogSeed
             "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=85",
             "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85",
             "https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1200&q=85",
+            "https://images.unsplash.com/photo-1464822759844-d150baec0494?auto=format&fit=crop&w=1200&q=85",
         };
-        db.ProductImages.AddRange(products.SelectMany((product, index) => new[]
+        foreach (var (product, index) in products.Select((product, index) => (product, index)))
         {
-            new ProductImage
-            {
-                Id = Guid.Parse($"{index * 2 + 1:00000000}-0000-0000-0000-000000000001"),
-                ProductId = product.Id,
-                ImageUrl = imageUrls[index * 2],
-                AltText = product.Name,
-                DisplayOrder = 0,
-            },
-            new ProductImage
-            {
-                Id = Guid.Parse($"{index * 2 + 2:00000000}-0000-0000-0000-000000000001"),
-                ProductId = product.Id,
-                ImageUrl = imageUrls[index * 2 + 1],
-                AltText = $"{product.Name} alternate view",
-                DisplayOrder = 1,
-            },
-        }));
+            product.AddImage(
+                imageUrls[index * 2],
+                product.Name,
+                displayOrder: 0,
+                id: Guid.Parse($"{index * 2 + 1:00000000}-0000-0000-0000-000000000001"));
+            product.AddImage(
+                imageUrls[index * 2 + 1],
+                $"{product.Name} alternate view",
+                displayOrder: 1,
+                id: Guid.Parse($"{index * 2 + 2:00000000}-0000-0000-0000-000000000001"));
+        }
 
         await db.SaveChangesAsync(cancellationToken);
     }
