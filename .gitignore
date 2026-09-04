@@ -10,3 +10,4 @@ out/
 *.user
 TestResults/
 coverage-report/
+src/Frontend/tsconfig.tsbuildinfo
