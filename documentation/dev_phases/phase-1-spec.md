@@ -921,7 +921,7 @@ The phase is also complete when:
 ## Authentication
 
 - [ ] SPEC-AUTH-001 - Customer authentication
-- [ ] SPEC-AUTH-002 - Roles
+- [x] SPEC-AUTH-002 - Roles
 - [ ] SPEC-AUTH-003 - Session boundary
 
 ## Checkout
@@ -977,19 +977,19 @@ The phase is also complete when:
 ## Frontend
 
 - [ ] SPEC-FE-001 - Customer routes
-- [ ] SPEC-FE-002 - Public catalog behavior
+- [x] SPEC-FE-002 - Public catalog behavior
 - [ ] SPEC-FE-003 - Interactive behavior
 - [ ] SPEC-FE-004 - Error behavior
 
 ## Database
 
-- [ ] SPEC-DB-001 - Migrations
-- [ ] SPEC-DB-002 - Migration startup
+- [x] SPEC-DB-001 - Migrations
+- [x] SPEC-DB-002 - Migration startup
 - [ ] SPEC-DB-003 - Cross-service relationships
 
 ## Testing
 
 - [ ] SPEC-TEST-001 - Business behavior
-- [ ] SPEC-TEST-002 - Catalog reads
+- [x] SPEC-TEST-002 - Catalog reads
 - [ ] SPEC-TEST-003 - Cross-service behavior
 - [ ] SPEC-TEST-004 - Coverage

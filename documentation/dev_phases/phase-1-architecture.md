@@ -330,7 +330,39 @@ The frontend uses Next.js, React, TypeScript, Axios, and TanStack Query.
 
 # 9. Authentication Architecture
 
-Next.js is the browser/session boundary. The target design uses OpenIddict/OIDC, keeps access tokens out of browser JavaScript by default, and forwards authorized requests to private backend APIs. Backend services validate tokens and enforce authorization.
+Luna uses stateless JWT authentication. ASP.NET Core Identity manages users, passwords, roles, and account-related functionality. OpenIddict is used in the Luna Identity service to provide OAuth 2.0 / OpenID Connect server functionality and issue signed JWT access tokens.
+
+OpenIddict Server is responsible for token issuance, and the Identity service acts as the trusted token issuer. It exposes the token and discovery endpoints, including signing key information. Backend services use OpenIddict Validation to discover and cache the trusted signing keys, then validate incoming JWT access tokens and their claims locally. They do not need to contact Identity for each request. Discovery also provides a path for signing-key rotation without manually distributing a public key through every service's configuration.
+
+Next.js acts as the browser-facing gateway and stores the JWT in an encrypted, `HttpOnly`, `Secure` cookie. Cookie encryption provides confidentiality and prevents the browser from inspecting the stored token; it is separate from JWT validation. JWT authenticity and integrity come from signature verification using Luna Identity's trusted signing key.
+
+When Next.js calls backend services, it sends the JWT as a Bearer token. Backend services independently validate the JWT signature and claims.
+
+No server-side session store, Redis, or sticky sessions are required.
+
+```mermaid
+flowchart LR
+
+   Browser["Browser"]
+
+   Next["Next.js Gateway"]
+
+   Identity["Luna Identity<br/><br/>ASP.NET Core Identity<br/>+<br/>OpenIddict Server"]
+
+   Services["Backend Services<br/><br/>Orders · Inventory · Payments · Shipping<br/>+ OpenIddict Validation"]
+
+   Browser -->|1. Login| Next
+   Next -->|2. Authenticate| Identity
+   Identity -->|3. Signed JWT| Next
+
+   Next -->|4. Encrypted HttpOnly cookie| Browser
+   Browser -->|5. Requests + cookie| Next
+
+   Next -->|6. Bearer JWT| Services
+
+   Services -.->|7. Discover / fetch<br/>signing keys| Identity
+   Services -->|8. Validate JWT locally| Services
+```
 
 # 10. Checkout Coordination
 
@@ -481,11 +513,11 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 
 ## Layering and persistence
 
-- [ ] Controllers remain limited to HTTP concerns and response mapping.
+- [x] Controllers remain limited to HTTP concerns and response mapping.
 - [ ] Application services coordinate use cases and cross-service calls.
 - [ ] Domain code owns business rules and state transitions.
 - [ ] Infrastructure contains EF Core, migrations, HTTP clients, and external-provider adapters.
-- [ ] Read repositories project directly to read DTOs without unnecessarily materializing aggregates.
+- [x] Read repositories project directly to read DTOs without unnecessarily materializing aggregates.
 - [ ] Write operations load and modify aggregates when business behavior is required.
 
 ## Verification

@@ -214,7 +214,11 @@ Shipping owns the rate calculation. Orders snapshots the resulting shipping cost
 | Area | Technologies |
 | --- | --- |
 | Backend | C#, .NET, ASP.NET Core, Entity Framework Core, SQL Server |
-| Frontend | React, TypeScript, Next.js |
+| Frontend framework | React, TypeScript, Next.js |
+| Frontend forms | React Hook Form, Zod, `@hookform/resolvers` |
+| Frontend server state | TanStack Query |
+| Frontend HTTP | Axios through centralized typed API clients |
+| Frontend testing | Vitest, Testing Library, Playwright |
 | Messaging | RabbitMQ |
 | Infrastructure | Docker, Docker Compose |
 | Observability | OpenTelemetry, Prometheus, Grafana, structured logging |
