@@ -41,6 +41,9 @@ services:
       HOSTNAME: 0.0.0.0
       PORT: 3000
       CATALOG_API_INTERNAL_URL: http://catalog:8080
+      IDENTITY_API_INTERNAL_URL: http://identity:8080
+      LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY}"
+      AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE}"
     networks:
       - luna
     healthcheck:
@@ -55,6 +58,7 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "${IDENTITY_DB_CONNECTION_STRING}"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
