@@ -84,7 +84,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Start compose stack
-        run: docker compose -f infrastructure/docker-compose.yml up -d --build --wait --wait-timeout 120
+        run: docker compose --env-file infrastructure/.env.example -f infrastructure/docker-compose.yml up -d --build --wait --wait-timeout 120
 
       - name: Check frontend and health endpoints
         run: |
@@ -96,9 +96,9 @@ jobs:
       - name: Show compose diagnostics
         if: failure()
         run: |
-          docker compose -f infrastructure/docker-compose.yml ps
-          docker compose -f infrastructure/docker-compose.yml logs --tail=200 frontend
+          docker compose --env-file infrastructure/.env.example -f infrastructure/docker-compose.yml ps
+          docker compose --env-file infrastructure/.env.example -f infrastructure/docker-compose.yml logs --tail=200
 
       - name: Tear down compose stack
         if: always()
-        run: docker compose -f infrastructure/docker-compose.yml down -v
+        run: docker compose --env-file infrastructure/.env.example -f infrastructure/docker-compose.yml down -v
