@@ -7,7 +7,7 @@ IMAGE_PREFIX="ghcr.io/renanmoraisdasilva"
 DEPLOYMENT_IMAGE="$IMAGE_PREFIX/luna-frontend:latest"
 DEPLOYMENT_DIR="/opt/luna-deployment"
 
-SERVICES=(frontend identity catalog orders payments inventory shipping)
+SERVICES=(sqlserver frontend identity catalog orders payments inventory shipping)
 
 cd "$APP_DIR"
 
@@ -35,6 +35,7 @@ fi
 declare -A previous_digests
 
 for service in "${SERVICES[@]}"; do
+  [[ "$service" == sqlserver ]] && continue
   image="$IMAGE_PREFIX/luna-$service:latest"
   previous_digests["$service"]="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
 done
@@ -65,7 +66,7 @@ echo "Pulling Luna deployment configuration..."
 docker pull "$DEPLOYMENT_IMAGE"
 sync_deployment_files
 
-COMPOSE=(docker compose -p luna -f docker-compose.prod.yml)
+COMPOSE=(docker compose --env-file "$APP_DIR/.env" -p luna -f docker-compose.prod.yml)
 
 repair_stale_network() {
   if docker network inspect luna_default >/dev/null 2>&1; then
@@ -86,6 +87,7 @@ echo "Pulling Luna images..."
 changed=false
 
 for service in "${SERVICES[@]}"; do
+  [[ "$service" == sqlserver ]] && continue
   image="$IMAGE_PREFIX/luna-$service:latest"
   old_digest="${previous_digests[$service]}"
   new_digest="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
