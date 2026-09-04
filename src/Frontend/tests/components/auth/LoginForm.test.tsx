@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   login: vi.fn(),
   push: vi.fn(),
+  removeQueries: vi.fn(),
 }));
 
 vi.mock('../../../lib/api/identity', () => ({ login: mocks.login }));
@@ -14,6 +15,7 @@ import LoginForm from '../../../components/auth/LoginForm';
 
 function renderLoginForm() {
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  queryClient.removeQueries = mocks.removeQueries;
   return render(
     <QueryClientProvider client={queryClient}>
       <LoginForm />
@@ -25,6 +27,7 @@ describe('LoginForm', () => {
   beforeEach(() => {
     mocks.login.mockReset();
     mocks.push.mockReset();
+    mocks.removeQueries.mockReset();
   });
 
   it('validates credentials before calling Identity', async () => {
@@ -36,7 +39,7 @@ describe('LoginForm', () => {
     expect(mocks.login).not.toHaveBeenCalled();
   });
 
-  it('submits credentials and redirects to the shop', async () => {
+  it('submits credentials and redirects to the home page', async () => {
     mocks.login.mockResolvedValueOnce(undefined);
     renderLoginForm();
 
@@ -48,6 +51,7 @@ describe('LoginForm', () => {
       { email: 'jane@example.com', password: 'password123' },
       expect.anything(),
     ));
-    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/shop'));
+    await waitFor(() => expect(mocks.removeQueries).toHaveBeenCalledWith({ queryKey: ['current-user'] }));
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/'));
   });
 });

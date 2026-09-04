@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
@@ -12,6 +12,7 @@ import { loginSchema, type LoginFormValues } from '../../lib/validation/auth';
 
 export default function LoginForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -24,7 +25,10 @@ export default function LoginForm() {
   });
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: () => router.push('/shop'),
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: ['current-user'] });
+      router.push('/');
+    },
   });
 
   function handleLogin(values: LoginFormValues) {

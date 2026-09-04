@@ -15,6 +15,24 @@ export type LoginCredentials = {
   password: string;
 };
 
+export type RegisterCredentials = LoginCredentials & {
+  firstName: string;
+  lastName: string;
+};
+
 export async function login(credentials: LoginCredentials): Promise<void> {
-  await identityApi.post('/login?useCookies=true', credentials);
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to sign in.');
+  }
+}
+
+export async function registerAccount(credentials: RegisterCredentials): Promise<void> {
+  await identityApi.post('/register-profile', credentials);
 }
