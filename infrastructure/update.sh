@@ -16,7 +16,7 @@ flock -n 9 || { echo "Another Luna update is already running."; exit 0; }
 
 if [[ -f "$APP_DIR/.env" ]]; then
   set -a
-  source "$APP_DIR/.env"
+  source <(sed 's/\r$//' "$APP_DIR/.env")
   set +a
 fi
 
