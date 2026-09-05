@@ -11,3 +11,4 @@ out/
 TestResults/
 coverage-report/
 src/Frontend/tsconfig.tsbuildinfo
+src/Frontend/next-env.d.ts
