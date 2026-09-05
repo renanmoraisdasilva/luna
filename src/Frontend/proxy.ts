@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { accessTokenCookieName, decryptAccessToken } from './lib/auth-cookie';
 
+const protectedPagePrefixes = ['/account'];
+
+function isProtectedPage(pathname: string): boolean {
+  return protectedPagePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 export async function proxy(request: NextRequest) {
   const encryptedToken = request.cookies.get(accessTokenCookieName)?.value;
   if (!encryptedToken) {
-    if (request.nextUrl.pathname === '/account' || request.nextUrl.pathname.startsWith('/account/')) {
+    if (isProtectedPage(request.nextUrl.pathname)) {
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('returnUrl', request.nextUrl.pathname);
+      loginUrl.searchParams.set('returnUrl', `${request.nextUrl.pathname}${request.nextUrl.search}`);
       return NextResponse.redirect(loginUrl);
     }
 
@@ -15,6 +21,11 @@ export async function proxy(request: NextRequest) {
 
   try {
     const accessToken = await decryptAccessToken(encryptedToken);
+
+    if (!request.nextUrl.pathname.startsWith('/api/services/')) {
+      return NextResponse.next();
+    }
+
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('Authorization', `Bearer ${accessToken}`);
     requestHeaders.delete('cookie');

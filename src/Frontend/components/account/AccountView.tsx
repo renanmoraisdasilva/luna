@@ -7,12 +7,13 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { changePassword, logout, updateProfile } from '../../lib/api/auth';
 import { useCurrentUser } from '../../lib/queries/auth';
+import type { CurrentUser } from '../../types/auth';
 import { passwordChangeSchema, profileSchema, type PasswordChangeFormValues, type ProfileFormValues } from '../../lib/validation/account';
 
-export default function AccountView() {
+export default function AccountView({ initialUser }: { initialUser: CurrentUser }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const userQuery = useCurrentUser();
+  const userQuery = useCurrentUser(initialUser);
   const [passwordFormOpen, setPasswordFormOpen] = useState(false);
   const [passwordChanged, setPasswordChanged] = useState(false);
   const [saved, setSaved] = useState(false);

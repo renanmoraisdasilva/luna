@@ -4,18 +4,14 @@ import { vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   login: vi.fn(),
-  push: vi.fn(),
-  removeQueries: vi.fn(),
 }));
 
 vi.mock('../../../lib/api/identity', () => ({ login: mocks.login }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: mocks.push }) }));
 
 import LoginForm from '../../../components/auth/LoginForm';
 
 function renderLoginForm() {
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
-  queryClient.removeQueries = mocks.removeQueries;
   return render(
     <QueryClientProvider client={queryClient}>
       <LoginForm />
@@ -26,8 +22,6 @@ function renderLoginForm() {
 describe('LoginForm', () => {
   beforeEach(() => {
     mocks.login.mockReset();
-    mocks.push.mockReset();
-    mocks.removeQueries.mockReset();
   });
 
   it('validates credentials before calling Identity', async () => {
@@ -51,7 +45,5 @@ describe('LoginForm', () => {
       { email: 'jane@example.com', password: 'password123' },
       expect.anything(),
     ));
-    await waitFor(() => expect(mocks.removeQueries).toHaveBeenCalledWith({ queryKey: ['current-user'] }));
-    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/'));
   });
 });

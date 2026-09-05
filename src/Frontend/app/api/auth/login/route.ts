@@ -42,11 +42,12 @@ export async function POST(request: Request) {
 
   const encryptedToken = await encryptAccessToken(token.access_token);
   const response = NextResponse.json({ authenticated: true });
+  const secureCookie = process.env.AUTH_COOKIE_SECURE === 'true';
   response.cookies.set({
     name: accessTokenCookieName,
     value: encryptedToken,
     httpOnly: true,
-    secure: process.env.AUTH_COOKIE_SECURE === 'true',
+    secure: secureCookie,
     sameSite: 'lax',
     path: '/',
     maxAge: token.expires_in ?? 3600,
