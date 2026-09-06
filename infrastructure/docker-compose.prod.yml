@@ -76,6 +76,7 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -88,6 +89,7 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy

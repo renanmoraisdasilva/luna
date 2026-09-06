@@ -48,7 +48,7 @@ jobs:
             context: .
             image: ghcr.io/${{ github.repository_owner }}/luna-orders
             args: |
-              PROJECT=src/Services/Orders/Orders.csproj
+              PROJECT=src/Services/Orders/Orders.Api/Orders.Api.csproj
           - name: payments
             dockerfile: infrastructure/service.Dockerfile
             context: .

@@ -68,7 +68,9 @@ services:
       dockerfile: infrastructure/service.Dockerfile
       args: { PROJECT: src/Services/Catalog/Catalog.Api/Catalog.Api.csproj }
     command: ["Catalog.Api.dll"]
-    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
+    environment:
+      ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -77,9 +79,11 @@ services:
     build:
       context: ..
       dockerfile: infrastructure/service.Dockerfile
-      args: { PROJECT: src/Services/Orders/Orders.csproj }
-    command: ["Orders.dll"]
-    environment: { ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
+      args: { PROJECT: src/Services/Orders/Orders.Api/Orders.Api.csproj }
+    command: ["Orders.Api.dll"]
+    environment:
+      ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy

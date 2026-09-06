@@ -129,7 +129,7 @@ Luna is composed of independently deployable services. Each service owns its dom
 
 During the initial web application phases, Next.js acts as a thin frontend gateway. It is the public application entry point, while the backend services remain HTTP APIs on the private Docker network and are not publicly exposed by default. The gateway forwards service contracts without introducing BFF DTOs or aggregation. That decision can be revisited when the Operations Console exposes a concrete need for aggregated views.
 
-Authentication follows the same boundary: ASP.NET Core Identity owns users, passwords, roles, and account management; OpenIddict will eventually provide the OAuth 2.0/OpenID Connect authorization server; backend services validate access tokens but do not issue them. Next.js is the preferred OIDC client and server-side session boundary, keeping access tokens out of browser JavaScript by default.
+Authentication follows the same boundary: ASP.NET Core Identity owns users, passwords, roles, and account management; OpenIddict in the Identity service provides the OAuth 2.0/OpenID Connect authorization server; backend services validate access tokens but do not issue them. `Luna.Contracts` defines shared token semantics, while the `Luna.Authentication` class library standardizes JWT validation without becoming another deployable service. Next.js is the preferred OIDC client and server-side session boundary, keeping access tokens out of browser JavaScript by default.
 
 ### Bounded Contexts
 
@@ -439,14 +439,12 @@ Luna is being built incrementally. Architecture and implementation decisions may
 
 Phase 0 foundation is in place: the services, independent persistence, EF Core migration startup and initial Catalog/Identity migrations, Docker Compose environment, health endpoints, OpenAPI documentation, centralized tests, and Next.js gateway are implemented.
 
-Phase 1 is in progress. The catalog storefront currently supports server-rendered active products, search, category filtering, URL-based pagination, image optimization, and a unified Swagger explorer. CI validates the .NET solution, frontend, Compose startup, and service health endpoints; successful CI then publishes versioned and `latest` images to GHCR.
+Phase 1 is in progress. The catalog storefront currently supports server-rendered active products, search, category filtering, URL-based pagination, image optimization, and a unified Swagger explorer. Cart API operations, per-customer cart authorization, the cart frontend, and the Identity/OpenIddict session boundary are implemented. Catalog and Orders are both prepared for local JWT validation, with Orders currently protecting cart endpoints. CI validates the .NET solution, frontend, Compose startup, and service health endpoints; successful CI then publishes versioned and `latest` images to GHCR.
 
-The next implementation priority is the customer commerce path:
+The next implementation priority is the remaining customer commerce path:
 
 1. Product details route and data client.
-2. Functional cart state and cart API operations.
-3. Customer login and the agreed OpenIddict/OIDC session boundary.
-4. Checkout orchestration with current price validation and immutable snapshots.
-5. Shipping quotes, inventory reservation, deterministic payment authorization, and fulfillment/shipment status transitions.
+2. Checkout orchestration with current price validation and immutable snapshots.
+3. Shipping quotes, inventory reservation, deterministic payment authorization, and fulfillment/shipment status transitions.
 
 RabbitMQ, retries, idempotency, the transactional outbox, observability, and operations tooling remain later phases as planned.

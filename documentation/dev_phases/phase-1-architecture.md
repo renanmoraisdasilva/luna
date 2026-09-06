@@ -334,6 +334,10 @@ Luna uses stateless JWT authentication. ASP.NET Core Identity manages users, pas
 
 OpenIddict Server is responsible for token issuance, and the Identity service acts as the trusted token issuer. It exposes the token and discovery endpoints, including signing key information. Backend services use OpenIddict Validation to discover and cache the trusted signing keys, then validate incoming JWT access tokens and their claims locally. They do not need to contact Identity for each request. Discovery also provides a path for signing-key rotation without manually distributing a public key through every service's configuration.
 
+The shared `Luna.Contracts` project defines the authentication protocol values used across the system, including the API audience and JWT claim names. The shared `Luna.Authentication` class library contains the reusable OpenIddict validation bootstrap and validation scheme details. Consuming services reference this library and opt into validation explicitly; they retain ownership of endpoint authorization and service-specific policies. Identity keeps its OpenIddict Server configuration local because it is the token issuer rather than a token consumer.
+
+Catalog enables JWT validation before it has protected endpoints so its hosting and security pipeline is ready for future authorization without making current catalog reads private. Orders protects cart endpoints and derives the customer ID from the validated token subject. Subject claim parsing is shared, while cart ownership remains an Orders application concern.
+
 Next.js acts as the browser-facing gateway and stores the JWT in an encrypted, `HttpOnly`, `Secure` cookie. Cookie encryption provides confidentiality and prevents the browser from inspecting the stored token; it is separate from JWT validation. JWT authenticity and integrity come from signature verification using Luna Identity's trusted signing key.
 
 When Next.js calls backend services, it sends the JWT as a Bearer token. Backend services independently validate the JWT signature and claims.
@@ -483,6 +487,12 @@ The repository also separates unit, integration, and smoke tests under the centr
 36. Phase 1 does not introduce a shared cross-service domain library.
 37. Phase 1 does not introduce a full BFF.
 38. Phase 1 does not attempt to solve distributed reliability.
+39. Authentication protocol values are shared through `Luna.Contracts`.
+40. JWT validation bootstrap is shared through the `Luna.Authentication` class library, not a deployable service.
+41. Identity remains the only token issuer.
+42. Backend services validate JWTs locally using discovered and cached signing keys.
+43. Authorization policies remain service-owned even when validation setup is shared.
+44. Cart access is authorized per customer using the token subject claim.
 
 # 14. Deferred Architecture
 
@@ -501,7 +511,7 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 
 - [x] Aggregate roots are identified and documented for each implemented bounded context.
 - [x] `Product` owns `ProductImage` and controls image ordering and lifecycle.
-- [ ] `Cart` owns `CartItem` and controls quantity and item changes.
+- [x] `Cart` owns `CartItem` and controls quantity and item changes.
 - [ ] `Order` owns `OrderItem` and `ShippingAddress` snapshots and controls valid state transitions.
 - [ ] `Stock` owns inventory reservations and enforces availability and concurrency invariants.
 - [ ] `Payment` owns payment attempts and authorization state.
