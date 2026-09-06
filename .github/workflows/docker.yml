@@ -91,6 +91,8 @@ jobs:
           file: ${{ matrix.dockerfile }}
           push: true
           build-args: ${{ matrix.args }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.event.workflow_run.head_sha }}
           tags: |
             ${{ matrix.image }}:${{ github.event.workflow_run.head_sha }}
             ${{ matrix.image }}:latest

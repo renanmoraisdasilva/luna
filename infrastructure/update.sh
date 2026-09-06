@@ -32,14 +32,6 @@ if [[ -n "${GHCR_PAT:-}" ]]; then
   printf '%s' "$GHCR_PAT" | docker login "$REGISTRY" --username "$GHCR_USER" --password-stdin
 fi
 
-declare -A previous_digests
-
-for service in "${SERVICES[@]}"; do
-  [[ "$service" == sqlserver ]] && continue
-  image="$IMAGE_PREFIX/luna-$service:latest"
-  previous_digests["$service"]="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
-done
-
 sync_deployment_files() (
   container="luna-deployment-sync-$$"
   staging_dir="$(mktemp -d)"
@@ -64,7 +56,18 @@ sync_deployment_files() (
 
 echo "Pulling Luna deployment configuration..."
 docker pull "$DEPLOYMENT_IMAGE"
+LUNA_IMAGE_TAG="$(docker image inspect "$DEPLOYMENT_IMAGE" --format='{{index .Config.Labels "org.opencontainers.image.revision"}}')"
+: "${LUNA_IMAGE_TAG:?The deployment image is missing org.opencontainers.image.revision}"
+export LUNA_IMAGE_TAG
 sync_deployment_files
+
+declare -A previous_digests
+
+for service in "${SERVICES[@]}"; do
+  [[ "$service" == sqlserver ]] && continue
+  image="$IMAGE_PREFIX/luna-$service:$LUNA_IMAGE_TAG"
+  previous_digests["$service"]="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
+done
 
 COMPOSE=(docker compose --env-file "$APP_DIR/.env" -p luna -f docker-compose.prod.yml)
 
@@ -88,7 +91,7 @@ changed=false
 
 for service in "${SERVICES[@]}"; do
   [[ "$service" == sqlserver ]] && continue
-  image="$IMAGE_PREFIX/luna-$service:latest"
+  image="$IMAGE_PREFIX/luna-$service:$LUNA_IMAGE_TAG"
   old_digest="${previous_digests[$service]}"
   new_digest="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
 
@@ -106,7 +109,7 @@ else
   echo "No image changes detected; reconciling Compose configuration..."
 fi
 
-"${COMPOSE[@]}" up -d --wait --force-recreate --remove-orphans "${SERVICES[@]}"
+"${COMPOSE[@]}" up -d --wait --remove-orphans "${SERVICES[@]}"
 echo "Luna deployment is up to date."
 
 docker image prune -f >/dev/null

@@ -5,7 +5,7 @@ networks:
 
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: "mcr.microsoft.com/mssql/server:${MSSQL_IMAGE_TAG:?Set MSSQL_IMAGE_TAG in .env to a tested SQL Server 2022 tag}"
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
@@ -33,7 +33,7 @@ services:
       start_period: 20s
 
   frontend:
-    image: ghcr.io/renanmoraisdasilva/luna-frontend:latest
+    image: ghcr.io/renanmoraisdasilva/luna-frontend:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -54,7 +54,7 @@ services:
       start_period: 30s
 
   identity:
-    image: ghcr.io/renanmoraisdasilva/luna-identity:latest
+    image: ghcr.io/renanmoraisdasilva/luna-identity:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -72,7 +72,7 @@ services:
       start_period: 60s
 
   catalog:
-    image: ghcr.io/renanmoraisdasilva/luna-catalog:latest
+    image: ghcr.io/renanmoraisdasilva/luna-catalog:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -84,7 +84,7 @@ services:
     healthcheck: *service_healthcheck
 
   orders:
-    image: ghcr.io/renanmoraisdasilva/luna-orders:latest
+    image: ghcr.io/renanmoraisdasilva/luna-orders:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -96,7 +96,7 @@ services:
     healthcheck: *service_healthcheck
 
   payments:
-    image: ghcr.io/renanmoraisdasilva/luna-payments:latest
+    image: ghcr.io/renanmoraisdasilva/luna-payments:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -108,7 +108,7 @@ services:
     healthcheck: *service_healthcheck
 
   inventory:
-    image: ghcr.io/renanmoraisdasilva/luna-inventory:latest
+    image: ghcr.io/renanmoraisdasilva/luna-inventory:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -120,7 +120,7 @@ services:
     healthcheck: *service_healthcheck
 
   shipping:
-    image: ghcr.io/renanmoraisdasilva/luna-shipping:latest
+    image: ghcr.io/renanmoraisdasilva/luna-shipping:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
