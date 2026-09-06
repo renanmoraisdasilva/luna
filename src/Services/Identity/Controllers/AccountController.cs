@@ -1,4 +1,5 @@
 using Luna.Identity.Application;
+using Luna.Contracts.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -93,7 +94,7 @@ public sealed class AccountController(
 
     private async Task<LunaUser?> GetCurrentUserAsync(CancellationToken cancellationToken)
     {
-        var userId = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = User.FindFirstValue(LunaAuthentication.SubjectClaim) ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
         return string.IsNullOrWhiteSpace(userId)
             ? null
             : await userManager.FindByIdAsync(userId);

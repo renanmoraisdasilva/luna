@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Catalog.Application\Catalog.Application.csproj" />
     <ProjectReference Include="..\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />
     <ProjectReference Include="..\Catalog.Contracts\Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Luna.Authentication\Luna.Authentication.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />

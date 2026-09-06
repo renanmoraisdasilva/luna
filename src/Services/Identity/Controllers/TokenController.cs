@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Luna.Contracts.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -33,14 +34,14 @@ public sealed class TokenController(
 
             var principal = await signInManager.CreateUserPrincipalAsync(user);
             principal.SetScopes(request.GetScopes());
-            principal.SetResources("luna-api");
-            principal.SetClaim(OpenIddictConstants.Claims.Subject, user.Id);
-            principal.SetClaim(OpenIddictConstants.Claims.Email, user.Email ?? string.Empty);
-            principal.SetClaim(OpenIddictConstants.Claims.Name, user.UserName ?? user.Email ?? user.Id);
+            principal.SetResources(LunaAuthentication.ApiResource);
+            principal.SetClaim(LunaAuthentication.SubjectClaim, user.Id);
+            principal.SetClaim(LunaAuthentication.EmailClaim, user.Email ?? string.Empty);
+            principal.SetClaim(LunaAuthentication.NameClaim, user.UserName ?? user.Email ?? user.Id);
 
             foreach (var role in await userManager.GetRolesAsync(user))
             {
-                principal.SetClaim(OpenIddictConstants.Claims.Role, role);
+                principal.SetClaim(LunaAuthentication.RoleClaim, role);
             }
 
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
