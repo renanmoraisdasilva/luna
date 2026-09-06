@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProductCard from '../../../components/catalog/ProductCard';
 import type { CatalogProduct } from '../../../types/catalog';
 
@@ -19,7 +20,8 @@ const product: CatalogProduct = {
 
 describe('ProductCard', () => {
   it('renders Catalog data, formats the price, and uses the first ordered image', () => {
-    render(<ProductCard product={product} />);
+    const queryClient = new QueryClient();
+    render(<QueryClientProvider client={queryClient}><ProductCard product={product} /></QueryClientProvider>);
 
     expect(screen.getByText('Orbit Keyboard')).toBeInTheDocument();
     expect(screen.getByText('$129.00')).toBeInTheDocument();

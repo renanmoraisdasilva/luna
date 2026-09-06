@@ -1,4 +1,4 @@
-type IconName = 'account' | 'cart' | 'search' | 'expand-more' | 'add' | 'remove' | 'chevron-right' | 'shopping-bag';
+type IconName = 'account' | 'cart' | 'search' | 'expand-more' | 'add' | 'remove' | 'delete' | 'chevron-right' | 'shopping-bag';
 
 export default function Icon({ name, className = '' }: { name: IconName; className?: string }) {
   const commonProps = {
@@ -32,6 +32,10 @@ export default function Icon({ name, className = '' }: { name: IconName; classNa
 
   if (name === 'remove') {
     return <svg {...commonProps}><path d="M5 12h14" /></svg>;
+  }
+
+  if (name === 'delete') {
+    return <svg {...commonProps}><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>;
   }
 
   if (name === 'chevron-right') {

@@ -63,6 +63,7 @@ export default function AccountView({ initialUser }: { initialUser: CurrentUser 
     mutationFn: logout,
     onSuccess: () => {
       queryClient.setQueryData(['current-user'], null);
+      queryClient.removeQueries({ queryKey: ['cart'] });
       router.replace('/login');
     },
   });

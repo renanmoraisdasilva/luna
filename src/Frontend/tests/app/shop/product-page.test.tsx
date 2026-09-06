@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import type { CatalogProduct } from '../../../types/catalog';
 
@@ -14,6 +15,9 @@ vi.mock('next/navigation', () => ({
   notFound: vi.fn(() => {
     throw new Error('NOT_FOUND');
   }),
+  usePathname: () => '/shop/products/product-1',
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 import ProductPage from '../../../app/(store)/shop/products/[id]/page';
@@ -42,7 +46,7 @@ describe('ProductPage', () => {
     mocks.getProduct.mockResolvedValue(product);
 
     const page = await ProductPage({ params: Promise.resolve({ id: product.id }) });
-    render(page);
+    render(<QueryClientProvider client={new QueryClient()}>{page}</QueryClientProvider>);
 
     expect(mocks.getProduct).toHaveBeenCalledWith(product.id);
     expect(screen.getByRole('heading', { name: product.name })).toBeInTheDocument();

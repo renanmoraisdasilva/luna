@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import Icon from './Icon';
+import { getCart } from '../../lib/api/orders';
+import { useCurrentUser } from '../../lib/queries/auth';
 
 const navigationLinks = [
   { label: 'Shop', href: '/shop' },
@@ -17,6 +20,16 @@ const utilityLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const userQuery = useCurrentUser();
+  const cartQuery = useQuery({
+    queryKey: ['cart'],
+    queryFn: getCart,
+    retry: false,
+    enabled: Boolean(userQuery.data),
+  });
+  const cartItemCount = userQuery.data
+    ? cartQuery.data?.items.reduce((total, item) => total + item.quantity, 0) ?? 0
+    : 0;
 
   return (
     <header className="fixed top-0 z-50 flex h-4xl w-full justify-center border-b border-[#e5e7eb] bg-[#fbf9fa] shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
@@ -41,6 +54,7 @@ export default function Header() {
           {utilityLinks.map((link) => {
             return <Link className={'relative flex items-center justify-center rounded-button p-xs text-primary transition-colors hover:bg-surface-container-low'} href={link.href} aria-label={link.label} key={link.label}>
               <Icon name={link.icon} />
+              {link.label === 'Cart' && cartItemCount > 0 ? <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-label-caps text-[10px] leading-none text-on-primary" aria-hidden="true">{cartItemCount}</span> : null}
             </Link>;
           })}
         </div>

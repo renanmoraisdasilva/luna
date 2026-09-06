@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import type { CatalogCategory, CatalogProduct, PaginatedResponse } from '../../../types/catalog';
 
@@ -48,7 +49,7 @@ async function renderShop(
   mocks.getCategories.mockResolvedValue({ items: categories, page: 1, pageSize: 100, totalCount: categories.length });
   const page = await ShopPage({ searchParams: Promise.resolve(searchParams) });
 
-  return render(page);
+  return render(<QueryClientProvider client={new QueryClient()}>{page}</QueryClientProvider>);
 }
 
 describe('ShopPage', () => {
