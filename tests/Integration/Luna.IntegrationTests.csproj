@@ -10,6 +10,10 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Orders/Orders.Api/Orders.Api.csproj" />
+    <ProjectReference Include="../../src/Services/Orders/Orders.Infrastructure/Orders.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Orders/Orders.Domain/Orders.Domain.csproj" />
+    <ProjectReference Include="../../src/Shared/Luna.Authentication/Luna.Authentication.csproj" />
     <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
@@ -22,5 +26,6 @@
     <PackageReference Include="Testcontainers.MsSql" Version="4.6.0" />
     <PackageReference Include="Respawn" Version="6.2.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.22" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.22" />
   </ItemGroup>
 </Project>
