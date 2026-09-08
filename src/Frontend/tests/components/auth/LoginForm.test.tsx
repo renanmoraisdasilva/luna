@@ -46,4 +46,22 @@ describe('LoginForm', () => {
       expect.anything(),
     ));
   });
+
+  it('shows specific and generic login errors and toggles password visibility', async () => {
+    mocks.login.mockRejectedValueOnce({ isAxiosError: true, response: { status: 401 } });
+    renderLoginForm();
+
+    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'jane@example.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Show password' }));
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'text');
+    fireEvent.click(screen.getByRole('button', { name: 'Hide password' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(await screen.findByText('Invalid email or password.')).toBeInTheDocument();
+
+    mocks.login.mockRejectedValueOnce(new Error('network failure'));
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    expect(await screen.findByText('Unable to sign in right now. Please try again.')).toBeInTheDocument();
+  });
 });

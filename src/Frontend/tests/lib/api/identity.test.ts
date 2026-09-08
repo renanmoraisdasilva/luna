@@ -34,4 +34,24 @@ describe('Identity API client', () => {
       lastName: 'Doe',
     });
   });
+
+  it('surfaces a failed login response', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: 'Invalid credentials.' }), { status: 401 }),
+    );
+
+    await expect(login({ email: 'jane@example.com', password: 'wrong-password' }))
+      .rejects.toThrow('Unable to sign in.');
+  });
+
+  it('surfaces a failed registration response', async () => {
+    vi.spyOn(identityApi, 'post').mockRejectedValueOnce(new Error('Identity unavailable.'));
+
+    await expect(registerAccount({
+      email: 'jane@example.com',
+      password: 'password123',
+      firstName: 'Jane',
+      lastName: 'Doe',
+    })).rejects.toThrow('Identity unavailable.');
+  });
 });

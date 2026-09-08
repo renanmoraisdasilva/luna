@@ -42,12 +42,12 @@ function response(items: CatalogProduct[] = [product], totalCount = items.length
 }
 
 async function renderShop(
-  searchParams: Record<string, string> = {},
+  searchParams?: Record<string, string>,
   products = response(),
 ) {
   mocks.getProducts.mockResolvedValue(products);
   mocks.getCategories.mockResolvedValue({ items: categories, page: 1, pageSize: 100, totalCount: categories.length });
-  const page = await ShopPage({ searchParams: Promise.resolve(searchParams) });
+  const page = await ShopPage({ searchParams: searchParams ? Promise.resolve(searchParams) : undefined });
 
   return render(<QueryClientProvider client={new QueryClient()}>{page}</QueryClientProvider>);
 }
@@ -91,5 +91,11 @@ describe('ShopPage', () => {
     await renderShop({ search: 'keyboard', category: 'electronics', page: '1' }, { ...response([product], 24), page: 1 });
 
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute('href', '/shop?search=keyboard&category=electronics&page=2');
+  });
+
+  it('normalizes an invalid page and supports omitted search parameters', async () => {
+    await renderShop(undefined, { ...response([product], 24), page: 1 });
+
+    expect(mocks.getProducts).toHaveBeenCalledWith({ search: '', category: '', page: 1, pageSize: 12 });
   });
 });

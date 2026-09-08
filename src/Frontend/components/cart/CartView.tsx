@@ -110,6 +110,7 @@ export default function CartView() {
   const hasUnavailableProduct = lines.some(({ product }) => product === null);
   const subtotal = lines.reduce((total, { item, product }) => total + (product?.currentPrice ?? 0) * item.quantity, 0);
   const isMutating = quantityMutation.isPending || removeMutation.isPending;
+  const mutationError = quantityMutation.error ?? removeMutation.error;
 
   if (cart.items.length === 0) {
     return (
@@ -151,6 +152,7 @@ export default function CartView() {
             </article>
           ))}
           {hasUnavailableProduct ? <p className="font-status-pill text-status-pill text-status-error" role="alert">One or more products are no longer available. Remove them before checkout.</p> : null}
+          {mutationError ? <p className="font-status-pill text-status-pill text-status-error" role="alert">{mutationError instanceof Error ? mutationError.message : 'We could not update your cart.'}</p> : null}
         </div>
         <aside className="w-full lg:w-[380px]">
           <div className="sticky top-[100px] rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm">

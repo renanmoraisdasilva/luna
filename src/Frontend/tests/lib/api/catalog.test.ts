@@ -36,4 +36,21 @@ describe('Catalog API client', () => {
 
     await expect(getProduct('missing-product')).resolves.toBeNull();
   });
+
+  it('rethrows non-404 product errors', async () => {
+    const error = new Error('Catalog unavailable');
+    vi.spyOn(catalogApi, 'get').mockRejectedValueOnce(error);
+
+    await expect(getProduct('product-1')).rejects.toBe(error);
+  });
+
+  it('omits empty optional product filters', async () => {
+    const get = vi.spyOn(catalogApi, 'get').mockResolvedValueOnce({ data: { items: [] } });
+
+    await getProducts({ search: '', category: '', page: 1, pageSize: 12 });
+
+    expect(get).toHaveBeenCalledWith('/products', {
+      params: { search: undefined, category: undefined, Page: 1, PageSize: 12 },
+    });
+  });
 });

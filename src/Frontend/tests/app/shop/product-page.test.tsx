@@ -54,4 +54,10 @@ describe('ProductPage', () => {
     expect(screen.getByRole('button', { name: 'View Keyboard side' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add to Cart' })).toBeInTheDocument();
   });
+
+  it('calls notFound when the product does not exist', async () => {
+    mocks.getProduct.mockResolvedValue(null);
+
+    await expect(ProductPage({ params: Promise.resolve({ id: 'missing-product' }) })).rejects.toThrow('NOT_FOUND');
+  });
 });

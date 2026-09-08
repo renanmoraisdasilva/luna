@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const ordersApi = axios.create({
+export const ordersApi = axios.create({
   baseURL: '/api/services/orders',
   headers: { Accept: 'application/json' },
 });
