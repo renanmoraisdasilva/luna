@@ -113,7 +113,32 @@ else
     reportgenerator \
         "-reports:$reports" \
         "-targetdir:$backend_target_directory" \
-        '-reporttypes:Html' >"$results_directory/ReportGenerator.log" 2>&1 || overall_status=1
+        '-reporttypes:Html;Cobertura' >"$results_directory/ReportGenerator.log" 2>&1 || overall_status=1
+
+    if [[ -f "$backend_coverage_directory/Cobertura.xml" && -f "$frontend_coverage_directory/coverage-summary.json" ]]; then
+        if ! node - "$backend_coverage_directory/Cobertura.xml" "$frontend_coverage_directory/coverage-summary.json" <<'NODE'
+const fs = require('fs');
+
+const [backendPath, frontendPath] = process.argv.slice(2);
+const backend = fs.readFileSync(backendPath, 'utf8').match(/branch-rate="([0-9.]+)"/);
+const frontend = JSON.parse(fs.readFileSync(frontendPath, 'utf8')).total.branches.pct / 100;
+const backendRate = backend ? Number(backend[1]) : NaN;
+const minimum = 0.9;
+
+if (!Number.isFinite(backendRate) || backendRate < minimum || frontend < minimum) {
+    console.error(`Branch coverage must be at least 90% (backend: ${Number.isFinite(backendRate) ? (backendRate * 100).toFixed(2) : 'unavailable'}%, frontend: ${(frontend * 100).toFixed(2)}%).`);
+    process.exit(1);
+}
+
+console.log(`Branch coverage gate passed (backend: ${(backendRate * 100).toFixed(2)}%, frontend: ${(frontend * 100).toFixed(2)}%).`);
+NODE
+        then
+            overall_status=1
+        fi
+    else
+        echo "Coverage summary files are missing; unable to enforce the 90% branch coverage gate." >&2
+        overall_status=1
+    fi
 fi
 
 cat >> "$summary_file" <<EOF

@@ -44,6 +44,8 @@ Follow the roadmap and the relevant phase specification and architecture documen
 - Follow the Next.js server-first boundary: use Server Components where practical, and use Client Components for interactive workflows.
 - Keep URL parameters as the source of truth for catalog filters and pagination.
 - Keep frontend tests focused on user-visible behavior and important loading, validation, error, and mutation states.
+- For every frontend API client and interactive workflow, cover the successful request, the relevant unauthorized or failed response, and the resulting user-visible error or empty state.
+- Cover cart and account workflows for loading, validation, mutation success, mutation failure, retry or refresh behavior, and authorization boundaries.
 
 ### Backend
 
@@ -52,3 +54,5 @@ Follow the roadmap and the relevant phase specification and architecture documen
 - Preserve bounded-context ownership: each service owns its domain and database, and services must not access one another's databases directly.
 - Maintain the CQRS-style separation between read and write paths. Read repositories may project directly to application DTOs/read models; writes should use domain entities when behavior or invariants are required.
 - Use the phase documents as the source of truth for contracts, failure behavior, architecture, and acceptance criteria. Record deliberate deviations in the relevant documentation.
+- Backend tests should cover domain invariants, application error paths, controller validation and authorization, persistence behavior, concurrency-sensitive operations, and the response contract for expected failures.
+- Integration tests should exercise each public endpoint through the real host and database boundary, including unauthenticated requests, invalid input, missing resources, and successful persistence.
