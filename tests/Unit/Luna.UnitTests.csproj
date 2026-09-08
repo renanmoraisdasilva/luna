@@ -12,6 +12,7 @@
     <ProjectReference Include="../../src/Services/Catalog/Catalog.Contracts/Catalog.Contracts.csproj" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Application/Orders.Application.csproj" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Domain/Orders.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
     <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
   </ItemGroup>
 
