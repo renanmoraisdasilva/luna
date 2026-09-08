@@ -9,24 +9,34 @@ namespace Luna.Orders.Api.Controllers;
 [ApiController]
 [Authorize(AuthenticationSchemes = LunaAuthenticationDefaults.ValidationScheme)]
 [Route("api/v1/orders/cart")]
-public sealed class CartsController(CartService cartService) : ControllerBase
+public sealed class CartsController(
+    GetCartHandler getCart,
+    AddCartItemHandler addCartItem,
+    ChangeCartItemQuantityHandler changeCartItemQuantity,
+    RemoveCartItemHandler removeCartItem) : ControllerBase
 {
     [HttpGet]
     public Task<CartResponse> Get(CancellationToken cancellationToken) =>
-        cartService.GetAsync(GetCustomerId(), cancellationToken);
+        getCart.HandleAsync(GetCustomerId(), cancellationToken);
 
     [HttpPost("items")]
     public Task<CartResponse> AddItem(AddCartItemRequest request, CancellationToken cancellationToken) =>
-        cartService.AddItemAsync(GetCustomerId(), request.ProductId, request.Quantity, cancellationToken);
+        addCartItem.HandleAsync(
+            new AddCartItemCommand(GetCustomerId(), request.ProductId, request.Quantity),
+            cancellationToken);
 
     [HttpPut("items/{productId:guid}")]
     public Task<CartResponse> ChangeItemQuantity(Guid productId, ChangeCartItemQuantityRequest request, CancellationToken cancellationToken) =>
-        cartService.ChangeItemQuantityAsync(GetCustomerId(), productId, request.Quantity, cancellationToken);
+        changeCartItemQuantity.HandleAsync(
+            new ChangeCartItemQuantityCommand(GetCustomerId(), productId, request.Quantity),
+            cancellationToken);
 
     [HttpDelete("items/{productId:guid}")]
     public async Task<IActionResult> RemoveItem(Guid productId, CancellationToken cancellationToken)
     {
-        await cartService.RemoveItemAsync(GetCustomerId(), productId, cancellationToken);
+        await removeCartItem.HandleAsync(
+            new RemoveCartItemCommand(GetCustomerId(), productId),
+            cancellationToken);
         return NoContent();
     }
 

@@ -26,4 +26,18 @@ public sealed class CartRepositoryTests(OrdersSqlServerFixture fixture)
         await using var verificationDb = fixture.CreateDbContext();
         (await verificationDb.Carts.CountAsync(cart => cart.CustomerId == customerId)).Should().Be(1);
     }
+
+    [Fact]
+    public async Task Existing_cart_is_returned_without_creating_a_duplicate()
+    {
+        await fixture.ResetAsync();
+        var customerId = Guid.NewGuid();
+        await using var db = fixture.CreateDbContext();
+        var repository = new CartRepository(db);
+        var created = await repository.GetOrCreateAsync(customerId, CancellationToken.None);
+
+        var loaded = await repository.GetOrCreateAsync(customerId, CancellationToken.None);
+
+        loaded.Id.Should().Be(created.Id);
+    }
 }

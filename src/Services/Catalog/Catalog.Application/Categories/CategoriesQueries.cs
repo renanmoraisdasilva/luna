@@ -1,5 +1,5 @@
-using Luna.Contracts.Pagination;
 using Luna.Catalog.Contracts.Categories;
+using Luna.Contracts.Pagination;
 
 namespace Luna.Catalog.Application.Categories;
 

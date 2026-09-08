@@ -1,5 +1,5 @@
-using Luna.Contracts.Pagination;
 using Luna.Catalog.Contracts.Products;
+using Luna.Contracts.Pagination;
 
 namespace Luna.Catalog.Application.Products;
 
@@ -12,5 +12,13 @@ public sealed class GetProductsHandler(IProductReadRepository repository)
         CancellationToken cancellationToken)
     {
         return repository.GetActiveProductsAsync(search, categorySlug, pagination, cancellationToken);
+    }
+}
+
+public sealed class GetProductHandler(IProductReadRepository repository)
+{
+    public Task<ProductResponse?> HandleAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return repository.GetActiveProductAsync(id, cancellationToken);
     }
 }

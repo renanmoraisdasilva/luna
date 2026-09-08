@@ -53,6 +53,36 @@ public sealed class CartsControllerTests(OrdersSqlServerFixture fixture)
         secondCart.Items.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Rejects_non_positive_item_quantity()
+    {
+        await fixture.ResetAsync();
+        using var factory = new OrdersApiFactory(fixture);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.CustomerHeader, Guid.NewGuid().ToString());
+
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/orders/cart/items",
+            new { ProductId = Guid.NewGuid(), Quantity = 0 });
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Rejects_changing_quantity_when_customer_has_no_cart()
+    {
+        await fixture.ResetAsync();
+        using var factory = new OrdersApiFactory(fixture);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.CustomerHeader, Guid.NewGuid().ToString());
+
+        var response = await client.PutAsJsonAsync(
+            $"/api/v1/orders/cart/items/{Guid.NewGuid()}",
+            new { Quantity = 2 });
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+    }
+
     private sealed record CartResponseDto(Guid Id, Guid CustomerId, IReadOnlyCollection<CartItemResponseDto> Items);
     private sealed record CartItemResponseDto(Guid ProductId, int Quantity);
 }

@@ -6,7 +6,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Luna.Orders.Infrastructure.Repositories;
 
-public sealed class CartRepository(OrdersDbContext dbContext) : ICartRepository
+public sealed class CartRepository(OrdersDbContext dbContext) : ICartWriteRepository
 {
     public Task<Cart?> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken) =>
         dbContext.Carts

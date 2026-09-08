@@ -12,8 +12,12 @@ public static class OrdersInfrastructureExtensions
     public static IServiceCollection AddOrdersInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<OrdersDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("Database")));
-        services.AddScoped<ICartRepository, CartRepository>();
-        services.AddScoped<CartService>();
+        services.AddScoped<ICartWriteRepository, CartRepository>();
+        services.AddScoped<ICartReadRepository, CartReadRepository>();
+        services.AddScoped<GetCartHandler>();
+        services.AddScoped<AddCartItemHandler>();
+        services.AddScoped<ChangeCartItemQuantityHandler>();
+        services.AddScoped<RemoveCartItemHandler>();
         return services;
     }
 

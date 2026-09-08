@@ -281,6 +281,18 @@ Domain services are reserved for behavior that does not naturally belong to one 
 
 ## Read and Write Behavior
 
+Application features organize code by business capability. Queries and commands are grouped by feature, while read and write repository interfaces explicitly identify their CQRS responsibility.
+
+```text
+Feature/
+├── FeatureQueries.cs
+├── FeatureCommands.cs
+├── IFeatureReadRepository.cs
+└── IFeatureWriteRepository.cs
+```
+
+Query handlers read through read repositories and return read models. Command handlers load and modify domain aggregates through write repositories. A feature that is read-only may omit `FeatureCommands.cs` and `IFeatureWriteRepository.cs`; a feature that is write-only may omit the query files.
+
 ## Reads
 
 Read repositories project directly to Application DTOs/read models.
