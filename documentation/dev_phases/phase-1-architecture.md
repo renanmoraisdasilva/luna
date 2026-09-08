@@ -162,18 +162,31 @@ Cross-service relationships are represented using IDs.
 
 ## Application Structure
 
-Each backend service follows the Phase 0 structure:
+Each backend service uses project-level layer boundaries when it owns meaningful
+application, domain, and infrastructure behavior:
 
 ```text
 Service/
-+---- Controllers/
-+---- Application/
-+---- Domain/
-+---- Infrastructure/
-+---- Program.cs
++---- Service.Api/            -> HTTP host and controllers
++---- Service.Application/    -> commands, queries, handlers, ports
++---- Service.Contracts/      -> public API request/response contracts
++---- Service.Domain/         -> aggregates and business rules
++---- Service.Infrastructure/ -> EF Core, repositories, migrations, adapters
 ```
 
-The structure is a boundary, not a requirement for excessive abstraction.
+The dependency direction is inward:
+
+```text
+Api -> Application, Contracts, Infrastructure
+Infrastructure -> Application, Domain
+Application -> Contracts, Domain
+Domain -> no service project dependencies
+Contracts -> no service project dependencies
+```
+
+Simple services may remain a single project only while they have not yet
+developed meaningful layer boundaries. They must be split before application
+or domain behavior is added to the host project.
 
 ## Controllers
 
@@ -524,11 +537,11 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 - [x] Aggregate roots are identified and documented for each implemented bounded context.
 - [x] `Product` owns `ProductImage` and controls image ordering and lifecycle.
 - [x] `Cart` owns `CartItem` and controls quantity and item changes.
+- [x] Aggregate child entities cannot be modified independently through application use cases.
 - [ ] `Order` owns `OrderItem` and `ShippingAddress` snapshots and controls valid state transitions.
-- [ ] `Stock` owns inventory reservations and enforces availability and concurrency invariants.
+- [x] `Stock` owns inventory reservations and enforces availability and concurrency invariants.
 - [ ] `Payment` owns payment attempts and authorization state.
 - [ ] `Shipment` owns tracking events and its shipment lifecycle.
-- [ ] Aggregate child entities cannot be modified independently through application use cases.
 - [ ] Value objects are introduced where they protect meaningful domain rules, especially money, quantity, SKU, and address data.
 - [ ] Domain services are used only for behavior that does not naturally belong to one aggregate.
 - [ ] Checkout coordination remains in the Orders application layer rather than becoming a domain service.
@@ -536,15 +549,15 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 ## Layering and persistence
 
 - [x] Controllers remain limited to HTTP concerns and response mapping.
-- [ ] Application services coordinate use cases and cross-service calls.
-- [ ] Domain code owns business rules and state transitions.
-- [ ] Infrastructure contains EF Core, migrations, HTTP clients, and external-provider adapters.
+- [x] Application services coordinate use cases and cross-service calls.
+- [x] Domain code owns business rules and state transitions.
+- [x] Infrastructure contains EF Core, migrations, HTTP clients, and external-provider adapters.
 - [x] Read repositories project directly to read DTOs without unnecessarily materializing aggregates.
-- [ ] Write operations load and modify aggregates when business behavior is required.
+- [x] Write operations load and modify aggregates when business behavior is required.
 
 ## Verification
 
-- [ ] Aggregate invariants have focused unit tests.
-- [ ] Persistence behavior has integration tests against real database infrastructure.
+- [x] Aggregate invariants have focused unit tests.
+- [x] Persistence behavior has integration tests against real database infrastructure.
 - [ ] Cross-service workflows have integration or end-to-end coverage.
 - [ ] Architecture changes are reviewed against the bounded-context and ownership rules above.

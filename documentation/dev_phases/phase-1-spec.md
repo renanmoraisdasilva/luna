@@ -912,17 +912,17 @@ The phase is also complete when:
 
 ## Cart
 
-- [ ] SPEC-CART-001 - Add item
-- [ ] SPEC-CART-002 - Change quantity
-- [ ] SPEC-CART-003 - Remove item
-- [ ] SPEC-CART-004 - Current pricing
-- [ ] SPEC-CART-005 - Inventory is not reserved
+- [x] SPEC-CART-001 - Add item
+- [x] SPEC-CART-002 - Change quantity
+- [x] SPEC-CART-003 - Remove item
+- [x] SPEC-CART-004 - Current pricing
+- [x] SPEC-CART-005 - Inventory is not reserved
 
 ## Authentication
 
-- [ ] SPEC-AUTH-001 - Customer authentication
+- [x] SPEC-AUTH-001 - Customer authentication
 - [x] SPEC-AUTH-002 - Roles
-- [ ] SPEC-AUTH-003 - Session boundary
+- [x] SPEC-AUTH-003 - Session boundary
 
 ## Checkout
 
@@ -943,11 +943,11 @@ The phase is also complete when:
 
 ## Inventory
 
-- [ ] SPEC-INV-001 - Available quantity
-- [ ] SPEC-INV-002 - Successful reservation
-- [ ] SPEC-INV-003 - Insufficient inventory
-- [ ] SPEC-INV-004 - Concurrent reservation
-- [ ] SPEC-INV-005 - Release reservation
+- [x] SPEC-INV-001 - Available quantity
+- [x] SPEC-INV-002 - Successful reservation
+- [x] SPEC-INV-003 - Insufficient inventory
+- [x] SPEC-INV-004 - Concurrent reservation
+- [x] SPEC-INV-005 - Release reservation
 
 ## Pricing
 
