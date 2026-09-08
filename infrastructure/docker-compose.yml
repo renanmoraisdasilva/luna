@@ -103,8 +103,8 @@ services:
     build:
       context: ..
       dockerfile: infrastructure/service.Dockerfile
-      args: { PROJECT: src/Services/Inventory/Inventory.csproj }
-    command: ["Inventory.dll"]
+      args: { PROJECT: src/Services/Inventory/Inventory.Api/Inventory.Api.csproj }
+    command: ["Inventory.Api.dll"]
     environment: { ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:

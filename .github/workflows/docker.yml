@@ -60,7 +60,7 @@ jobs:
             context: .
             image: ghcr.io/${{ github.repository_owner }}/luna-inventory
             args: |
-              PROJECT=src/Services/Inventory/Inventory.csproj
+              PROJECT=src/Services/Inventory/Inventory.Api/Inventory.Api.csproj
           - name: shipping
             dockerfile: infrastructure/service.Dockerfile
             context: .

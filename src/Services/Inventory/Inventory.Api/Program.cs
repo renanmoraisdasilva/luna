@@ -1,6 +1,6 @@
 using Luna.Inventory.Application.Reservations;
 using Luna.Inventory.Infrastructure;
-using Luna.Inventory;
+using Luna.Inventory.Api.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -18,6 +18,7 @@ await app.Services.InitializeInventoryDatabaseAsync();
 app.UseSerilogRequestLogging();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<InventoryExceptionHandlingMiddleware>();
 app.MapControllers();
 app.MapHealthChecks("/health");
