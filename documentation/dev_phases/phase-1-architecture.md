@@ -284,6 +284,8 @@ Important ownership rules include:
 * `Order` owns item price snapshots, address snapshots, and valid status transitions.
 * `Stock` owns availability and reservation invariants, including concurrency-safe reserve and release behavior.
 * `Payment` owns authorization state and payment-attempt history.
+* `Payment` uses a unique order identifier and optimistic concurrency token to prevent conflicting aggregate writes.
+* Payment authorization uses a stable order-based idempotency key so concurrent provider requests produce one deterministic result.
 * `Shipment` owns its tracking lifecycle.
 
 The most useful value objects are `Money`, `Sku`, `CategorySlug`, `Quantity`, and `ShippingAddress`. They should be introduced when related write behavior requires stronger validation; they are not required for every read model.
@@ -521,7 +523,7 @@ The repository also separates unit, integration, and smoke tests under the centr
 
 # 14. Deferred Architecture
 
-Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, idempotency, compensation, distributed tracing, advanced metrics, operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
+Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, compensation, distributed tracing, advanced metrics, operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
 
 # 15. Architecture Implementation Checklist
 
@@ -540,7 +542,9 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 - [x] Aggregate child entities cannot be modified independently through application use cases.
 - [ ] `Order` owns `OrderItem` and `ShippingAddress` snapshots and controls valid state transitions.
 - [x] `Stock` owns inventory reservations and enforces availability and concurrency invariants.
-- [ ] `Payment` owns payment attempts and authorization state.
+- [x] `Payment` owns payment attempts and authorization state.
+- [x] Payment persistence enforces unique order ownership and optimistic concurrency.
+- [x] Payment provider authorization is idempotent for repeated authorization keys.
 - [x] `Shipment` owns tracking events and its shipment lifecycle.
 - [ ] Value objects are introduced where they protect meaningful domain rules, especially money, quantity, SKU, and address data.
 - [ ] Domain services are used only for behavior that does not naturally belong to one aggregate.

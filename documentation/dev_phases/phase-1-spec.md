@@ -636,6 +636,16 @@ Orders may then transition to `Confirmed`.
 
 Inventory must be released.
 
+## SPEC-PAY-005 - Concurrent authorization safety
+
+**Given** two authorization requests for the same order arrive concurrently
+
+**Then** Payments maintains one payment aggregate per order
+
+**And** optimistic concurrency prevents one request from silently overwriting the other
+
+**And** repeated provider authorization keys return the same deterministic provider result.
+
 ---
 # 12. Fulfillment
 
@@ -786,7 +796,6 @@ The following are intentionally unresolved:
 service crashes after successful payment
 request timeout after downstream success
 duplicate checkout request
-duplicate payment authorization
 lost response after inventory reservation
 partial distributed transaction
 automatic recovery
@@ -803,7 +812,6 @@ Phase 1 does not implement:
 * asynchronous consumers
 * transactional outbox
 * retries
-* idempotency
 * dead-letter queues
 * compensation/Sagas
 * distributed locks

@@ -92,8 +92,8 @@ services:
     build:
       context: ..
       dockerfile: infrastructure/service.Dockerfile
-      args: { PROJECT: src/Services/Payments/Payments.csproj }
-    command: ["Payments.dll"]
+      args: { PROJECT: src/Services/Payments/Payments.Api/Payments.Api.csproj }
+    command: ["Payments.Api.dll"]
     environment: { ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:

@@ -21,4 +21,32 @@ public sealed class ShippingMethodTests
 
         act.Should().Throw<ArgumentOutOfRangeException>();
     }
+
+    [Theory]
+    [InlineData("", "Standard")]
+    [InlineData("STANDARD", "")]
+    public void Create_rejects_missing_code_or_name(string code, string name)
+    {
+        var act = () => ShippingMethod.Create(code, name, 5.99m, 5);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Create_rejects_non_positive_delivery_time()
+    {
+        var act = () => ShippingMethod.Create("STANDARD", "Standard", 5.99m, 0);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void Create_uses_the_supplied_id()
+    {
+        var id = Guid.NewGuid();
+
+        var method = ShippingMethod.Create("STANDARD", "Standard", 5.99m, 5, id);
+
+        method.Id.Should().Be(id);
+    }
 }

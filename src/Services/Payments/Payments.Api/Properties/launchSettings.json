@@ -1,12 +1,14 @@
 {
   "profiles": {
-    "Payments": {
+    "Payments.Api": {
       "commandName": "Project",
+      "dotnetRunMessages": true,
       "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:5005",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:58403;http://localhost:58408"
+      }
     }
   }
 }

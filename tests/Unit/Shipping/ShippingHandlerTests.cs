@@ -24,6 +24,19 @@ public sealed class ShippingHandlerTests
         quotes.Quote!.ShippingMethodCode.Should().Be("STANDARD");
     }
 
+    [Fact]
+    public async Task Quote_handler_rejects_an_empty_order_id()
+    {
+        var methods = new FakeMethodRepository(new ShippingMethodReadModel(Guid.NewGuid(), "STANDARD", "Standard", 5.99m, 5));
+        var handler = new QuoteShippingHandler(methods, new FakeQuoteRepository());
+
+        var act = () => handler.HandleAsync(
+            new QuoteShippingCommand(Guid.Empty, "STANDARD", "US", "90210"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
     private sealed class FakeMethodRepository(ShippingMethodReadModel method) : IShippingMethodReadRepository
     {
         public Task<IReadOnlyCollection<ShippingMethodReadModel>> GetAllAsync(CancellationToken cancellationToken) =>

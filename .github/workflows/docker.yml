@@ -54,7 +54,7 @@ jobs:
             context: .
             image: ghcr.io/${{ github.repository_owner }}/luna-payments
             args: |
-              PROJECT=src/Services/Payments/Payments.csproj
+              PROJECT=src/Services/Payments/Payments.Api/Payments.Api.csproj
           - name: inventory
             dockerfile: infrastructure/service.Dockerfile
             context: .
