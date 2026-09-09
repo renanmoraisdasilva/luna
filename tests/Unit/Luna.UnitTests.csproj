@@ -13,6 +13,8 @@
     <ProjectReference Include="../../src/Services/Orders/Orders.Application/Orders.Application.csproj" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Domain/Orders.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Shipping/Shipping.Application/Shipping.Application.csproj" />
+    <ProjectReference Include="../../src/Services/Shipping/Shipping.Domain/Shipping.Domain.csproj" />
     <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
   </ItemGroup>
 

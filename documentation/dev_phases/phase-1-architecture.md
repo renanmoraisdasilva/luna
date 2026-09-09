@@ -541,7 +541,7 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 - [ ] `Order` owns `OrderItem` and `ShippingAddress` snapshots and controls valid state transitions.
 - [x] `Stock` owns inventory reservations and enforces availability and concurrency invariants.
 - [ ] `Payment` owns payment attempts and authorization state.
-- [ ] `Shipment` owns tracking events and its shipment lifecycle.
+- [x] `Shipment` owns tracking events and its shipment lifecycle.
 - [ ] Value objects are introduced where they protect meaningful domain rules, especially money, quantity, SKU, and address data.
 - [ ] Domain services are used only for behavior that does not naturally belong to one aggregate.
 - [ ] Checkout coordination remains in the Orders application layer rather than becoming a domain service.

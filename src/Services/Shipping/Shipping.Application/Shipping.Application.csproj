@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Luna.Shipping.Application</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shipping.Contracts\Shipping.Contracts.csproj" />
+    <ProjectReference Include="..\Shipping.Domain\Shipping.Domain.csproj" />
+  </ItemGroup>
+</Project>

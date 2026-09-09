@@ -114,8 +114,8 @@ services:
     build:
       context: ..
       dockerfile: infrastructure/service.Dockerfile
-      args: { PROJECT: src/Services/Shipping/Shipping.csproj }
-    command: ["Shipping.dll"]
+      args: { PROJECT: src/Services/Shipping/Shipping.Api/Shipping.Api.csproj }
+    command: ["Shipping.Api.dll"]
     environment: { ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True" }
     depends_on:
       sqlserver:
