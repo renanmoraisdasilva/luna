@@ -16,6 +16,66 @@ export type Cart = {
   items: CartItem[];
 };
 
+export type CheckoutRequest = {
+  fullName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  stateOrProvince: string;
+  postalCode: string;
+  country: string;
+  shippingMethodCode: string;
+  paymentMethod: string;
+  currency: string;
+};
+
+export type CheckoutResponse = {
+  orderId: string;
+  status: string;
+  total: number;
+  currency: string;
+  reservationId: string;
+  paymentId: string;
+};
+
+export type OrderItem = {
+  productId: string;
+  sku: string;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+};
+
+export type OrderSummary = {
+  id: string;
+  status: string;
+  total: number;
+  createdAt: string;
+  itemCount: number;
+};
+
+export type Order = {
+  id: string;
+  customerId: string;
+  status: string;
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+  shippingMethodCode: string;
+  createdAt: string;
+  shippingAddress: {
+    fullName: string;
+    addressLine1: string;
+    addressLine2?: string | null;
+    city: string;
+    stateOrProvince: string;
+    postalCode: string;
+    country: string;
+  };
+  items: OrderItem[];
+};
+
 export type AddCartItemRequest = {
   productId: string;
   quantity: number;
@@ -28,6 +88,21 @@ export async function addCartItem(request: AddCartItemRequest): Promise<Cart> {
 
 export async function getCart(): Promise<Cart> {
   const response = await ordersApi.get<Cart>('/cart');
+  return response.data;
+}
+
+export async function submitCheckout(request: CheckoutRequest): Promise<CheckoutResponse> {
+  const response = await ordersApi.post<CheckoutResponse>('/checkout', request);
+  return response.data;
+}
+
+export async function getOrder(id: string): Promise<Order> {
+  const response = await ordersApi.get<Order>(`/${id}`);
+  return response.data;
+}
+
+export async function getOrders(): Promise<OrderSummary[]> {
+  const response = await ordersApi.get<OrderSummary[]>('/');
   return response.data;
 }
 

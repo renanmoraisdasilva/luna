@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { accessTokenCookieName, decryptAccessToken } from './lib/auth-cookie';
 
-const protectedPagePrefixes = ['/account'];
+const protectedPagePrefixes = ['/account', '/checkout', '/orders'];
 
 function isProtectedPage(pathname: string): boolean {
   return protectedPagePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -37,5 +37,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/services/:path*', '/account/:path*'],
+  matcher: ['/api/services/:path*', '/account/:path*', '/checkout/:path*', '/orders/:path*'],
 };

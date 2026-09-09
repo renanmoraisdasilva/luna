@@ -23,6 +23,12 @@ const nextConfig = {
 			source: `/api/services/${service}/health`,
 			destination: `${baseUrl}/health`,
 		}));
+		const shippingRewrites = configuredServices.some(([service]) => service === 'shipping')
+			? [{
+					source: '/api/services/shipping/:path*',
+					destination: `${configuredServices.find(([service]) => service === 'shipping')?.[1]}/api/v1/:path*`,
+				}]
+			: [];
 		const identityBaseUrl = configuredServices.find(([service]) => service === 'identity')?.[1];
 		const identityDiscoveryRewrites = identityBaseUrl
 			? [
@@ -36,12 +42,12 @@ const nextConfig = {
 					},
 				]
 			: [];
-		const serviceRewrites = configuredServices.map(([service, baseUrl]) => ({
+		const serviceRewrites = configuredServices.filter(([service]) => service !== 'shipping').map(([service, baseUrl]) => ({
 			source: `/api/services/${service}/:path*`,
 			destination: `${baseUrl}/api/v1/${service}/:path*`,
 		}));
 
-		return [...swaggerRewrites, ...identityDiscoveryRewrites, ...serviceHealthRewrites, ...serviceRewrites];
+		return [...swaggerRewrites, ...identityDiscoveryRewrites, ...serviceHealthRewrites, ...shippingRewrites, ...serviceRewrites];
 	},
 };
 export default nextConfig;

@@ -163,7 +163,7 @@ export default function CartView() {
             </div>
             <div className="mb-xl flex items-center justify-between font-body-md text-body-md text-on-surface"><span className="font-medium">Estimated total</span><span className="font-semibold">{formatCurrency(subtotal)}</span></div>
             <div className="flex flex-col gap-md">
-              <button className="h-control w-full rounded-button bg-primary px-xl py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50" type="button" disabled>Proceed to checkout</button>
+              <Link className={`flex h-control w-full items-center justify-center rounded-button bg-primary px-xl py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:bg-primary-container ${hasUnavailableProduct ? 'pointer-events-none opacity-50' : ''}`} href={hasUnavailableProduct ? '#' : '/checkout'} aria-disabled={hasUnavailableProduct}>Proceed to checkout</Link>
               <Link className="flex h-control w-full items-center justify-center rounded-button border border-outline bg-surface-card px-xl py-sm font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-container-low" href="/shop">Continue shopping</Link>
             </div>
           </div>

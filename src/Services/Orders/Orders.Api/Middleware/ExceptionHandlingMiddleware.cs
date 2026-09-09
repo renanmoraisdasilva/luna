@@ -1,4 +1,5 @@
 using Luna.Contracts.Errors;
+using Luna.Orders.Application.Checkout;
 
 namespace Luna.Orders.Api.Middleware;
 
@@ -23,6 +24,7 @@ public sealed class ExceptionHandlingMiddleware(
 
             var (statusCode, error) = exception switch
             {
+                CheckoutRejectedException rejected => (StatusCodes.Status422UnprocessableEntity, new ApiError(rejected.Code, rejected.Message)),
                 ArgumentException => (StatusCodes.Status400BadRequest, new ApiError("INVALID_REQUEST", exception.Message)),
                 KeyNotFoundException => (StatusCodes.Status404NotFound, new ApiError("CART_NOT_FOUND", exception.Message)),
                 _ => (StatusCodes.Status500InternalServerError, new ApiError("INTERNAL_ERROR", "An unexpected error occurred.")),

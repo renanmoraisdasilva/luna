@@ -23,6 +23,35 @@ html { scrollbar-gutter: stable; }
   font-feature-settings: 'liga';
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
+.confirmation-check {
+  width: 16px;
+  height: 30px;
+  border-right: 4px solid currentColor;
+  border-bottom: 4px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+}
+.timeline-check {
+  width: 6px;
+  height: 11px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+.payment-card-icon {
+  width: 24px;
+  height: 16px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  position: relative;
+}
+.payment-card-icon::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  border-top: 1.5px solid currentColor;
+}
 .swagger-page { padding: 24px 0px; background:#fff; }
 .swagger-back { border:1px solid #555; border-radius:3px; color:#fff; font-size:11px; padding:8px 12px; text-decoration:none; }
 .swagger-selector { display:flex; align-items:center; gap:12px; max-width:1180px; margin:28px auto 18px; padding:0 24px; color:#555; font:500 12px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }

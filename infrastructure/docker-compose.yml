@@ -84,6 +84,10 @@ services:
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
+      CatalogApi: http://catalog:8080/
+      ShippingApi: http://shipping:8080/
+      InventoryApi: http://inventory:8080/
+      PaymentsApi: http://payments:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
