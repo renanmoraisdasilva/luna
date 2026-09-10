@@ -4,6 +4,8 @@ using Luna.Orders.Application.Orders;
 using Luna.Orders.Infrastructure.Checkout;
 using Luna.Orders.Infrastructure.Database;
 using Luna.Orders.Infrastructure.Repositories;
+using Luna.Authentication.ServiceAuthentication;
+using Luna.Contracts.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,14 +19,21 @@ public static class OrdersInfrastructureExtensions
         services.AddDbContext<OrdersDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("Database")));
         services.AddHttpContextAccessor();
         services.AddTransient<BearerTokenHandler>();
+        services.AddLunaServiceAuthentication(configuration);
         services.AddHttpClient<ICatalogCheckoutClient, CatalogCheckoutClient>(client => client.BaseAddress = GetServiceUri(configuration, "CatalogApi"))
             .AddHttpMessageHandler<BearerTokenHandler>();
         services.AddHttpClient<IShippingCheckoutClient, ShippingCheckoutClient>(client => client.BaseAddress = GetServiceUri(configuration, "ShippingApi"))
-            .AddHttpMessageHandler<BearerTokenHandler>();
+            .AddHttpMessageHandler(serviceProvider => new ServiceTokenHandler(
+                serviceProvider.GetRequiredService<ServiceTokenProvider>(),
+                LunaServiceScopes.ShippingShipmentsWrite));
         services.AddHttpClient<IInventoryCheckoutClient, InventoryCheckoutClient>(client => client.BaseAddress = GetServiceUri(configuration, "InventoryApi"))
-            .AddHttpMessageHandler<BearerTokenHandler>();
+            .AddHttpMessageHandler(serviceProvider => new ServiceTokenHandler(
+                serviceProvider.GetRequiredService<ServiceTokenProvider>(),
+                LunaServiceScopes.InventoryReservationsWrite));
         services.AddHttpClient<IPaymentsCheckoutClient, PaymentsCheckoutClient>(client => client.BaseAddress = GetServiceUri(configuration, "PaymentsApi"))
-            .AddHttpMessageHandler<BearerTokenHandler>();
+            .AddHttpMessageHandler(serviceProvider => new ServiceTokenHandler(
+                serviceProvider.GetRequiredService<ServiceTokenProvider>(),
+                LunaServiceScopes.PaymentsAuthorize));
         services.AddScoped<ICartWriteRepository, CartRepository>();
         services.AddScoped<ICartReadRepository, CartReadRepository>();
         services.AddScoped<IOrderWriteRepository, OrderRepository>();

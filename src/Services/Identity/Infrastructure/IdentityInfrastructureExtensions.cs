@@ -18,5 +18,9 @@ public static class IdentityInfrastructureExtensions
 
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         await IdentitySeed.SeedRolesAsync(roleManager);
+        await IdentitySeed.SeedServiceClientsAsync(
+            services,
+            services.GetRequiredService<IConfiguration>(),
+            cancellationToken);
     }
 }

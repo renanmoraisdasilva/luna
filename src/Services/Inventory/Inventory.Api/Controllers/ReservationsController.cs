@@ -1,5 +1,7 @@
 using Luna.Inventory.Application.Reservations;
 using Luna.Inventory.Contracts.Reservations;
+using Luna.Authentication.ServiceAuthentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Inventory.Api.Controllers;
@@ -11,6 +13,7 @@ public sealed class ReservationsController(
     ReleaseReservationHandler releaseReservation) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Policy = LunaServicePolicies.OrdersInventoryReservationsWrite)]
     public async Task<ActionResult<ReservationResponse>> Reserve(
         ReserveInventoryRequest request,
         CancellationToken cancellationToken)
@@ -21,6 +24,7 @@ public sealed class ReservationsController(
     }
 
     [HttpPost("{id:guid}/release")]
+    [Authorize(Policy = LunaServicePolicies.OrdersInventoryReservationsWrite)]
     public async Task<ActionResult<ReleaseReservationResponse>> Release(
         Guid id,
         CancellationToken cancellationToken)

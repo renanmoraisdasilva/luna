@@ -9,3 +9,15 @@ public static class LunaAuthentication
     public const string NameClaim = "name";
     public const string RoleClaim = "role";
 }
+
+public static class LunaServiceClients
+{
+    public const string Orders = "orders";
+}
+
+public static class LunaServiceScopes
+{
+    public const string InventoryReservationsWrite = "inventory.reservations.write";
+    public const string PaymentsAuthorize = "payments.authorize";
+    public const string ShippingShipmentsWrite = "shipping.shipments.write";
+}

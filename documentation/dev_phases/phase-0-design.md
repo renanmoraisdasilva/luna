@@ -516,6 +516,7 @@ The backend authorization model does not depend on a particular access-token ser
 - Tokens and secrets are never logged.
 - Client-supplied user IDs are never treated as proof of identity.
 - Backend services are not publicly exposed by default.
+- Internal write APIs authenticate service callers with short-lived OpenIddict client-credentials tokens and least-privilege scopes. The Orders client secret is supplied by deployment configuration, not source control.
 
 Deferred to the dedicated security phase:
 
@@ -524,7 +525,6 @@ Deferred to the dedicated security phase:
 - Email verification
 - Refresh-token rotation
 - Security auditing
-- Service-to-service authentication
 - Advanced security hardening
 
 ---

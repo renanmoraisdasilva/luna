@@ -1,5 +1,7 @@
 using Luna.Shipping.Application.Shipments;
 using Luna.Shipping.Contracts;
+using Luna.Authentication.ServiceAuthentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Shipping.Api.Controllers;
@@ -9,6 +11,7 @@ namespace Luna.Shipping.Api.Controllers;
 public sealed class ShipmentsController(CreateShipmentHandler handler) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Policy = LunaServicePolicies.OrdersShippingShipmentsWrite)]
     public async Task<ActionResult<ShipmentResponse>> Create(
         CreateShipmentRequest request,
         CancellationToken cancellationToken) =>

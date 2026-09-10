@@ -47,6 +47,27 @@ public sealed class TokenController(
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
+        if (request.IsClientCredentialsGrantType())
+        {
+            if (string.IsNullOrWhiteSpace(request.ClientId))
+            {
+                return BadRequest(new
+                {
+                    error = OpenIddictConstants.Errors.InvalidClient,
+                    error_description = "A service client ID is required.",
+                });
+            }
+
+            var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            identity.SetClaim(OpenIddictConstants.Claims.Subject, request.ClientId);
+            identity.SetClaim(OpenIddictConstants.Claims.ClientId, request.ClientId);
+
+            var principal = new ClaimsPrincipal(identity);
+            principal.SetScopes(request.GetScopes());
+            principal.SetResources(LunaAuthentication.ApiResource);
+            return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        }
+
         if (request.IsRefreshTokenGrantType())
         {
             var result = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);

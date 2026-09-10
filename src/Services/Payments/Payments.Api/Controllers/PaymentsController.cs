@@ -1,6 +1,8 @@
 using Luna.Payments.Application.Authorization;
 using Luna.Payments.Contracts;
+using Luna.Authentication.ServiceAuthentication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Luna.Payments.Api.Controllers;
 
@@ -9,6 +11,7 @@ namespace Luna.Payments.Api.Controllers;
 public sealed class PaymentsController(AuthorizePaymentHandler authorizePayment) : ControllerBase
 {
     [HttpPost("authorize")]
+    [Authorize(Policy = LunaServicePolicies.OrdersPaymentsAuthorize)]
     public async Task<ActionResult<AuthorizePaymentResponse>> Authorize(
         AuthorizePaymentRequest request,
         CancellationToken cancellationToken)

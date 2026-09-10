@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Payments.Contracts\Payments.Contracts.csproj" />
     <ProjectReference Include="..\Payments.Infrastructure\Payments.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\Contracts\Luna.Contracts\Luna.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Luna.Authentication\Luna.Authentication.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />

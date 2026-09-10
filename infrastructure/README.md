@@ -12,6 +12,8 @@ Important: the production server must have a real `/opt/luna/.env` file before r
 
 A sample file is provided at `.env.example` for reference. Copy it to `/opt/luna/.env` on the server and replace the example values with the real database connection strings.
 
+`ORDERS_SERVICE_CLIENT_SECRET` must be a long random secret shared only by Identity and Orders. It is used to issue and validate Orders' service-to-service tokens.
+
 Run the local stack:
 
 ```bash

@@ -29,6 +29,7 @@ public static class IdentityServiceCollectionExtensions
                 options.SetConfigurationEndpointUris("/.well-known/openid-configuration");
                 options.AllowPasswordFlow();
                 options.AllowRefreshTokenFlow();
+                options.AllowClientCredentialsFlow();
                 options.AcceptAnonymousClients();
                 options.DisableAccessTokenEncryption();
                 options.AddDevelopmentEncryptionCertificate();
