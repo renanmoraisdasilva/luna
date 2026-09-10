@@ -367,7 +367,9 @@ Catalog enables JWT validation before it has protected endpoints so its hosting 
 
 Next.js acts as the browser-facing gateway and stores the JWT in an encrypted, `HttpOnly`, `Secure` cookie. Cookie encryption provides confidentiality and prevents the browser from inspecting the stored token; it is separate from JWT validation. JWT authenticity and integrity come from signature verification using Luna Identity's trusted signing key.
 
-When Next.js calls backend services, it sends the JWT as a Bearer token. Backend services independently validate the JWT signature and claims.
+When Next.js calls backend services, it sends the customer's JWT as a Bearer token. Backend services independently validate the JWT signature and claims.
+
+Backend services also authenticate to one another. Orders is the checkout coordinator and uses the OAuth 2.0 client-credentials grant to obtain a short-lived service access token from Identity. It sends that token as a Bearer token when calling Catalog, Inventory, Payments, and Shipping. Each receiving service validates the service token locally using the same OpenIddict signing keys and applies its own service-specific authorization policy. Service credentials and token exchange are kept server-side; they are never exposed to the browser.
 
 No server-side session store, Redis, or sticky sessions are required.
 
@@ -380,7 +382,19 @@ flowchart LR
 
    Identity["Luna Identity<br/><br/>ASP.NET Core Identity<br/>+<br/>OpenIddict Server"]
 
-   Services["Backend Services<br/><br/>Orders · Inventory · Payments · Shipping<br/>+ OpenIddict Validation"]
+   subgraph GatewayApis["Gateway-facing APIs"]
+      Orders["Orders Service<br/><br/>Checkout coordinator<br/>+ OpenIddict Validation"]
+
+      Catalog["Catalog Service<br/><br/>OpenIddict Validation"]
+
+      Shipping["Shipping Service<br/><br/>OpenIddict Validation"]
+   end
+
+   subgraph CheckoutApis["Checkout-only internal APIs"]
+      Inventory["Inventory Service<br/><br/>OpenIddict Validation"]
+
+      Payments["Payments Service<br/><br/>OpenIddict Validation"]
+   end
 
    Browser -->|1. Login| Next
    Next -->|2. Authenticate| Identity
@@ -389,10 +403,30 @@ flowchart LR
    Next -->|4. Encrypted HttpOnly cookie| Browser
    Browser -->|5. Requests + cookie| Next
 
-   Next -->|6. Bearer JWT| Services
+   Next -->|6. Customer Bearer JWT| Catalog
+   Next -->|6. Customer Bearer JWT| Orders
+   Next -->|6. Customer Bearer JWT| Shipping
 
-   Services -.->|7. Discover / fetch<br/>signing keys| Identity
-   Services -->|8. Validate JWT locally| Services
+   Orders -->|7. Client credentials<br/>service token request| Identity
+   Identity -->|8. Short-lived service JWT| Orders
+
+   Orders -->|9. Service Bearer JWT| Catalog
+   Orders -->|9. Service Bearer JWT| Inventory
+   Orders -->|9. Service Bearer JWT| Payments
+   Orders -->|9. Service Bearer JWT| Shipping
+
+   Orders -.->|10. Discover / fetch<br/>signing keys| Identity
+   Catalog -.->|10. Discover / fetch<br/>signing keys| Identity
+   Inventory -.->|10. Discover / fetch<br/>signing keys| Identity
+   Payments -.->|10. Discover / fetch<br/>signing keys| Identity
+   Shipping -.->|10. Discover / fetch<br/>signing keys| Identity
+
+   classDef identity fill:#fef3c7,stroke:#b45309,color:#78350f
+   classDef gateway fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+   classDef internal fill:#f3e8ff,stroke:#7e22ce,color:#581c87
+   class Identity identity
+   class Next,Orders,Catalog,Shipping gateway
+   class Inventory,Payments internal
 ```
 
 # 10. Checkout Coordination
