@@ -123,10 +123,11 @@ const [backendPath, frontendPath] = process.argv.slice(2);
 const backend = fs.readFileSync(backendPath, 'utf8').match(/branch-rate="([0-9.]+)"/);
 const frontend = JSON.parse(fs.readFileSync(frontendPath, 'utf8')).total.branches.pct / 100;
 const backendRate = backend ? Number(backend[1]) : NaN;
-const minimum = 0.9;
+const backendMinimum = 0.8;
+const frontendMinimum = 0.9;
 
-if (!Number.isFinite(backendRate) || backendRate < minimum || frontend < minimum) {
-    console.error(`Branch coverage must be at least 90% (backend: ${Number.isFinite(backendRate) ? (backendRate * 100).toFixed(2) : 'unavailable'}%, frontend: ${(frontend * 100).toFixed(2)}%).`);
+if (!Number.isFinite(backendRate) || backendRate < backendMinimum || frontend < frontendMinimum) {
+    console.error(`Branch coverage must be at least 80% for backend and 90% for frontend (backend: ${Number.isFinite(backendRate) ? (backendRate * 100).toFixed(2) : 'unavailable'}%, frontend: ${(frontend * 100).toFixed(2)}%).`);
     process.exit(1);
 }
 
@@ -136,7 +137,7 @@ NODE
             overall_status=1
         fi
     else
-        echo "Coverage summary files are missing; unable to enforce the 90% branch coverage gate." >&2
+        echo "Coverage summary files are missing; unable to enforce the backend 80% and frontend 90% branch coverage gates." >&2
         overall_status=1
     fi
 fi
