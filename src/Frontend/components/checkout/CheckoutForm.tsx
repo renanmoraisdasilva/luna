@@ -3,11 +3,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-import { submitCheckout, type Cart } from '../../lib/api/orders';
+import { submitCheckout, type Cart, type CheckoutRequest } from '../../lib/api/orders';
 import type { ShippingMethod } from '../../lib/api/shipping';
 import type { CatalogProduct } from '../../types/catalog';
 import { checkoutSchema, type CheckoutFormValues } from '../../lib/validation/checkout';
@@ -43,17 +44,23 @@ export default function CheckoutForm({ cart, products, shippingMethods, email }:
     reValidateMode: 'onChange',
   });
   const router = useRouter();
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const selectedMethodCode = useWatch({ control, name: 'shippingMethodCode' });
   const selectedMethod = shippingMethods.find((method) => method.code === selectedMethodCode);
   const subtotal = cart.items.reduce((total, item) => total + (products[item.productId]?.currentPrice ?? 0) * item.quantity, 0);
   const shipping = selectedMethod?.cost ?? 0;
   const hasUnavailableProduct = cart.items.some((item) => !products[item.productId]);
-  const checkoutMutation = useMutation({ mutationFn: submitCheckout });
+  const checkoutMutation = useMutation({
+    mutationFn: ({ request, idempotencyKey }: { request: CheckoutRequest; idempotencyKey: string }) => submitCheckout(request, idempotencyKey),
+  });
 
   async function onSubmit(values: CheckoutFormValues) {
     try {
       const { state, email: _email, ...addressValues } = values;
-      const response = await checkoutMutation.mutateAsync({ ...addressValues, stateOrProvince: state, currency: 'USD' });
+      const response = await checkoutMutation.mutateAsync({
+        request: { ...addressValues, stateOrProvince: state, currency: 'USD' },
+        idempotencyKey,
+      });
       router.replace(`/checkout/confirmation?orderId=${encodeURIComponent(response.orderId)}`);
     } catch (error) {
       const message = axios.isAxiosError<{ message?: string }>(error)

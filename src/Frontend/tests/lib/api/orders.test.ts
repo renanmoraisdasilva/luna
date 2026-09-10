@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { addCartItem, changeCartItemQuantity, getCart, ordersApi, removeCartItem } from '../../../lib/api/orders';
+import { addCartItem, changeCartItemQuantity, getCart, ordersApi, removeCartItem, submitCheckout } from '../../../lib/api/orders';
 
 describe('Orders API client', () => {
   it('supports reading and mutating the cart', async () => {
@@ -24,5 +24,24 @@ describe('Orders API client', () => {
     vi.spyOn(ordersApi, 'get').mockRejectedValueOnce(new Error('Orders unavailable.'));
 
     await expect(getCart()).rejects.toThrow('Orders unavailable.');
+  });
+
+  it('sends the caller-generated checkout idempotency key', async () => {
+    const response = { data: { orderId: 'order-1' } };
+    const post = vi.spyOn(ordersApi, 'post').mockResolvedValueOnce(response);
+    const request = {
+      fullName: 'Jane Doe',
+      addressLine1: '123 Luna Street',
+      city: 'Austin',
+      stateOrProvince: 'Texas',
+      postalCode: '78701',
+      country: 'US',
+      shippingMethodCode: 'STANDARD',
+      paymentMethod: 'test-card',
+      currency: 'USD',
+    };
+
+    await expect(submitCheckout(request, 'checkout-attempt-1')).resolves.toEqual(response.data);
+    expect(post).toHaveBeenCalledWith('/checkout', request, { headers: { 'Idempotency-Key': 'checkout-attempt-1' } });
   });
 });

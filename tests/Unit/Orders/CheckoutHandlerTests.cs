@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Luna.Orders.Application.Carts;
 using Luna.Orders.Application.Checkout;
+using Luna.Orders.Application.Orders;
 using Luna.Orders.Contracts.Carts;
 using Luna.Orders.Contracts.Checkout;
 using Luna.Orders.Domain;
@@ -21,7 +22,7 @@ public sealed class CheckoutHandlerTests
         var repository = new FakeOrderRepository();
         var handler = CreateHandler(customerId, catalog, shipping, inventory, payments, repository);
 
-        var response = await handler.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None);
+        var response = await handler.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "checkout-1"), CancellationToken.None);
 
         response.Status.Should().Be(nameof(OrderStatus.Confirmed));
         response.Total.Should().Be(49.99m);
@@ -39,7 +40,7 @@ public sealed class CheckoutHandlerTests
         var repository = new FakeOrderRepository();
         var handler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), inventory, payments, repository);
 
-        var act = () => handler.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None);
+        var act = () => handler.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "checkout-2"), CancellationToken.None);
 
         await act.Should().ThrowAsync<CheckoutRejectedException>().WithMessage("The requested inventory is not available.");
         repository.Order!.Status.Should().Be(OrderStatus.Cancelled);
@@ -54,7 +55,7 @@ public sealed class CheckoutHandlerTests
         var repository = new FakeOrderRepository();
         var handler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), inventory, new FakePaymentsClient(authorized: false), repository);
 
-        var act = () => handler.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None);
+        var act = () => handler.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "checkout-3"), CancellationToken.None);
 
         await act.Should().ThrowAsync<CheckoutRejectedException>().WithMessage("Payment authorization was declined.");
         repository.Order!.Status.Should().Be(OrderStatus.PaymentFailed);
@@ -62,11 +63,42 @@ public sealed class CheckoutHandlerTests
     }
 
     [Fact]
+    public async Task Replaying_confirmed_checkout_returns_original_result_without_side_effects()
+    {
+        var customerId = Guid.NewGuid();
+        var idempotencyKey = "checkout-replay";
+        var existingOrder = Order.Create(
+            customerId,
+            [new OrderItemSnapshot(Guid.NewGuid(), "SKU-1", "Keyboard", 20m, 2)],
+            ShippingAddress.Create("Jane Doe", "123 Luna Street", null, "Austin", "Texas", "78701", "US"),
+            "STANDARD",
+            9.99m,
+            idempotencyKey,
+            Guid.NewGuid());
+        existingOrder.RecordCheckoutResult(Guid.NewGuid(), Guid.NewGuid());
+        existingOrder.Confirm();
+        var repository = new FakeOrderRepository { ExistingOrder = existingOrder };
+        var inventory = new FakeInventoryClient();
+        var payments = new FakePaymentsClient(authorized: true);
+        var handler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), inventory, payments, repository);
+
+        var response = await handler.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), idempotencyKey), CancellationToken.None);
+
+        response.OrderId.Should().Be(existingOrder.Id);
+        response.Status.Should().Be(nameof(OrderStatus.Confirmed));
+        response.Total.Should().Be(existingOrder.Total);
+        response.ReservationId.Should().Be(existingOrder.InventoryReservationId!.Value);
+        response.PaymentId.Should().Be(existingOrder.PaymentId!.Value);
+        inventory.ReservedOrderId.Should().BeNull();
+        payments.AuthorizeCalls.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Rejects_empty_customer_id()
     {
         var handler = CreateHandler(Guid.NewGuid());
 
-        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(Guid.Empty, ValidRequest()), CancellationToken.None))
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(Guid.Empty, ValidRequest(), "checkout-4"), CancellationToken.None))
             .Should().ThrowAsync<CheckoutRejectedException>()
             .WithMessage("Customer ID is required.");
     }
@@ -76,13 +108,13 @@ public sealed class CheckoutHandlerTests
     {
         var customerId = Guid.NewGuid();
         var missingCartHandler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), new FakeOrderRepository(), null, false);
-        await missingCartHandler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+        await missingCartHandler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "checkout-5"), CancellationToken.None))
             .Should().ThrowAsync<CheckoutRejectedException>()
             .WithMessage("The cart must contain at least one item.");
 
         var emptyCart = new CartResponse(Guid.NewGuid(), customerId, []);
         var emptyCartHandler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), new FakeOrderRepository(), emptyCart);
-        await emptyCartHandler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+        await emptyCartHandler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "checkout-6"), CancellationToken.None))
             .Should().ThrowAsync<CheckoutRejectedException>()
             .WithMessage("The cart must contain at least one item.");
     }
@@ -95,7 +127,7 @@ public sealed class CheckoutHandlerTests
         var request = ValidRequest() with { PaymentMethod = paymentMethod, Currency = currency };
         var handler = CreateHandler(Guid.NewGuid());
 
-        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(Guid.NewGuid(), request), CancellationToken.None))
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(Guid.NewGuid(), request, "checkout-7"), CancellationToken.None))
             .Should().ThrowAsync<CheckoutRejectedException>()
             .WithMessage(message);
     }
@@ -106,7 +138,7 @@ public sealed class CheckoutHandlerTests
         var customerId = Guid.NewGuid();
         var handler = CreateHandler(customerId, new FakeCatalogClient { Missing = true }, new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), new FakeOrderRepository());
 
-        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "checkout-8"), CancellationToken.None))
             .Should().ThrowAsync<CheckoutRejectedException>()
             .WithMessage("Product * is no longer available.");
     }
@@ -118,7 +150,7 @@ public sealed class CheckoutHandlerTests
         var inventory = new FakeInventoryClient { ReleaseFailure = true };
         var handler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), inventory, new FakePaymentsClient(authorized: false), new FakeOrderRepository());
 
-        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "checkout-9"), CancellationToken.None))
             .Should().ThrowAsync<CheckoutRejectedException>()
             .WithMessage("Payment failed and the inventory reservation could not be released.");
     }
@@ -161,6 +193,8 @@ public sealed class CheckoutHandlerTests
     private sealed class FakeOrderRepository : IOrderWriteRepository
     {
         public Order? Order { get; private set; }
+        public Order? ExistingOrder { get; init; }
+        public Task<Order?> GetByIdempotencyKeyAsync(Guid customerId, string idempotencyKey, CancellationToken cancellationToken) => Task.FromResult(ExistingOrder);
         public Task AddAsync(Order order, CancellationToken cancellationToken) { Order = order; return Task.CompletedTask; }
         public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }

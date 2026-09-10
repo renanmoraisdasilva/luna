@@ -1,4 +1,4 @@
-using Luna.Catalog.Application.Common;
+using Luna.Contracts.Errors;
 
 namespace Luna.Catalog.Application.Errors;
 

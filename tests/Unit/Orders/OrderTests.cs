@@ -17,7 +17,8 @@ public sealed class OrderTests
             [new OrderItemSnapshot(productId, " SKU-1 ", " Keyboard ", 12.345m, 2)],
             Address(),
             " standard ",
-            4.567m);
+            4.567m,
+            "create-normalization");
 
         order.Status.Should().Be(OrderStatus.Pending);
         order.ShippingMethodCode.Should().Be("STANDARD");
@@ -39,7 +40,7 @@ public sealed class OrderTests
             : [new OrderItemSnapshot(Guid.NewGuid(), "SKU", "Product", 1, 1)];
         var shippingCode = invalidValue == "shipping" ? " " : "STANDARD";
 
-        var act = () => Order.Create(customerId, items, Address(), shippingCode, 1);
+        var act = () => Order.Create(customerId, items, Address(), shippingCode, 1, "required-values");
 
         act.Should().Throw<ArgumentException>();
     }
@@ -47,7 +48,7 @@ public sealed class OrderTests
     [Fact]
     public void Create_rejects_negative_shipping_cost()
     {
-        var act = () => Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", -1);
+        var act = () => Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", -1, "negative-shipping");
 
         act.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -66,7 +67,7 @@ public sealed class OrderTests
             invalidValue == "price" ? -1 : 1,
             invalidValue == "quantity" ? 0 : 1);
 
-        var act = () => Order.Create(CustomerId, [item], Address(), "STANDARD", 0);
+        var act = () => Order.Create(CustomerId, [item], Address(), "STANDARD", 0, "invalid-item");
 
         act.Should().Throw<ArgumentException>();
     }
@@ -74,7 +75,7 @@ public sealed class OrderTests
     [Fact]
     public void Status_transitions_follow_the_order_lifecycle()
     {
-        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0);
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "lifecycle");
 
         order.Confirm();
         order.Prepare();
@@ -86,7 +87,7 @@ public sealed class OrderTests
     [Fact]
     public void Preparing_order_can_be_marked_for_shipping_retry()
     {
-        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0);
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "shipping-retry");
 
         order.Confirm();
         order.Prepare();
@@ -101,7 +102,7 @@ public sealed class OrderTests
     [InlineData("confirmed")]
     public void Pending_order_supports_terminal_pending_transitions(string transition)
     {
-        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0);
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "terminal-transition");
 
         if (transition == "payment-failed") order.MarkPaymentFailed();
         if (transition == "cancelled") order.Cancel();
@@ -113,7 +114,7 @@ public sealed class OrderTests
     [Fact]
     public void Invalid_status_transitions_are_rejected()
     {
-        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0);
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "invalid-transition");
 
         var actions = new Action[]
         {

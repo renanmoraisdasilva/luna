@@ -91,8 +91,8 @@ export async function getCart(): Promise<Cart> {
   return response.data;
 }
 
-export async function submitCheckout(request: CheckoutRequest): Promise<CheckoutResponse> {
-  const response = await ordersApi.post<CheckoutResponse>('/checkout', request);
+export async function submitCheckout(request: CheckoutRequest, idempotencyKey: string): Promise<CheckoutResponse> {
+  const response = await ordersApi.post<CheckoutResponse>('/checkout', request, { headers: { 'Idempotency-Key': idempotencyKey } });
   return response.data;
 }
 

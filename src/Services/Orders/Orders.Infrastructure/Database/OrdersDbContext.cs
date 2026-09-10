@@ -39,11 +39,15 @@ public sealed class OrdersDbContext(DbContextOptions<OrdersDbContext> options) :
             entity.HasKey(order => order.Id);
             entity.Property(order => order.Id).ValueGeneratedNever();
             entity.Property(order => order.CustomerId).IsRequired();
+            entity.Property(order => order.IdempotencyKey).HasMaxLength(200).IsRequired();
+            entity.Property(order => order.InventoryReservationId);
+            entity.Property(order => order.PaymentId);
             entity.Property(order => order.Status).HasConversion<string>().HasMaxLength(40).IsRequired();
             entity.Property(order => order.ShippingMethodCode).HasMaxLength(40).IsRequired();
             entity.Property(order => order.ShippingCost).HasPrecision(18, 2).IsRequired();
             entity.Property(order => order.CreatedAt).IsRequired();
             entity.HasIndex(order => new { order.CustomerId, order.CreatedAt });
+            entity.HasIndex(order => new { order.CustomerId, order.IdempotencyKey }).IsUnique();
             entity.Navigation(order => order.Items).UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.HasMany(order => order.Items)
                 .WithOne()

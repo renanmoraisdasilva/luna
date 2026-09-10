@@ -24,6 +24,23 @@ Phase 1 architecture should preserve the service boundaries established in Phase
 
 # 2. Service Boundaries
 
+### Structural invariants
+
+Luna uses the following structural rules when adding or reorganizing code:
+
+1. Business services use `{Service}.Api`, `{Service}.Application`, `{Service}.Contracts`, `{Service}.Domain`, and `{Service}.Infrastructure` projects where the service boundary requires them.
+2. Application code is organized by feature or capability.
+3. Domain projects contain business entities and domain rules.
+4. Contracts projects contain external and API contracts owned by that service.
+5. `Luna.Contracts` contains only genuinely cross-service contracts.
+6. Infrastructure contains persistence and external integration implementations.
+7. Repository interfaces belong to the Application abstraction; repository implementations belong to Infrastructure.
+8. Repositories do not orchestrate business workflows.
+9. Application handlers own use-case orchestration.
+10. Shared code requires explicit justification and should not be introduced merely to avoid local duplication.
+
+Identity is a deliberate exception to the project layout rule. It currently uses one `Identity.csproj` with Application, Controllers, Domain, Infrastructure, and Migrations folders because its OpenIddict identity host predates the five-project service template. Its internal folders preserve the same responsibility boundaries. New services should follow the standard service layout.
+
 ## Checkout orchestration
 
 ### SPEC-ARCH-001 - Orders owns checkout
@@ -563,10 +580,10 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 
 ## Service boundaries
 
-- [ ] Orders is the only service that orchestrates checkout.
-- [ ] Each service owns its domain, application logic, persistence, migrations, and API.
-- [ ] Services communicate through contracts and APIs rather than internal implementation details.
-- [ ] No service directly accesses another service's database.
+- [x] Orders is the only service that orchestrates checkout.
+- [x] Each service owns its domain, application logic, persistence, migrations, and API.
+- [x] Services communicate through contracts and APIs rather than internal implementation details.
+- [x] No service directly accesses another service's database.
 
 ## Domain-Driven Design
 
@@ -574,7 +591,7 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 - [x] `Product` owns `ProductImage` and controls image ordering and lifecycle.
 - [x] `Cart` owns `CartItem` and controls quantity and item changes.
 - [x] Aggregate child entities cannot be modified independently through application use cases.
-- [ ] `Order` owns `OrderItem` and `ShippingAddress` snapshots and controls valid state transitions.
+- [x] `Order` owns `OrderItem` and `ShippingAddress` snapshots and controls valid state transitions.
 - [x] `Stock` owns inventory reservations and enforces availability and concurrency invariants.
 - [x] `Payment` owns payment attempts and authorization state.
 - [x] Payment persistence enforces unique order ownership and optimistic concurrency.
@@ -582,7 +599,7 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 - [x] `Shipment` owns tracking events and its shipment lifecycle.
 - [ ] Value objects are introduced where they protect meaningful domain rules, especially money, quantity, SKU, and address data.
 - [ ] Domain services are used only for behavior that does not naturally belong to one aggregate.
-- [ ] Checkout coordination remains in the Orders application layer rather than becoming a domain service.
+- [x] Checkout coordination remains in the Orders application layer rather than becoming a domain service.
 
 ## Layering and persistence
 

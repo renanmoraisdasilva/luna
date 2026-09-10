@@ -12,13 +12,13 @@ namespace Luna.Orders.Api.Controllers;
 public sealed class CheckoutController(CheckoutHandler checkout) : ControllerBase
 {
     [HttpPost]
-    public Task<CheckoutResponse> Submit(CheckoutRequest request, CancellationToken cancellationToken)
+    public Task<CheckoutResponse> Submit(CheckoutRequest request, [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey, CancellationToken cancellationToken)
     {
         if (!User.TryGetSubjectId(out var customerId))
         {
             throw new InvalidOperationException("The authenticated customer ID is missing or invalid.");
         }
 
-        return checkout.HandleAsync(new CheckoutCommand(customerId, request), cancellationToken);
+        return checkout.HandleAsync(new CheckoutCommand(customerId, request, idempotencyKey ?? string.Empty), cancellationToken);
     }
 }

@@ -894,18 +894,18 @@ Shipment failure
 The phase is also complete when:
 
 * [ ] all required APIs are implemented
-* [ ] OpenAPI documents the APIs
-* [ ] service boundaries remain intact
-* [ ] database ownership remains isolated
-* [ ] migrations create the required schemas
-* [ ] meaningful unit tests exist
-* [ ] integration tests exercise real persistence
-* [ ] concurrency behavior is tested for inventory
-* [ ] customer frontend implements the required routes
-* [ ] authentication works
+* [x] OpenAPI documents the APIs
+* [x] service boundaries remain intact
+* [x] database ownership remains isolated
+* [x] migrations create the required schemas
+* [x] meaningful unit tests exist
+* [x] integration tests exercise real persistence
+* [x] concurrency behavior is tested for inventory
+* [x] customer frontend implements the required routes
+* [x] authentication works
 * [ ] checkout works end-to-end
 * [ ] failure scenarios are observable
-* [ ] Phase 2 can introduce asynchronous messaging without redesigning the basic commerce model
+* [x] Phase 2 can introduce asynchronous messaging without redesigning the basic commerce model
 
 ---
 
@@ -934,19 +934,19 @@ The phase is also complete when:
 
 ## Checkout
 
-- [ ] SPEC-CHK-001 - Checkout requires authentication
-- [ ] SPEC-CHK-002 - Validate products
-- [ ] SPEC-CHK-003 - Calculate shipping
-- [ ] SPEC-CHK-004 - Create pending order
-- [ ] SPEC-CHK-005 - Reserve inventory
-- [ ] SPEC-CHK-006 - Authorize payment
-- [ ] SPEC-CHK-007 - Confirm order
+- [x] SPEC-CHK-001 - Checkout requires authentication
+- [x] SPEC-CHK-002 - Validate products
+- [x] SPEC-CHK-003 - Calculate shipping
+- [x] SPEC-CHK-004 - Create pending order
+- [x] SPEC-CHK-005 - Reserve inventory
+- [x] SPEC-CHK-006 - Authorize payment
+- [x] SPEC-CHK-007 - Confirm order
 
 ## Order lifecycle
 
-- [ ] SPEC-ORD-001 - Valid transitions
-- [ ] SPEC-ORD-002 - Payment failure
-- [ ] SPEC-ORD-003 - Shipment failure
+- [x] SPEC-ORD-001 - Valid transitions
+- [x] SPEC-ORD-002 - Payment failure
+- [x] SPEC-ORD-003 - Shipment failure
 - [ ] SPEC-ORD-004 - Customer cancellation
 
 ## Inventory
@@ -959,32 +959,32 @@ The phase is also complete when:
 
 ## Pricing
 
-- [ ] SPEC-PRICE-001 - Catalog owns current price
-- [ ] SPEC-PRICE-002 - Cart does not snapshot price
-- [ ] SPEC-PRICE-003 - Order snapshots price
+- [x] SPEC-PRICE-001 - Catalog owns current price
+- [x] SPEC-PRICE-002 - Cart does not snapshot price
+- [x] SPEC-PRICE-003 - Order snapshots price
 
 ## Shipping
 
-- [ ] SPEC-SHIP-001 - Shipping methods
-- [ ] SPEC-SHIP-002 - Quote ownership
-- [ ] SPEC-SHIP-003 - Shipping snapshot
-- [ ] SPEC-SHIP-004 - Shipment
+- [x] SPEC-SHIP-001 - Shipping methods
+- [x] SPEC-SHIP-002 - Quote ownership
+- [x] SPEC-SHIP-003 - Shipping snapshot
+- [x] SPEC-SHIP-004 - Shipment
 
 ## Payments
 
-- [ ] SPEC-PAY-001 - Authorization only
-- [ ] SPEC-PAY-002 - Deterministic provider
-- [ ] SPEC-PAY-003 - Payment success
-- [ ] SPEC-PAY-004 - Payment failure
+- [x] SPEC-PAY-001 - Authorization only
+- [x] SPEC-PAY-002 - Deterministic provider
+- [x] SPEC-PAY-003 - Payment success
+- [x] SPEC-PAY-004 - Payment failure
 
 ## Fulfillment
 
-- [ ] SPEC-FUL-001 - Fulfillment remains inside Orders
-- [ ] SPEC-FUL-002 - Prepare order
+- [x] SPEC-FUL-001 - Fulfillment remains inside Orders
+- [x] SPEC-FUL-002 - Prepare order
 
 ## Frontend
 
-- [ ] SPEC-FE-001 - Customer routes
+- [x] SPEC-FE-001 - Customer routes
 - [x] SPEC-FE-002 - Public catalog behavior
 - [ ] SPEC-FE-003 - Interactive behavior
 - [ ] SPEC-FE-004 - Error behavior
@@ -993,11 +993,11 @@ The phase is also complete when:
 
 - [x] SPEC-DB-001 - Migrations
 - [x] SPEC-DB-002 - Migration startup
-- [ ] SPEC-DB-003 - Cross-service relationships
+- [x] SPEC-DB-003 - Cross-service relationships
 
 ## Testing
 
-- [ ] SPEC-TEST-001 - Business behavior
+- [x] SPEC-TEST-001 - Business behavior
 - [x] SPEC-TEST-002 - Catalog reads
 - [ ] SPEC-TEST-003 - Cross-service behavior
 - [ ] SPEC-TEST-004 - Coverage

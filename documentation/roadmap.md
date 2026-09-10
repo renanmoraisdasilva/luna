@@ -439,12 +439,12 @@ Luna is being built incrementally. Architecture and implementation decisions may
 
 Phase 0 foundation is in place: the services, independent persistence, EF Core migration startup and initial Catalog/Identity migrations, Docker Compose environment, health endpoints, OpenAPI documentation, centralized tests, and Next.js gateway are implemented.
 
-Phase 1 is in progress. The catalog storefront currently supports server-rendered active products, search, category filtering, URL-based pagination, image optimization, and a unified Swagger explorer. Cart API operations, per-customer cart authorization, the cart frontend, the Identity/OpenIddict session boundary, and the Inventory reservation service are implemented. Inventory owns stock and reservations, supports release, and uses an atomic database update for concurrency-safe reservations. Catalog and Orders are both prepared for local JWT validation, with Orders currently protecting cart endpoints. CI validates the .NET solution, frontend, Compose startup, and service health endpoints; successful CI then publishes versioned and `latest` images to GHCR.
+Phase 1 is in progress. The catalog storefront currently supports server-rendered active products, search, category filtering, URL-based pagination, image optimization, and a unified Swagger explorer. Cart API operations, per-customer cart authorization, the cart frontend, the Identity/OpenIddict session boundary, inventory reservations, checkout orchestration, order persistence, deterministic payment authorization, shipping methods and quotes, shipment creation, and fulfillment state transitions are implemented. Inventory owns stock and reservations, supports release, and uses an atomic database update for concurrency-safe reservations. Orders orchestrates the synchronous checkout flow through authenticated service clients. CI validates the .NET solution, frontend, Compose startup, and service health endpoints; successful CI then publishes versioned and `latest` images to GHCR.
 
-The next implementation priority is the remaining customer commerce path:
+The next implementation priority is proving and completing the remaining customer commerce path:
 
-1. Product details route and data client.
-2. Checkout orchestration with current price validation and immutable snapshots.
-3. Shipping quotes, deterministic payment authorization, and fulfillment/shipment status transitions.
+1. Customer-facing order history, order details, and checkout error states.
+2. Cross-service integration or end-to-end tests covering successful checkout and compensation failures.
+3. Coverage verification and the remaining Phase 1 acceptance checks.
 
 RabbitMQ, retries, idempotency, the transactional outbox, observability, and operations tooling remain later phases as planned.

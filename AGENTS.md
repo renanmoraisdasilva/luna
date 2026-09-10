@@ -35,6 +35,21 @@ Use the roadmap to understand what should be worked on next. Use the relevant ph
 
 Follow the roadmap and the relevant phase specification and architecture documents before changing behavior. When implementation and documentation disagree, identify the discrepancy and update the appropriate documentation rather than silently creating a new convention.
 
+### Luna Structure Rules
+
+1. Every business service uses `{Service}.Api`, `{Service}.Application`, `{Service}.Contracts`, `{Service}.Domain`, and `{Service}.Infrastructure` projects where the service boundary requires them.
+2. Application code is organized by feature or capability.
+3. Domain projects contain business entities and domain rules.
+4. Contracts projects contain external and API contracts owned by that service.
+5. `Luna.Contracts` contains only genuinely cross-service contracts.
+6. Infrastructure contains persistence and external integration implementations.
+7. Repository interfaces belong to the Application abstraction; repository implementations belong to Infrastructure.
+8. Repositories do not orchestrate business workflows.
+9. Application handlers own use-case orchestration.
+10. Shared code requires explicit justification and should not be introduced merely to avoid local duplication.
+
+**Exception:** Identity currently uses one `Identity.csproj` with Application, Controllers, Domain, Infrastructure, and Migrations folders. This is intentional because the OpenIddict identity host predates the five-project service template. Its internal folders still preserve the same responsibility boundaries; new services should follow the standard project layout.
+
 ### Frontend
 
 - Use React Hook Form for interactive forms instead of manually duplicating field state and submit handling with `useState`.

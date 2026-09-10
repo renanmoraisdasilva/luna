@@ -13,19 +13,24 @@ public sealed class Order
         Guid customerId,
         string shippingMethodCode,
         decimal shippingCost,
-        ShippingAddress shippingAddress)
+        ShippingAddress shippingAddress,
+        string idempotencyKey)
     {
         Id = id;
         CustomerId = customerId;
         ShippingMethodCode = shippingMethodCode;
         ShippingCost = shippingCost;
         ShippingAddress = shippingAddress;
+        IdempotencyKey = idempotencyKey;
         Status = OrderStatus.Pending;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 
     public Guid Id { get; private set; }
     public Guid CustomerId { get; private set; }
+    public string IdempotencyKey { get; private set; } = string.Empty;
+    public Guid? InventoryReservationId { get; private set; }
+    public Guid? PaymentId { get; private set; }
     public OrderStatus Status { get; private set; }
     public string ShippingMethodCode { get; private set; } = string.Empty;
     public decimal ShippingCost { get; private set; }
@@ -40,6 +45,7 @@ public sealed class Order
         ShippingAddress shippingAddress,
         string shippingMethodCode,
         decimal shippingCost,
+        string idempotencyKey,
         Guid? id = null)
     {
         if (customerId == Guid.Empty)
@@ -62,7 +68,12 @@ public sealed class Order
             throw new ArgumentOutOfRangeException(nameof(shippingCost), "Shipping cost cannot be negative.");
         }
 
-        var order = new Order(id ?? Guid.NewGuid(), customerId, shippingMethodCode.Trim().ToUpperInvariant(), decimal.Round(shippingCost, 2), shippingAddress);
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            throw new ArgumentException("Idempotency key is required.", nameof(idempotencyKey));
+        }
+
+        var order = new Order(id ?? Guid.NewGuid(), customerId, shippingMethodCode.Trim().ToUpperInvariant(), decimal.Round(shippingCost, 2), shippingAddress, idempotencyKey.Trim());
         order.items.AddRange(itemSnapshots.Select(snapshot => OrderItem.Create(
             order.Id,
             snapshot.ProductId,
@@ -89,6 +100,17 @@ public sealed class Order
     {
         EnsureStatus(OrderStatus.Pending);
         Status = OrderStatus.Confirmed;
+    }
+
+    public void RecordCheckoutResult(Guid inventoryReservationId, Guid paymentId)
+    {
+        if (inventoryReservationId == Guid.Empty || paymentId == Guid.Empty)
+        {
+            throw new ArgumentException("Checkout result IDs are required.");
+        }
+
+        InventoryReservationId = inventoryReservationId;
+        PaymentId = paymentId;
     }
 
     public void Prepare()
