@@ -10,10 +10,14 @@ ARG PROJECT
 WORKDIR /app
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends curl \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& if ! getent passwd app >/dev/null; then adduser --system --ingroup app app; fi
 COPY --from=build /app/publish .
 RUN APP_NAME="$(basename "$PROJECT" .csproj)" \
 	&& printf '%s\n' "#!/bin/sh" "set -eu" "exec dotnet \"${APP_NAME}.dll\"" > /startup.sh \
-	&& chmod +x /startup.sh
+	&& chmod +x /startup.sh \
+	&& chown -R app:app /app /startup.sh
+ENV HOME=/home/app
+USER app
 EXPOSE 8080
 ENTRYPOINT ["/startup.sh"]

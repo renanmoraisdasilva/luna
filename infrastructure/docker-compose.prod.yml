@@ -3,6 +3,14 @@ networks:
     name: luna_default
     driver: bridge
 
+x-app-hardening: &app-hardening
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  mem_limit: 512m
+  cpus: "1.0"
+
 services:
   sqlserver:
     image: "mcr.microsoft.com/mssql/server:${MSSQL_IMAGE_TAG:?Set MSSQL_IMAGE_TAG in .env to a tested SQL Server 2022 tag}"
@@ -35,6 +43,8 @@ services:
   frontend:
     image: ghcr.io/renanmoraisdasilva/luna-frontend:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
+    <<: *app-hardening
+    user: node
     ports:
       - "3000:3000"
     environment:
@@ -56,9 +66,12 @@ services:
   identity:
     image: ghcr.io/renanmoraisdasilva/luna-identity:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
+    <<: *app-hardening
+    user: app
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
+      ServiceAuthentication__Clients__Orders__Secret: "${ORDERS_SERVICE_CLIENT_SECRET:?Set ORDERS_SERVICE_CLIENT_SECRET in .env}"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -74,6 +87,8 @@ services:
   catalog:
     image: ghcr.io/renanmoraisdasilva/luna-catalog:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
+    <<: *app-hardening
+    user: app
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
@@ -87,9 +102,14 @@ services:
   orders:
     image: ghcr.io/renanmoraisdasilva/luna-orders:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
+    <<: *app-hardening
+    user: app
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
+      ServiceAuthentication__ClientId: orders
+      ServiceAuthentication__ClientSecret: "${ORDERS_SERVICE_CLIENT_SECRET:?Set ORDERS_SERVICE_CLIENT_SECRET in .env}"
+      ServiceAuthentication__TokenEndpoint: http://identity:8080/api/v1/identity/connect/token
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -100,8 +120,11 @@ services:
   payments:
     image: ghcr.io/renanmoraisdasilva/luna-payments:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
+    <<: *app-hardening
+    user: app
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -112,8 +135,11 @@ services:
   inventory:
     image: ghcr.io/renanmoraisdasilva/luna-inventory:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
+    <<: *app-hardening
+    user: app
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -124,8 +150,11 @@ services:
   shipping:
     image: ghcr.io/renanmoraisdasilva/luna-shipping:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
+    <<: *app-hardening
+    user: app
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      OpenIddict__Issuer: http://identity:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
