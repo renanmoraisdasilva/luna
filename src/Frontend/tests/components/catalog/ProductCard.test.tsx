@@ -29,4 +29,17 @@ describe('ProductCard', () => {
     expect(screen.getByRole('link', { name: 'Orbit Keyboard' })).toHaveAttribute('href', '/shop/products/keyboard-1');
     expect(screen.queryByText('Available')).not.toBeInTheDocument();
   });
+  
+  it('renders a fallback when the product has no images', () => {
+    render(<QueryClientProvider client={new QueryClient()}><ProductCard product={{ ...product, images: [] }} /></QueryClientProvider>);
+    
+    expect(screen.getByText('No image')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('uses the product name when an image has no alt text', () => {
+    render(<QueryClientProvider client={new QueryClient()}><ProductCard product={{ ...product, images: [{ ...product.images[0], altText: '' }] }} /></QueryClientProvider>);
+
+    expect(screen.getByRole('img', { name: product.name })).toBeInTheDocument();
+  });
 });

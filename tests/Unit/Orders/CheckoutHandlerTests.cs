@@ -61,17 +61,85 @@ public sealed class CheckoutHandlerTests
         inventory.ReleasedReservationId.Should().Be(inventory.ReservationId);
     }
 
+    [Fact]
+    public async Task Rejects_empty_customer_id()
+    {
+        var handler = CreateHandler(Guid.NewGuid());
+
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(Guid.Empty, ValidRequest()), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("Customer ID is required.");
+    }
+
+    [Fact]
+    public async Task Rejects_missing_or_empty_cart()
+    {
+        var customerId = Guid.NewGuid();
+        var missingCartHandler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), new FakeOrderRepository(), null, false);
+        await missingCartHandler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("The cart must contain at least one item.");
+
+        var emptyCart = new CartResponse(Guid.NewGuid(), customerId, []);
+        var emptyCartHandler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), new FakeOrderRepository(), emptyCart);
+        await emptyCartHandler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("The cart must contain at least one item.");
+    }
+
+    [Theory]
+    [InlineData("", "USD", "Payment method is required.")]
+    [InlineData("card", "US", "Currency must be a three-letter code.")]
+    public async Task Rejects_invalid_payment_details(string paymentMethod, string currency, string message)
+    {
+        var request = ValidRequest() with { PaymentMethod = paymentMethod, Currency = currency };
+        var handler = CreateHandler(Guid.NewGuid());
+
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(Guid.NewGuid(), request), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage(message);
+    }
+
+    [Fact]
+    public async Task Rejects_when_a_product_is_unavailable()
+    {
+        var customerId = Guid.NewGuid();
+        var handler = CreateHandler(customerId, new FakeCatalogClient { Missing = true }, new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), new FakeOrderRepository());
+
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("Product * is no longer available.");
+    }
+
+    [Fact]
+    public async Task Reports_release_failure_when_payment_fails()
+    {
+        var customerId = Guid.NewGuid();
+        var inventory = new FakeInventoryClient { ReleaseFailure = true };
+        var handler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), inventory, new FakePaymentsClient(authorized: false), new FakeOrderRepository());
+
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest()), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("Payment failed and the inventory reservation could not be released.");
+    }
+
     private static CheckoutHandler CreateHandler(
         Guid customerId,
         FakeCatalogClient catalog,
         FakeShippingClient shipping,
         FakeInventoryClient inventory,
         FakePaymentsClient payments,
-        FakeOrderRepository repository)
+        FakeOrderRepository repository,
+        CartResponse? cart = null,
+        bool useDefaultCart = true)
     {
-        var cart = new FakeCartReadRepository(new CartResponse(Guid.NewGuid(), customerId, [new CartItemResponse(catalog.Product.Id, 2)]));
-        return new CheckoutHandler(cart, repository, catalog, shipping, inventory, payments);
+        var resolvedCart = cart ?? (useDefaultCart ? new CartResponse(Guid.NewGuid(), customerId, [new CartItemResponse(catalog.Product.Id, 2)]) : null);
+        var cartRepository = new FakeCartReadRepository(resolvedCart);
+        return new CheckoutHandler(cartRepository, repository, catalog, shipping, inventory, payments);
     }
+
+    private static CheckoutHandler CreateHandler(Guid customerId) =>
+        CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), new FakeOrderRepository());
 
     private static CheckoutRequest ValidRequest() => new(
         "Jane Doe",
@@ -85,7 +153,7 @@ public sealed class CheckoutHandlerTests
         "test-card",
         "USD");
 
-    private sealed class FakeCartReadRepository(CartResponse cart) : ICartReadRepository
+    private sealed class FakeCartReadRepository(CartResponse? cart) : ICartReadRepository
     {
         public Task<CartResponse?> GetCartAsync(Guid customerId, CancellationToken cancellationToken) => Task.FromResult<CartResponse?>(cart);
     }
@@ -100,7 +168,8 @@ public sealed class CheckoutHandlerTests
     private sealed class FakeCatalogClient : ICatalogCheckoutClient
     {
         public CatalogProductSnapshot Product { get; } = new(Guid.NewGuid(), "SKU-1", "Keyboard", 20m);
-        public Task<CatalogProductSnapshot?> GetProductAsync(Guid productId, CancellationToken cancellationToken) => Task.FromResult<CatalogProductSnapshot?>(Product);
+        public bool Missing { get; init; }
+        public Task<CatalogProductSnapshot?> GetProductAsync(Guid productId, CancellationToken cancellationToken) => Task.FromResult<CatalogProductSnapshot?>(Missing ? null : Product);
     }
 
     private sealed class FakeShippingClient : IShippingCheckoutClient
@@ -114,13 +183,19 @@ public sealed class CheckoutHandlerTests
         public Guid? ReservedOrderId { get; private set; }
         public Guid? ReleasedReservationId { get; private set; }
         public bool Failure { get; init; }
+        public bool ReleaseFailure { get; init; }
         public Task<InventoryReservationSnapshot> ReserveAsync(Guid orderId, IReadOnlyCollection<(Guid ProductId, int Quantity)> items, CancellationToken cancellationToken)
         {
             if (Failure) throw new InvalidOperationException("insufficient inventory");
             ReservedOrderId = orderId;
             return Task.FromResult(new InventoryReservationSnapshot(ReservationId, orderId, "Active"));
         }
-        public Task ReleaseAsync(Guid reservationId, CancellationToken cancellationToken) { ReleasedReservationId = reservationId; return Task.CompletedTask; }
+        public Task ReleaseAsync(Guid reservationId, CancellationToken cancellationToken)
+        {
+            if (ReleaseFailure) throw new InvalidOperationException("release failed");
+            ReleasedReservationId = reservationId;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakePaymentsClient(bool authorized) : IPaymentsCheckoutClient
