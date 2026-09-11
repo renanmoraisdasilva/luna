@@ -1,6 +1,6 @@
 x-service-healthcheck: &service-healthcheck
   test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
-  interval: 5s
+  interval: 15s
   timeout: 3s
   retries: 24
   start_period: 10s
@@ -52,7 +52,7 @@ services:
       HOSTNAME: 0.0.0.0
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 5s
+      interval: 15s
       timeout: 3s
       retries: 24
       start_period: 10s

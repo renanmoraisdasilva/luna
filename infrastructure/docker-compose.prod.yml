@@ -35,7 +35,7 @@ services:
           ('IdentityDb','CatalogDb','OrdersDb','PaymentsDb','InventoryDb','ShippingDb')
           AND state_desc <> 'ONLINE') THROW 50000, 'Application database is not online', 1;
           SELECT 1" || exit 1
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 30
       start_period: 20s
@@ -52,6 +52,10 @@ services:
       PORT: 3000
       CATALOG_API_INTERNAL_URL: http://catalog:8080
       IDENTITY_API_INTERNAL_URL: http://identity:8080
+      ORDERS_API_INTERNAL_URL: http://orders:8080
+      PAYMENTS_API_INTERNAL_URL: http://payments:8080
+      INVENTORY_API_INTERNAL_URL: http://inventory:8080
+      SHIPPING_API_INTERNAL_URL: http://shipping:8080
       LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY}"
       AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE}"
     networks:
