@@ -1,5 +1,6 @@
 using Luna.Contracts.Correlation;
 using Serilog;
+using Serilog.Events;
 using Serilog.Context;
 
 namespace Luna.Identity.Infrastructure;
@@ -8,7 +9,7 @@ public static class IdentityApplicationExtensions
 {
     public static WebApplication UseIdentityPipeline(this WebApplication app)
     {
-        app.UseSerilogRequestLogging();
+        app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exception) => httpContext.Request.Path == "/health" ? LogEventLevel.Verbose : exception is not null ? LogEventLevel.Error : LogEventLevel.Information);
         app.UseSwagger();
         app.UseSwaggerUI();
         app.UseAuthentication();

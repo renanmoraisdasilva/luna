@@ -7,12 +7,14 @@ using Luna.Authentication;
 using Luna.Authentication.ServiceAuthentication;
 using Luna.Contracts.Authentication;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Service", "Shipping")
+    .Filter.ByExcluding(logEvent => logEvent.Properties.TryGetValue("RequestPath", out var requestPath) && requestPath.ToString().Trim('"').Equals("/health", StringComparison.OrdinalIgnoreCase))
     .WriteTo.Console());
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -31,7 +33,7 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 await app.Services.InitializeShippingDatabaseAsync();
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exception) => httpContext.Request.Path == "/health" ? LogEventLevel.Verbose : exception is not null ? LogEventLevel.Error : LogEventLevel.Information);
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseMiddleware<CorrelationIdMiddleware>();
