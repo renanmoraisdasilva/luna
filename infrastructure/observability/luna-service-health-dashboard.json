@@ -1,0 +1,464 @@
+{
+  "name": "luna-service-health",
+  "schemaVersion": "v6",
+  "tags": [
+    {
+      "key": "project",
+      "value": "luna"
+    },
+    {
+      "key": "purpose",
+      "value": "service-health"
+    }
+  ],
+  "spec": {
+    "display": {
+      "name": "Luna Service Health",
+      "description": "Recent errors, frontend failures, request volume, and p95 latency across Luna services."
+    },
+    "duration": "1h",
+    "refreshInterval": "30s",
+    "layouts": [
+      {
+        "kind": "Grid",
+        "spec": {
+          "items": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 3,
+              "height": 3,
+              "content": {
+                "$ref": "#/spec/panels/10000000-0000-0000-0000-000000000001"
+              }
+            },
+            {
+              "x": 3,
+              "y": 0,
+              "width": 3,
+              "height": 3,
+              "content": {
+                "$ref": "#/spec/panels/10000000-0000-0000-0000-000000000002"
+              }
+            },
+            {
+              "x": 6,
+              "y": 0,
+              "width": 6,
+              "height": 4,
+              "content": {
+                "$ref": "#/spec/panels/10000000-0000-0000-0000-000000000003"
+              }
+            },
+            {
+              "x": 0,
+              "y": 4,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/10000000-0000-0000-0000-000000000004"
+              }
+            },
+            {
+              "x": 6,
+              "y": 4,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/10000000-0000-0000-0000-000000000005"
+              }
+            },
+            {
+              "x": 0,
+              "y": 9,
+              "width": 12,
+              "height": 6,
+              "content": {
+                "$ref": "#/spec/panels/10000000-0000-0000-0000-000000000006"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "panels": {
+      "10000000-0000-0000-0000-000000000001": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Recent errors",
+            "description": "Total spans marked as errors in the selected time range."
+          },
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "signal": "traces",
+                          "stepInterval": 60,
+                          "disabled": false,
+                          "filter": {
+                            "expression": "has_error = true"
+                          },
+                          "having": {
+                            "expression": ""
+                          },
+                          "aggregations": [
+                            {
+                              "expression": "count()"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "10000000-0000-0000-0000-000000000002": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Frontend errors",
+            "description": "Error spans emitted by the Next.js frontend server."
+          },
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "signal": "traces",
+                          "stepInterval": 60,
+                          "disabled": false,
+                          "filter": {
+                            "expression": "has_error = true AND service.name = 'luna-frontend'"
+                          },
+                          "having": {
+                            "expression": ""
+                          },
+                          "aggregations": [
+                            {
+                              "expression": "count()"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "10000000-0000-0000-0000-000000000003": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Errors by service",
+            "description": "Error spans grouped by Luna service."
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              },
+              "legend": {
+                "position": "bottom"
+              },
+              "chartAppearance": {
+                "lineStyle": "solid",
+                "lineInterpolation": "linear",
+                "fillMode": "none"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "signal": "traces",
+                          "stepInterval": 60,
+                          "disabled": false,
+                          "filter": {
+                            "expression": "has_error = true"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service.name",
+                              "fieldDataType": "string",
+                              "fieldContext": "resource"
+                            }
+                          ],
+                          "legend": "{{service.name}}",
+                          "having": {
+                            "expression": ""
+                          },
+                          "aggregations": [
+                            {
+                              "expression": "count()"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "10000000-0000-0000-0000-000000000004": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Request volume by service",
+            "description": "Trace span volume grouped by Luna service."
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              },
+              "legend": {
+                "position": "bottom"
+              },
+              "chartAppearance": {
+                "lineStyle": "solid",
+                "lineInterpolation": "linear",
+                "fillMode": "none"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "signal": "traces",
+                          "stepInterval": 60,
+                          "disabled": false,
+                          "filter": {
+                            "expression": ""
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service.name",
+                              "fieldDataType": "string",
+                              "fieldContext": "resource"
+                            }
+                          ],
+                          "legend": "{{service.name}}",
+                          "having": {
+                            "expression": ""
+                          },
+                          "aggregations": [
+                            {
+                              "expression": "count()"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "10000000-0000-0000-0000-000000000005": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "P95 latency by service",
+            "description": "95th percentile span duration grouped by Luna service."
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              },
+              "legend": {
+                "position": "bottom"
+              },
+              "chartAppearance": {
+                "lineStyle": "solid",
+                "lineInterpolation": "linear",
+                "fillMode": "none"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "signal": "traces",
+                          "stepInterval": 60,
+                          "disabled": false,
+                          "filter": {
+                            "expression": ""
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service.name",
+                              "fieldDataType": "string",
+                              "fieldContext": "resource"
+                            }
+                          ],
+                          "legend": "{{service.name}}",
+                          "having": {
+                            "expression": ""
+                          },
+                          "aggregations": [
+                            {
+                              "expression": "p95(duration_nano)"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "10000000-0000-0000-0000-000000000006": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Error operations by service",
+            "description": "Error-producing operations, grouped for quick triage."
+          },
+          "plugin": {
+            "kind": "signoz/TablePanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "signal": "traces",
+                          "stepInterval": 60,
+                          "disabled": false,
+                          "filter": {
+                            "expression": "has_error = true"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service.name",
+                              "fieldDataType": "string",
+                              "fieldContext": "resource"
+                            },
+                            {
+                              "name": "name",
+                              "fieldDataType": "string",
+                              "fieldContext": "span"
+                            }
+                          ],
+                          "legend": "{{service.name}} - {{name}}",
+                          "having": {
+                            "expression": ""
+                          },
+                          "limit": 25,
+                          "order": [
+                            {
+                              "key": {
+                                "name": "count()"
+                              },
+                              "direction": "desc"
+                            }
+                          ],
+                          "aggregations": [
+                            {
+                              "expression": "count()"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "variables": []
+  }
+}

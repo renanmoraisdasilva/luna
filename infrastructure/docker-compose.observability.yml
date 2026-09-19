@@ -106,8 +106,11 @@ services:
   otel-collector:
     image: signoz/signoz-otel-collector:v0.144.5
     container_name: luna-signoz-otel-collector
+    pid: host
     depends_on:
       clickhouse:
+        condition: service_healthy
+      signoz:
         condition: service_healthy
     entrypoint: ["/bin/sh"]
     command:
@@ -118,10 +121,11 @@ services:
         --manager-config=/etc/manager-config.yaml
         --copy-path=/var/tmp/collector-config.yaml
     volumes:
+      - /:/hostfs:ro
       - ./observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
       - ./observability/otel-collector-opamp-config.yaml:/etc/manager-config.yaml:ro
     environment:
-      OTEL_RESOURCE_ATTRIBUTES: host.name=luna-signoz-host,os.type=linux
+      OTEL_RESOURCE_ATTRIBUTES: os.type=linux
       LOW_CARDINAL_EXCEPTION_GROUPING: "false"
       SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN: tcp://clickhouse:9000
       SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER: cluster

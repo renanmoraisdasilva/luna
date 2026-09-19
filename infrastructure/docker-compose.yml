@@ -56,6 +56,10 @@ services:
       <<: *telemetry-environment
       CATALOG_API_INTERNAL_URL: http://catalog:8080
       IDENTITY_API_INTERNAL_URL: http://identity:8080
+      ORDERS_API_INTERNAL_URL: http://orders:8080
+      PAYMENTS_API_INTERNAL_URL: http://payments:8080
+      INVENTORY_API_INTERNAL_URL: http://inventory:8080
+      SHIPPING_API_INTERNAL_URL: http://shipping:8080
       LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY}"
       AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE}"
       OTEL_SERVICE_NAME: "${OTEL_SERVICE_NAME_FRONTEND:-luna-frontend}"

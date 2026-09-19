@@ -33,6 +33,13 @@ docker compose -f infrastructure/docker-compose.observability.yml down
 
 See [observability documentation](../documentation/observability.md) for OTLP configuration and checkout trace verification.
 
+Provision the tracked Luna Service Health dashboard with a SigNoz API key supplied through the shell:
+
+```bash
+SIGNOZ_API_TOKEN='paste-token-in-your-shell-only' \
+   bash infrastructure/observability/provision-luna-dashboard.sh
+```
+
 ## Deployment Synchronization
 
 The frontend image packages the production deployment files under `/opt/luna-deployment/`. The server-side updater pulls that image first, extracts its deployment files, replaces the local Compose definition and updater, then pulls and starts all service images.

@@ -42,6 +42,8 @@ The shared `Luna.Observability` project registers ASP.NET Core, `HttpClient`, SQ
 
 The API hosts continue to use Serilog for the existing console sink. They enable Serilog's `writeToProviders` option so Serilog forwards the existing `ILogger` events to the registered OpenTelemetry logging provider; no second application logging abstraction is introduced.
 
+The collector also gathers native Ubuntu host metrics through the `hostmetrics` receiver. It mounts the host root at `/hostfs`, uses `pid: host`, and runs the `resourcedetection` processor before batching on every telemetry pipeline. This setup is intended for native Docker Engine on Ubuntu; Docker Desktop may report the Linux VM/WSL host rather than the Windows host. Frontend traces remain the primary frontend error signal because Next.js currently exports server traces and exceptions but does not configure a Node OTLP log provider.
+
 The existing `X-Correlation-ID` remains a separate application/debug identifier and is preserved by the current middleware. OpenTelemetry `trace_id` identifies one distributed operation, `span_id` identifies one operation within that trace, and `X-Correlation-ID` is Luna's existing request identifier. OpenTelemetry logs include trace and span context when an active span exists; application logs continue to use `ILogger` and Serilog.
 
 Checkout stage logs record the customer and order identifiers, item/product counts, shipping method, order total, reservation identifiers where applicable, and failure stages. Payment methods, credentials, tokens, request bodies, and personal address contents are not logged.
@@ -55,6 +57,23 @@ docker compose -f infrastructure/docker-compose.observability.yml up -d
 ```
 
 The SigNoz UI is available at [http://localhost:8080](http://localhost:8080). OTLP is exposed on ports `4317` (gRPC) and `4318` (HTTP/protobuf).
+
+The tracked [Luna Service Health dashboard](../infrastructure/observability/luna-service-health-dashboard.json) includes recent errors, frontend errors, error trends by service, request volume, p95 latency, and grouped error operations. SigNoz dashboard APIs require authentication, so provision it with a read-only-capable dashboard management token supplied outside the repository:
+
+```bash
+SIGNOZ_API_TOKEN='paste-token-in-your-shell-only' \
+   bash infrastructure/observability/provision-luna-dashboard.sh
+```
+
+The script creates a dashboard through `/api/v2/dashboards`. To update an existing dashboard, provide its ID:
+
+```bash
+SIGNOZ_API_TOKEN='paste-token-in-your-shell-only' \
+SIGNOZ_DASHBOARD_ID='dashboard-id' \
+   bash infrastructure/observability/provision-luna-dashboard.sh
+```
+
+The default authentication header is `SIGNOZ-API-KEY`. Override `SIGNOZ_AUTH_HEADER` and `SIGNOZ_AUTH_VALUE_PREFIX` when using a different SigNoz deployment credential format. The local dashboard API returns `401 unauthenticated` without a token; create a service account/API key in SigNoz first.
 
 Start Luna separately using the existing commands:
 
@@ -88,6 +107,8 @@ The application Compose files support these environment variables:
 - `OTEL_SERVICE_NAME_FRONTEND`: optional Next.js service name override.
 
 The .NET configuration equivalents are `Telemetry__Enabled`, `Telemetry__Environment`, and `Telemetry__OtlpEndpoint`. Standard `OTEL_SDK_DISABLED=true` is also honored by the .NET setup.
+
+For host metrics, restart the observability stack after changing the collector configuration. In SigNoz, open **Infrastructure Monitoring > Hosts** and verify CPU, memory, load, filesystem, disk, network, paging, and process metrics. The host should have a detected `host.name` rather than the collector container name.
 
 If the collector is unavailable, OpenTelemetry export is asynchronous and best-effort. Luna requests and checkout do not synchronously depend on SigNoz availability.
 

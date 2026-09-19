@@ -6,6 +6,24 @@ connectors:
       - name: deployment.environment
       - name: host.name
 receivers:
+  hostmetrics:
+    root_path: /hostfs
+    collection_interval: 60s
+    scrapers:
+      cpu: {}
+      disk: {}
+      filesystem: {}
+      load: {}
+      memory: {}
+      network: {}
+      paging: {}
+      process:
+        mute_process_name_error: true
+        mute_process_exe_error: true
+        mute_process_io_error: true
+        mute_process_user_error: true
+      processes: {}
+      system: {}
   otlp:
     protocols:
       grpc:
@@ -94,21 +112,21 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [signozspanmetrics/delta, batch]
+      processors: [resourcedetection, signozspanmetrics/delta, batch]
       exporters: [clickhousetraces, metadataexporter, signozmeter]
     metrics:
-      receivers: [otlp]
-      processors: [batch]
+      receivers: [otlp, hostmetrics]
+      processors: [resourcedetection, batch]
       exporters: [signozclickhousemetrics, metadataexporter, signozmeter]
     metrics/prometheus:
       receivers: [prometheus]
-      processors: [batch]
+      processors: [resourcedetection, batch]
       exporters: [signozclickhousemetrics, metadataexporter, signozmeter]
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: [resourcedetection, batch]
       exporters: [clickhouselogsexporter, metadataexporter, signozmeter]
     metrics/meter:
       receivers: [signozmeter]
-      processors: [batch/meter]
+      processors: [resourcedetection, batch/meter]
       exporters: [signozclickhousemeter]
