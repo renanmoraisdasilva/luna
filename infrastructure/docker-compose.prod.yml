@@ -11,6 +11,11 @@ x-app-hardening: &app-hardening
   mem_limit: 512m
   cpus: "1.0"
 
+x-telemetry-environment: &telemetry-environment
+  Telemetry__Enabled: "${TELEMETRY_ENABLED:-false}"
+  Telemetry__Environment: "${TELEMETRY_ENVIRONMENT:-Production}"
+  Telemetry__OtlpEndpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+
 services:
   sqlserver:
     image: "mcr.microsoft.com/mssql/server:${MSSQL_IMAGE_TAG:?Set MSSQL_IMAGE_TAG in .env to a tested SQL Server 2022 tag}"
@@ -48,6 +53,9 @@ services:
     ports:
       - "3000:3000"
     environment:
+      OTEL_SERVICE_NAME: "${OTEL_SERVICE_NAME_FRONTEND:-luna-frontend}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_HTTP_ENDPOINT:-}"
+      OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=${TELEMETRY_ENVIRONMENT:-Production}"
       HOSTNAME: 0.0.0.0
       PORT: 3000
       CATALOG_API_INTERNAL_URL: http://catalog:8080
@@ -73,6 +81,7 @@ services:
     <<: *app-hardening
     user: app
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
       ServiceAuthentication__Clients__Orders__Secret: "${ORDERS_SERVICE_CLIENT_SECRET:?Set ORDERS_SERVICE_CLIENT_SECRET in .env}"
@@ -94,6 +103,7 @@ services:
     <<: *app-hardening
     user: app
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     depends_on:
@@ -109,6 +119,7 @@ services:
     <<: *app-hardening
     user: app
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
       ServiceAuthentication__ClientId: orders
@@ -127,6 +138,7 @@ services:
     <<: *app-hardening
     user: app
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     depends_on:
@@ -142,6 +154,7 @@ services:
     <<: *app-hardening
     user: app
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     depends_on:
@@ -157,6 +170,7 @@ services:
     <<: *app-hardening
     user: app
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     depends_on:

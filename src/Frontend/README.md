@@ -46,6 +46,7 @@ src/Frontend/
 │   └── swagger/
 │       ├── page.tsx                API explorer route
 │       └── SwaggerExplorer.tsx     Client-side service selector and Swagger UI
+├── instrumentation.ts               Server-side OpenTelemetry registration
 ├── types/
 │   └── swagger-ui-react.d.ts       Local TypeScript declaration for the package
 ├── .env.example                    Browser-facing API URL examples
@@ -179,6 +180,8 @@ PAYMENTS_API_INTERNAL_URL
 INVENTORY_API_INTERNAL_URL
 SHIPPING_API_INTERNAL_URL
 ```
+
+Server-side OpenTelemetry uses the standard `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_SERVICE_NAME` environment variables. The instrumentation hook traces Next.js server work and supported outbound HTTP operations; browser instrumentation is intentionally not enabled in this phase.
 
 ## Scripts
 

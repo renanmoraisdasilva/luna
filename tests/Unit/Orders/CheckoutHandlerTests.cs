@@ -5,6 +5,7 @@ using Luna.Orders.Application.Orders;
 using Luna.Orders.Contracts.Carts;
 using Luna.Orders.Contracts.Checkout;
 using Luna.Orders.Domain;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Luna.UnitTests.Orders;
@@ -167,7 +168,7 @@ public sealed class CheckoutHandlerTests
     {
         var resolvedCart = cart ?? (useDefaultCart ? new CartResponse(Guid.NewGuid(), customerId, [new CartItemResponse(catalog.Product.Id, 2)]) : null);
         var cartRepository = new FakeCartReadRepository(resolvedCart);
-        return new CheckoutHandler(cartRepository, repository, catalog, shipping, inventory, payments);
+        return new CheckoutHandler(cartRepository, repository, catalog, shipping, inventory, payments, NullLogger<CheckoutHandler>.Instance);
     }
 
     private static CheckoutHandler CreateHandler(Guid customerId) =>

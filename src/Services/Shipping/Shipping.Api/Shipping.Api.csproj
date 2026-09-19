@@ -11,6 +11,7 @@
     <ProjectReference Include="..\Shipping.Infrastructure\Shipping.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\Contracts\Luna.Contracts\Luna.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Shared\Luna.Authentication\Luna.Authentication.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Luna.Observability\Luna.Observability.csproj" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.22">

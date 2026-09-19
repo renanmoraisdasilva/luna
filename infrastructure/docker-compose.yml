@@ -5,6 +5,14 @@ x-service-healthcheck: &service-healthcheck
   retries: 24
   start_period: 10s
 
+x-telemetry-environment: &telemetry-environment
+  Telemetry__Enabled: "${TELEMETRY_ENABLED:-true}"
+  Telemetry__Environment: "${TELEMETRY_ENVIRONMENT:-Development}"
+  Telemetry__OtlpEndpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT:-http://host.docker.internal:4317}"
+
+x-telemetry-hosts: &telemetry-hosts
+  - "host.docker.internal:host-gateway"
+
 services:
 
   sqlserver:
@@ -45,11 +53,16 @@ services:
         SHIPPING_API_INTERNAL_URL: http://shipping:8080
     ports: ["3000:3000"]
     environment:
+      <<: *telemetry-environment
       CATALOG_API_INTERNAL_URL: http://catalog:8080
       IDENTITY_API_INTERNAL_URL: http://identity:8080
       LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY}"
       AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE}"
+      OTEL_SERVICE_NAME: "${OTEL_SERVICE_NAME_FRONTEND:-luna-frontend}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_HTTP_ENDPOINT:-http://host.docker.internal:4318}"
+      OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=${TELEMETRY_ENVIRONMENT:-Development}"
       HOSTNAME: 0.0.0.0
+    extra_hosts: *telemetry-hosts
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 15s
@@ -64,9 +77,11 @@ services:
       args: { PROJECT: src/Services/Identity/Identity.csproj }
     command: ["Identity.dll"]
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
       ServiceAuthentication__Clients__Orders__Secret: "${ORDERS_SERVICE_CLIENT_SECRET:?Set ORDERS_SERVICE_CLIENT_SECRET in .env}"
+    extra_hosts: *telemetry-hosts
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -79,8 +94,10 @@ services:
       args: { PROJECT: src/Services/Catalog/Catalog.Api/Catalog.Api.csproj }
     command: ["Catalog.Api.dll"]
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
+    extra_hosts: *telemetry-hosts
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -93,6 +110,7 @@ services:
       args: { PROJECT: src/Services/Orders/Orders.Api/Orders.Api.csproj }
     command: ["Orders.Api.dll"]
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
       ServiceAuthentication__ClientId: orders
@@ -102,6 +120,7 @@ services:
       ShippingApi: http://shipping:8080/
       InventoryApi: http://inventory:8080/
       PaymentsApi: http://payments:8080/
+    extra_hosts: *telemetry-hosts
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -114,8 +133,10 @@ services:
       args: { PROJECT: src/Services/Payments/Payments.Api/Payments.Api.csproj }
     command: ["Payments.Api.dll"]
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
+    extra_hosts: *telemetry-hosts
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -128,8 +149,10 @@ services:
       args: { PROJECT: src/Services/Inventory/Inventory.Api/Inventory.Api.csproj }
     command: ["Inventory.Api.dll"]
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
+    extra_hosts: *telemetry-hosts
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -142,8 +165,10 @@ services:
       args: { PROJECT: src/Services/Shipping/Shipping.Api/Shipping.Api.csproj }
     command: ["Shipping.Api.dll"]
     environment:
+      <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
+    extra_hosts: *telemetry-hosts
     depends_on:
       sqlserver:
         condition: service_healthy

@@ -3,6 +3,7 @@ using Luna.Orders.Contracts.Carts;
 using Luna.Orders.Domain;
 using Luna.Orders.Application.Carts;
 using Luna.Orders.Application.Orders;
+using Microsoft.Extensions.Logging;
 
 namespace Luna.Orders.Application.Checkout;
 
@@ -14,11 +15,26 @@ public sealed class CheckoutHandler(
     ICatalogCheckoutClient catalogClient,
     IShippingCheckoutClient shippingClient,
     IInventoryCheckoutClient inventoryClient,
-    IPaymentsCheckoutClient paymentsClient)
+    IPaymentsCheckoutClient paymentsClient,
+    ILogger<CheckoutHandler> logger)
 {
     public async Task<CheckoutResponse> HandleAsync(CheckoutCommand command, CancellationToken cancellationToken)
     {
+        try
+        {
+            return await HandleCoreAsync(command, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "Checkout failed for customer {CustomerId}", command.CustomerId);
+            throw;
+        }
+    }
+
+    private async Task<CheckoutResponse> HandleCoreAsync(CheckoutCommand command, CancellationToken cancellationToken)
+    {
         ValidateCommand(command);
+        logger.LogInformation("Checkout started for customer {CustomerId}", command.CustomerId);
 
         var idempotencyKey = NormalizeIdempotencyKey(command.IdempotencyKey);
         var existingCheckout = await TryGetExistingCheckoutAsync(command.CustomerId, idempotencyKey, command.Request, cancellationToken);
@@ -29,11 +45,15 @@ public sealed class CheckoutHandler(
 
         ValidatePayment(command.Request);
         var cart = await LoadCartAsync(command.CustomerId, cancellationToken);
+        logger.LogInformation("Cart loaded for customer {CustomerId} with {ItemCount} items", command.CustomerId, cart.Items.Count);
         var address = CreateShippingAddress(command.Request);
         var products = await LoadProductsAsync(cart, cancellationToken);
+        logger.LogInformation("Products loaded for checkout with {ProductCount} distinct products", products.Count);
         var orderId = Guid.NewGuid();
         var quote = await shippingClient.QuoteAsync(orderId, command.Request.ShippingMethodCode, address, cancellationToken);
+        logger.LogInformation("Shipping quote obtained for order {OrderId} using method {ShippingMethodCode}", orderId, quote.ShippingMethodCode);
         var order = CreateOrder(command, cart, products, address, quote, idempotencyKey, orderId);
+        logger.LogInformation("Order created for checkout {OrderId} with total {OrderTotal}", order.Id, order.Total);
 
         await orderRepository.AddAsync(order, cancellationToken);
         await orderRepository.SaveChangesAsync(cancellationToken);
@@ -41,6 +61,7 @@ public sealed class CheckoutHandler(
         var reservation = await ReserveInventoryAsync(order, cart, cancellationToken);
         var payment = await AuthorizePaymentAsync(order, reservation, command.Request, cancellationToken);
         await ConfirmOrderAsync(order, reservation, payment, cancellationToken);
+        logger.LogInformation("Order confirmed for checkout {OrderId}", order.Id);
 
         return CreateResponse(order, reservation, payment, command.Request);
     }
@@ -85,6 +106,7 @@ public sealed class CheckoutHandler(
             && existingOrder.InventoryReservationId is Guid reservationId
             && existingOrder.PaymentId is Guid paymentId)
         {
+            logger.LogInformation("Existing idempotent checkout detected for customer {CustomerId} and order {OrderId}", customerId, existingOrder.Id);
             return new CheckoutResponse(existingOrder.Id, existingOrder.Status.ToString(), existingOrder.Total, request.Currency.Trim().ToUpperInvariant(), reservationId, paymentId);
         }
 
@@ -166,6 +188,7 @@ public sealed class CheckoutHandler(
     {
         try
         {
+            logger.LogInformation("Inventory reservation attempted for order {OrderId}", order.Id);
             return await inventoryClient.ReserveAsync(
                 order.Id,
                 cart.Items.Select(item => (item.ProductId, item.Quantity)).ToArray(),
@@ -173,9 +196,10 @@ public sealed class CheckoutHandler(
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
+            logger.LogError(exception, "Inventory reservation failed for order {OrderId}", order.Id);
             order.Cancel();
             await orderRepository.SaveChangesAsync(cancellationToken);
-            throw new CheckoutRejectedException("INVENTORY_UNAVAILABLE", "The requested inventory is not available.");
+            throw new CheckoutRejectedException("INVENTORY_UNAVAILABLE", "The requested inventory is not available.", exception);
         }
     }
 
@@ -188,20 +212,24 @@ public sealed class CheckoutHandler(
         PaymentAuthorizationSnapshot payment;
         try
         {
+            logger.LogInformation("Payment authorization attempted for order {OrderId}", order.Id);
             payment = await paymentsClient.AuthorizeAsync(order.Id, order.Total, request.Currency, request.PaymentMethod, cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            await HandlePaymentFailureAsync(order, reservation, "PAYMENT_UNAVAILABLE", "Payment authorization could not be completed.", cancellationToken);
+            logger.LogError(exception, "Payment authorization failed for order {OrderId}", order.Id);
+            await HandlePaymentFailureAsync(order, reservation, "PAYMENT_UNAVAILABLE", "Payment authorization could not be completed.", exception, cancellationToken);
             throw new InvalidOperationException("Payment failure handling must not return.");
         }
 
         if (!payment.Authorized)
         {
-            await HandlePaymentFailureAsync(order, reservation, "PAYMENT_DECLINED", "Payment authorization was declined.", cancellationToken);
+            logger.LogWarning("Payment authorization declined for order {OrderId}", order.Id);
+            await HandlePaymentFailureAsync(order, reservation, "PAYMENT_DECLINED", "Payment authorization was declined.", null, cancellationToken);
             throw new InvalidOperationException("Payment failure handling must not return.");
         }
 
+        logger.LogInformation("Payment authorization completed for order {OrderId}", order.Id);
         return payment;
     }
 
@@ -210,6 +238,7 @@ public sealed class CheckoutHandler(
         InventoryReservationSnapshot reservation,
         string code,
         string message,
+        Exception? innerException,
         CancellationToken cancellationToken)
     {
         var releaseSucceeded = await TryReleaseReservationAsync(reservation.ReservationId, cancellationToken);
@@ -218,10 +247,10 @@ public sealed class CheckoutHandler(
 
         if (!releaseSucceeded)
         {
-            throw new CheckoutRejectedException("RESERVATION_RELEASE_FAILED", "Payment failed and the inventory reservation could not be released.");
+            throw new CheckoutRejectedException("RESERVATION_RELEASE_FAILED", "Payment failed and the inventory reservation could not be released.", innerException);
         }
 
-        throw new CheckoutRejectedException(code, message);
+        throw new CheckoutRejectedException(code, message, innerException);
     }
 
     private async Task ConfirmOrderAsync(
@@ -251,6 +280,7 @@ public sealed class CheckoutHandler(
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
+            logger.LogWarning(exception, "Inventory reservation release failed for reservation {ReservationId}", reservationId);
             return false;
         }
     }

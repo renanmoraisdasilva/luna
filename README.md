@@ -245,6 +245,7 @@ The repository separates **what Luna is**, **where it is going**, and **how each
 - [Phase 0 Design](documentation/phase-0-design.md) — Foundation and architectural decisions
 - [Phase 1 Specification](documentation/dev_phases/phase-1-spec.md) — Basic commerce flow requirements and decisions
 - [Phase 1 Architecture](documentation/dev_phases/phase-1-architecture.md) — Technical design, boundaries, and architectural decisions
+- [Observability](documentation/observability.md) — OpenTelemetry, OTLP, SigNoz, and checkout trace verification
 
 For frontend-specific implementation details, see the frontend documentation under `src/Frontend/`.
 
