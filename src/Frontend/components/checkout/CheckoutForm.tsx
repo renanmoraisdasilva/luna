@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -22,20 +22,20 @@ type CheckoutFormProps = {
   email: string;
 };
 
-function Field({
+const Field = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { id: string; label: string; error?: string }>(function Field({
   id,
   label,
   error,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { id: string; label: string; error?: string }) {
+}, ref) {
   return (
     <div className="flex flex-col gap-xs">
       <label className="font-label-caps text-label-caps uppercase tracking-wider text-on-surface" htmlFor={id}>{label}</label>
-      <input className="h-control rounded border border-outline-variant bg-surface-card px-md font-body-md text-body-md text-on-surface outline-none transition-colors focus:border-primary" id={id} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} {...props} />
+      <input ref={ref} className="h-control rounded border border-outline-variant bg-surface-card px-md font-body-md text-body-md text-on-surface outline-none transition-colors focus:border-primary" id={id} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} {...props} />
       {error ? <p className="font-status-pill text-status-pill text-status-error" id={`${id}-error`} role="alert">{error}</p> : null}
     </div>
   );
-}
+});
 
 export default function CheckoutForm({ cart, products, shippingMethods, email }: CheckoutFormProps) {
   const { register, handleSubmit, control, formState: { errors, isSubmitting }, setError } = useForm<CheckoutFormValues>({

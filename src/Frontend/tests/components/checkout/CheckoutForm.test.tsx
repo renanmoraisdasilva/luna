@@ -52,6 +52,7 @@ async function fillRequiredFields() {
   for (const [label, value] of fields) {
     const input = screen.getByLabelText(label);
     fireEvent.change(input, { target: { name: input.getAttribute('name'), value } });
+    fireEvent.blur(input);
     await waitFor(() => expect(input).toHaveValue(value));
   }
 }
