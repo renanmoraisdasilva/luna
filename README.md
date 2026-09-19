@@ -191,8 +191,10 @@ For local frontend development without rebuilding the frontend container on ever
 docker compose \
 -f infrastructure/docker-compose.yml \
 -f infrastructure/docker-compose.dev.yml \
+-f infrastructure/docker-compose.observability.yml \
 up --build \
-sqlserver identity catalog orders payments inventory shipping
+sqlserver identity catalog orders payments inventory shipping \
+signoz signoz-migrator otel-collector
 ```
 
 Then run the frontend from `src/Frontend`:
@@ -202,6 +204,8 @@ npm run dev
 ```
 
 The development override publishes the backend services on ports `5001` through `5006`, matching the frontend's local `.env` rewrite destinations. Use `--force-recreate` if the services were previously started with the default Compose file. Restart `npm run dev` after changing `.env` because Next.js reads the rewrite destinations at startup.
+
+This command also starts SigNoz and the OpenTelemetry collector. The SigNoz UI is available at `http://localhost:8080`, and OTLP receivers are available on ports `4317` and `4318`.
 
 The storefront is available at:
 

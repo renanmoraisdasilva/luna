@@ -6,6 +6,10 @@ Phase 0 establishes Luna's **service boundaries, application architecture, devel
 
 No complex commerce workflow is implemented yet. Phase 1 should be able to build the commerce flows without changing these fundamental boundaries.
 
+## Implementation status
+
+**Complete as of 2026-09-19.** This document describes the Phase 0 baseline and intentionally preserves the constraints that were established before commerce behavior was added. Subsequent work implemented the Phase 1 synchronous commerce flow and delivered several capabilities earlier than the original sequence, including OpenIddict-based authentication, service-to-service authorization, checkout idempotency, OpenTelemetry, and local SigNoz infrastructure. Those capabilities do not change the Phase 0 ownership and boundary decisions.
+
 ## Quick navigation
 
 ### Architecture & Boundaries
@@ -743,7 +747,7 @@ Phase 0 is complete when:
 
 ### Current status
 
-The repository now satisfies the Phase 0 baseline in both structure and runtime validation. The project has six independent backend services, a Next.js frontend gateway, a working Docker environment, health checks, Swagger/OpenAPI exposure, correlation-ID logging, identity endpoints, and a basic test foundation. This is ready to proceed into Phase 1 without redesigning the core architecture.
+The repository satisfies the Phase 0 baseline in both structure and runtime validation. The project has six independent backend services, a Next.js frontend gateway, a working Docker environment, health checks, Swagger/OpenAPI exposure, correlation-ID logging, identity endpoints, CI/container publishing, and a test foundation. Phase 1 proceeded without redesigning the core architecture and is now in closure; the current project position is tracked in the [roadmap](../roadmap.md).
 
 ---
 

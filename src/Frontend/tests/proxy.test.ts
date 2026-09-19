@@ -30,6 +30,12 @@ describe('frontend proxy', () => {
     expect(result.headers.get('location')).toBe('http://localhost/login?returnUrl=%2Faccount%2Forders%3Ffilter%3Dopen');
   });
 
+  it('redirects unauthenticated checkout pages to login with a return URL', async () => {
+    const result = await proxy(request('/checkout'));
+
+    expect(result.headers.get('location')).toBe('http://localhost/login?returnUrl=%2Fcheckout');
+  });
+
   it('allows authenticated pages and injects the token for service requests', async () => {
     decryptAccessToken.mockResolvedValue('access-token');
 

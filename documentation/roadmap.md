@@ -431,20 +431,35 @@ Scenarios include:
 
 ## Project Status
 
-**Early Development**
+**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; observability foundation delivered ahead of sequence.**
 
 Luna is being built incrementally. Architecture and implementation decisions may change as new requirements and failure scenarios are introduced. The repository is intentionally a work in progress.
 
 ### Current implementation snapshot
 
-Phase 0 foundation is in place: the services, independent persistence, EF Core migration startup and initial Catalog/Identity migrations, Docker Compose environment, health endpoints, OpenAPI documentation, centralized tests, and Next.js gateway are implemented.
+Phase 0 is complete: the six services, independent persistence, EF Core migration startup, Docker Compose environment, health endpoints, OpenAPI documentation, centralized tests, Next.js gateway, and CI/container publishing foundations are in place.
 
-Phase 1 is in progress. The catalog storefront currently supports server-rendered active products, search, category filtering, URL-based pagination, image optimization, and a unified Swagger explorer. Cart API operations, per-customer cart authorization, the cart frontend, the Identity/OpenIddict session boundary, inventory reservations, checkout orchestration, order persistence, deterministic payment authorization, shipping methods and quotes, shipment creation, and fulfillment state transitions are implemented. Inventory owns stock and reservations, supports release, and uses an atomic database update for concurrency-safe reservations. Orders orchestrates the synchronous checkout flow through authenticated service clients. CI validates the .NET solution, frontend, Compose startup, and service health endpoints; successful CI then publishes versioned and `latest` images to GHCR.
+Phase 1 is substantially implemented through the synchronous customer commerce path. The catalog storefront supports server-rendered active products, search, category filtering, URL-based pagination, product details, and image galleries. Authenticated customers can use the cart, checkout, order history, order details, account pages, and the Identity/OpenIddict session boundary. Orders coordinates Catalog, Shipping, Inventory, and Payments through authenticated service clients; Inventory provides concurrency-safe reservations and release; Payments provides deterministic authorization with concurrency protection; and Orders persists price/shipping snapshots, fulfillment state, and checkout idempotency.
 
-The next implementation priority is proving and completing the remaining customer commerce path:
+The project also has a delivered observability foundation ahead of the original phase sequence: OpenTelemetry instrumentation, OTLP collection, SigNoz local infrastructure, host metrics, a tracked service-health dashboard, checkout stage logging, health checks, and a frontend SigNoz link. This is not yet the Phase 9 Operations Console or Phase 11 failure-injection tooling.
 
-1. Customer-facing order history, order details, and checkout error states.
-2. Cross-service integration or end-to-end tests covering successful checkout and compensation failures.
-3. Coverage verification and the remaining Phase 1 acceptance checks.
+Phase 1 closure is still pending because the repository does not yet prove the complete checkout and compensation flows through a cross-service integration or end-to-end test. Frontend checkout error-state coverage and a current full quality-gate run should be completed as part of that closure. The existing order history and order detail routes are implemented and are no longer outstanding work.
 
-RabbitMQ, retries, idempotency, the transactional outbox, observability, and operations tooling remain later phases as planned.
+### Phase position
+
+| Phase | Position | Notes |
+| --- | --- | --- |
+| 0 | Complete | Foundation, service boundaries, infrastructure, CI, and baseline security are implemented. |
+| 1 | In closure | Synchronous commerce path is implemented; cross-service proof and remaining UI failure-state verification are pending. |
+| 2-7 | Not started | Messaging, simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
+| 8 | Foundation delivered | Telemetry and local SigNoz are implemented; operational dashboards and workflows remain later work. |
+| 9-16 | Not started | Operations Console, redundancy, chaos, advanced security, production infrastructure, AWS, and scenario exercises remain future work. |
+
+### Next steps
+
+1. Add cross-service integration or end-to-end tests for successful checkout, insufficient inventory, payment failure with reservation release, shipment failure, and repeated idempotent checkout requests.
+2. Complete frontend verification for checkout loading, duplicate submission prevention, unauthorized access, downstream failures, and customer-friendly error messages.
+3. Run and record the current full quality gates, including backend unit/integration tests, frontend tests/lint/build, Compose smoke checks, and coverage.
+4. Close Phase 1 with a short implementation review, then begin Phase 2 by introducing RabbitMQ around one bounded workflow while preserving synchronous HTTP where an immediate response is required.
+
+RabbitMQ, asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.

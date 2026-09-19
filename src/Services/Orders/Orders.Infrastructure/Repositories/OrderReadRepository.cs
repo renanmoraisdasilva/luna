@@ -30,7 +30,7 @@ public sealed class OrderReadRepository(OrdersDbContext dbContext) : IOrderReadR
                 order.Status.ToString(),
                 order.Items.Sum(item => item.LineTotal),
                 order.ShippingCost,
-                order.Total,
+                order.Items.Sum(item => item.LineTotal) + order.ShippingCost,
                 order.ShippingMethodCode,
                 order.CreatedAt,
                 new ShippingAddressResponse(

@@ -7,11 +7,13 @@ import Icon from './Icon';
 import { getCart } from '../../lib/api/orders';
 import { useCurrentUser } from '../../lib/queries/auth';
 
+const signozUrl = process.env.NEXT_PUBLIC_SIGNOZ_URL || 'http://localhost:8080';
+
 const navigationLinks = [
   { label: 'Shop', href: '/shop' },
   { label: 'Orders', href: '/orders' },
   { label: 'Swagger', href: '/swagger' },
-  { label: 'SigNoz', href: 'http://localhost:8080', external: true },
+  { label: 'SigNoz', href: signozUrl, external: true },
 ];
 
 const utilityLinks = [

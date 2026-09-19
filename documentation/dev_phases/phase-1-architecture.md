@@ -22,6 +22,10 @@
 
 Phase 1 architecture should preserve the service boundaries established in Phase 0, keep databases independently owned, keep backend services private, allow Orders to coordinate checkout, keep Fulfillment inside Orders, and leave a clean path for asynchronous communication in Phase 2.
 
+## Implementation status
+
+**Substantially implemented; closure pending cross-service verification as of 2026-09-19.** The current implementation follows this architecture for the synchronous commerce path, including the Next.js thin gateway, service-owned contracts and persistence, Orders application orchestration, local JWT validation, authenticated service clients, checkout idempotency, and CQRS-style read/write boundaries. OpenTelemetry and local SigNoz infrastructure are also implemented as an early cross-cutting capability. Cross-service integration or end-to-end workflow coverage remains the main Phase 1 verification gap.
+
 # 2. Service Boundaries
 
 ### Structural invariants
@@ -574,7 +578,9 @@ The repository also separates unit, integration, and smoke tests under the centr
 
 # 14. Deferred Architecture
 
-Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, compensation, distributed tracing, advanced metrics, operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
+Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, compensation, operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
+
+Distributed tracing and metrics are no longer deferred at the foundation level: OpenTelemetry, OTLP export, local SigNoz, host metrics, and a service-health dashboard are implemented. The remaining deferred work is the operational use of that telemetry, including queue and failure workflows, operator controls, and the Phase 9 Operations Console.
 
 # 15. Architecture Implementation Checklist
 
@@ -615,4 +621,4 @@ Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional 
 - [x] Aggregate invariants have focused unit tests.
 - [x] Persistence behavior has integration tests against real database infrastructure.
 - [ ] Cross-service workflows have integration or end-to-end coverage.
-- [ ] Architecture changes are reviewed against the bounded-context and ownership rules above.
+- [x] Architecture changes are reviewed against the bounded-context and ownership rules above.

@@ -43,6 +43,10 @@ Phase 1 prioritizes:
 
 Phase 1 does **not** attempt to solve distributed reliability.
 
+## Implementation status
+
+**Substantially implemented; closure pending cross-service proof as of 2026-09-19.** The repository contains the required catalog, cart, authentication, checkout, order history/detail, inventory, payment authorization, fulfillment, shipping, and customer frontend surfaces. Checkout also has customer-scoped idempotency for repeated requests using the same `Idempotency-Key`. Unit, persistence integration, frontend, build, and coverage checks exist, but a complete checkout and compensation workflow has not yet been demonstrated by a cross-service integration or end-to-end test.
+
 ---
 
 # 1. Scope
@@ -795,11 +799,12 @@ The following are intentionally unresolved:
 ```text
 service crashes after successful payment
 request timeout after downstream success
-duplicate checkout request
 lost response after inventory reservation
 partial distributed transaction
 automatic recovery
 ```
+
+Repeated checkout requests with the same customer and `Idempotency-Key` are handled by the current Orders implementation. Distributed failure cases involving timeouts, crashes, partial completion, or recovery remain unresolved and are intentionally deferred.
 
 These become important in later phases.
 
@@ -813,7 +818,7 @@ Phase 1 does not implement:
 * transactional outbox
 * retries
 * dead-letter queues
-* compensation/Sagas
+* distributed compensation/Sagas beyond the synchronous payment-failure reservation release
 * distributed locks
 * payment capture
 * payment refunds
@@ -827,7 +832,7 @@ Phase 1 does not implement:
 * warehouse optimization
 * operations dashboard
 * chaos testing
-* advanced observability
+* advanced operational workflows beyond the current telemetry and SigNoz foundation
 * advanced security hardening
 * separate Fulfillment service
 
@@ -893,7 +898,7 @@ Shipment failure
 
 The phase is also complete when:
 
-* [ ] all required APIs are implemented
+* [x] all required APIs are implemented
 * [x] OpenAPI documents the APIs
 * [x] service boundaries remain intact
 * [x] database ownership remains isolated
@@ -904,7 +909,7 @@ The phase is also complete when:
 * [x] customer frontend implements the required routes
 * [x] authentication works
 * [ ] checkout works end-to-end
-* [ ] failure scenarios are observable
+* [x] failure scenarios emit structured application and telemetry signals
 * [x] Phase 2 can introduce asynchronous messaging without redesigning the basic commerce model
 
 ---
@@ -986,7 +991,7 @@ The phase is also complete when:
 
 - [x] SPEC-FE-001 - Customer routes
 - [x] SPEC-FE-002 - Public catalog behavior
-- [ ] SPEC-FE-003 - Interactive behavior
+- [x] SPEC-FE-003 - Interactive behavior
 - [ ] SPEC-FE-004 - Error behavior
 
 ## Database
@@ -1000,4 +1005,4 @@ The phase is also complete when:
 - [x] SPEC-TEST-001 - Business behavior
 - [x] SPEC-TEST-002 - Catalog reads
 - [ ] SPEC-TEST-003 - Cross-service behavior
-- [ ] SPEC-TEST-004 - Coverage
+- [x] SPEC-TEST-004 - Coverage collection and quality-gate reporting

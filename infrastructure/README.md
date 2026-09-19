@@ -21,7 +21,20 @@ Run the local stack:
 docker compose \
   -f infrastructure/docker-compose.yml \
   -f infrastructure/docker-compose.dev.yml \
+   -f infrastructure/docker-compose.observability.yml \
   up --build
+```
+
+To start only the backend plus observability services during host-side frontend development:
+
+```bash
+docker compose \
+   -f infrastructure/docker-compose.yml \
+   -f infrastructure/docker-compose.dev.yml \
+   -f infrastructure/docker-compose.observability.yml \
+   up --build \
+   sqlserver identity catalog orders payments inventory shipping \
+   signoz signoz-migrator otel-collector
 ```
 
 Start or stop observability independently:

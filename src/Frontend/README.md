@@ -74,8 +74,11 @@ For host-side Next.js development, start the backend services with the developme
 docker compose \
 	-f ../../infrastructure/docker-compose.yml \
 	-f ../../infrastructure/docker-compose.dev.yml \
+	-f ../../infrastructure/docker-compose.observability.yml \
 	up -d sqlserver identity catalog orders payments inventory shipping
 ```
+
+To include SigNoz and the OpenTelemetry collector in the same startup, append `signoz signoz-migrator otel-collector` to the service list. SigNoz is available at [http://localhost:8080](http://localhost:8080).
 
 The override publishes the backend ports only for local development. The default Compose file does not publish them.
 
