@@ -14,6 +14,8 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Luna' })).toHaveAttribute('href', '/shop');
     expect(screen.getByRole('link', { name: 'Shop' })).toHaveAttribute('href', '/shop');
     expect(screen.getByRole('link', { name: 'Orders' })).toHaveAttribute('href', '/orders');
+    expect(screen.getByRole('link', { name: 'SigNoz' })).toHaveAttribute('href', 'http://localhost:8080');
+    expect(screen.getByRole('link', { name: 'SigNoz' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: 'Account' })).toHaveAttribute('href', '/account');
     expect(screen.getByRole('link', { name: 'Cart' })).toHaveAttribute('href', '/cart');
   });
