@@ -39,7 +39,7 @@ function renderForm() {
   );
 }
 
-function fillRequiredFields() {
+async function fillRequiredFields() {
   const fields = [
     ['Full name', 'Jane Doe'],
     ['Payment method', 'test-card'],
@@ -51,9 +51,8 @@ function fillRequiredFields() {
 
   for (const [label, value] of fields) {
     const input = screen.getByLabelText(label);
-    fireEvent.input(input, { target: { value } });
-    fireEvent.blur(input);
-    expect(input).toHaveValue(value);
+    fireEvent.change(input, { target: { name: input.getAttribute('name'), value } });
+    await waitFor(() => expect(input).toHaveValue(value));
   }
 }
 
@@ -73,7 +72,7 @@ describe('CheckoutForm', () => {
     });
 
     renderForm();
-    fillRequiredFields();
+    await fillRequiredFields();
     fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
 
     await waitFor(() => expect(submitCheckout).toHaveBeenCalledTimes(1));
@@ -85,7 +84,7 @@ describe('CheckoutForm', () => {
     vi.mocked(submitCheckout).mockReturnValue(new Promise((resolve) => { resolveCheckout = resolve; }));
 
     renderForm();
-    fillRequiredFields();
+    await fillRequiredFields();
     const button = screen.getByRole('button', { name: 'Place order' });
     fireEvent.click(button);
 
@@ -113,7 +112,7 @@ describe('CheckoutForm', () => {
     });
 
     renderForm();
-    fillRequiredFields();
+    await fillRequiredFields();
     fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
 
     expect(await screen.findByText('Payment authorization was declined.')).toBeInTheDocument();
@@ -124,7 +123,7 @@ describe('CheckoutForm', () => {
     vi.mocked(submitCheckout).mockRejectedValue({ isAxiosError: true, response: { status: 401 } });
 
     renderForm();
-    fillRequiredFields();
+    await fillRequiredFields();
     fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
 
     expect(await screen.findByText('We could not place your order.')).toBeInTheDocument();
