@@ -23,8 +23,13 @@ const cart = {
 const products = {
   'product-1': {
     id: 'product-1',
+    sku: 'KB-001',
     name: 'Luna Keyboard',
+    description: 'A mechanical keyboard.',
     currentPrice: 12.5,
+    categoryId: 'electronics-1',
+    categoryName: 'Electronics',
+    categorySlug: 'electronics',
     images: [],
   },
 };
