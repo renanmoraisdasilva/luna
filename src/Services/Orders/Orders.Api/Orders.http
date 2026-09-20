@@ -1,0 +1,15 @@
+@baseUrl = http://localhost:5003
+@accessToken = replace-with-admin-access-token
+@orderId = 00000000-0000-0000-0000-000000000000
+
+### Get the fulfillment queue
+GET {{baseUrl}}/api/v1/orders/fulfillment?status=Confirmed,Preparing,ShippingPendingRetry&search=&page=1&pageSize=25
+Authorization: Bearer {{accessToken}}
+
+### Get a fulfillment order by ID
+GET {{baseUrl}}/api/v1/orders/fulfillment/{{orderId}}
+Authorization: Bearer {{accessToken}}
+
+### Get a missing fulfillment order
+GET {{baseUrl}}/api/v1/orders/fulfillment/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{accessToken}}

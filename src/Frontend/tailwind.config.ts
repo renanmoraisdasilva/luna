@@ -23,6 +23,8 @@ const config: Config = {
         'on-surface-variant': '#44474c',
         'status-success': '#10b981',
         'status-error': '#dc2626',
+        'status-warning': '#f59e0b',
+        'error-container': '#ffdad6',
         'border-standard': '#e2e8f0',
         'border-subtle': '#f1f5f9',
         'outline': '#75777d',

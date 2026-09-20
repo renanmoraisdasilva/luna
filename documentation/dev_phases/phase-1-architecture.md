@@ -18,6 +18,8 @@
 - [14. Deferred Architecture](#14-deferred-architecture)
 - [15. Architecture Implementation Checklist](#15-architecture-implementation-checklist)
 
+The detailed Phase 1 Luna Ops fulfillment and shipment boundary is documented separately in [phase-1-ops-architecture.md](phase-1-ops-architecture.md).
+
 # 1. Architectural Goals
 
 Phase 1 architecture should preserve the service boundaries established in Phase 0, keep databases independently owned, keep backend services private, allow Orders to coordinate checkout, keep Fulfillment inside Orders, and leave a clean path for asynchronous communication in Phase 2.
@@ -575,10 +577,11 @@ The repository also separates unit, integration, and smoke tests under the centr
 42. Backend services validate JWTs locally using discovered and cached signing keys.
 43. Authorization policies remain service-owned even when validation setup is shared.
 44. Cart access is authorized per customer using the token subject claim.
+45. Phase 1 Luna Ops uses the ownership and orchestration rules in [phase-1-ops-architecture.md](phase-1-ops-architecture.md); the broader Operations Console remains deferred.
 
 # 14. Deferred Architecture
 
-Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, compensation, operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
+Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, compensation, advanced operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
 
 Distributed tracing and metrics are no longer deferred at the foundation level: OpenTelemetry, OTLP export, local SigNoz, host metrics, and a service-health dashboard are implemented. The remaining deferred work is the operational use of that telemetry, including queue and failure workflows, operator controls, and the Phase 9 Operations Console.
 

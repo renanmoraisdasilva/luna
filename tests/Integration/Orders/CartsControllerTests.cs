@@ -112,9 +112,17 @@ internal sealed class TestAuthenticationHandler(
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     public const string CustomerHeader = "X-Test-Customer";
+    public const string AdminHeader = "X-Test-Admin";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        if (Request.Headers.ContainsKey(AdminHeader))
+        {
+            var adminIdentity = new ClaimsIdentity(Scheme.Name);
+            adminIdentity.AddClaim(new Claim(LunaAuthentication.RoleClaim, "Admin"));
+            return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(adminIdentity), Scheme.Name)));
+        }
+
         if (!Request.Headers.TryGetValue(CustomerHeader, out var value)
             || !Guid.TryParse(value, out var customerId)
             || customerId == Guid.Empty)

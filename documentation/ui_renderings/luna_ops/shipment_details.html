@@ -1,0 +1,446 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary": "#ffffff", "primary-fixed-dim": "#b9c7e1", "tertiary-fixed": "#d3e4fe", "on-secondary-container": "#57657a", "primary-container": "#253347", "surface-container": "#efedef", "surface-base": "#f8fafc", "surface-container-lowest": "#ffffff", "tertiary-container": "#233347", "on-tertiary": "#ffffff", "tertiary": "#0d1e31", "outline-variant": "#c5c6cd", "surface-bright": "#fbf9fa", "on-primary-container": "#8d9bb3", "inverse-surface": "#303032", "error": "#ba1a1a", "on-primary-fixed": "#0d1c2f", "surface-container-highest": "#e4e2e4", "on-secondary-fixed": "#0d1c2e", "surface-variant": "#e4e2e4", "error-container": "#ffdad6", "background": "#fbf9fa", "on-primary-fixed-variant": "#3a475c", "surface-container-low": "#f5f3f5", "secondary": "#515f74", "outline": "#75777d", "on-tertiary-fixed-variant": "#38485d", "status-success": "#10b981", "status-warning": "#f59e0b", "on-error": "#ffffff", "surface-tint": "#515f75", "primary": "#0f1e31", "on-secondary": "#ffffff", "secondary-fixed-dim": "#b9c7df", "surface-container-high": "#eae7e9", "border-standard": "#e2e8f0", "surface-dim": "#dbd9db", "surface-card": "#ffffff", "tertiary-fixed-dim": "#b7c8e1", "on-tertiary-container": "#8b9bb4", "on-secondary-fixed-variant": "#3a485b", "inverse-on-surface": "#f2f0f2", "border-subtle": "#f1f5f9", "inverse-primary": "#b9c7e1", "on-background": "#1b1b1d", "on-surface": "#1b1b1d", "on-surface-variant": "#44474c", "surface": "#fbf9fa", "on-error-container": "#93000a", "secondary-container": "#d5e3fc", "primary-fixed": "#d5e3fd", "secondary-fixed": "#d5e3fc", "on-tertiary-fixed": "#0b1c30", "status-error": "#ef4444" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "md": "12px", "2xl": "32px", "3xl": "48px", "4xl": "64px", "xl": "24px", "sm": "8px", "xs": "4px", "lg": "16px" }, "fontFamily": { "headline-lg": ["Inter"], "display": ["Inter"], "headline-lg-mobile": ["Inter"], "status-pill": ["Inter"], "product-title": ["Inter"], "label-caps": ["Inter"], "body-md": ["Inter"] }, "fontSize": { "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "status-pill": ["13px", { "lineHeight": "16px", "fontWeight": "500" }], "product-title": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }], "body-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400" }] } } } }</script></head><body class="bg-surface-base text-on-surface font-body-md text-body-md antialiased"><aside class="fixed left-0 top-0 bottom-0 w-64 bg-surface-card z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-xl flex items-center justify-between bg-primary"><div class="flex items-center gap-sm"><div class="w-2 h-2 rounded-full bg-status-success"></div><span class="font-product-title text-product-title text-on-primary tracking-tight">Luna Ops</span></div><span class="font-label-caps text-label-caps text-on-primary-container px-xs py-xs bg-primary-container rounded-lg uppercase">v2.6</span></div><div class="px-lg pt-xl pb-sm"><span class="font-label-caps text-label-caps uppercase text-secondary tracking-wider">Operations Core</span></div><nav class="flex flex-col gap-xs px-md" data-active-classes="bg-primary-container text-on-primary font-product-title rounded-lg"><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="fulfillment" href="#"><span class="material-symbols-outlined text-[20px]">package_2</span><span class="font-status-pill text-status-pill">Fulfillment</span></a><a aria-current="page" class="flex items-center gap-md px-md py-sm transition-colors bg-primary-container text-on-primary font-product-title rounded-lg" data-path="shipments" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span class="font-status-pill text-status-pill">Shipments</span></a></nav></div><div class="p-lg flex flex-col gap-md bg-surface-container-lowest"><a class="inline-flex items-center justify-between text-secondary hover:text-primary transition-colors text-label-caps font-label-caps" href="#"><span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">storefront</span>Storefront</span><span class="material-symbols-outlined text-[14px]">north_east</span></a><div class="p-sm bg-surface-container-low rounded-lg flex items-center gap-sm"><div class="w-2 h-2 rounded-full bg-status-success"></div><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-on-surface truncate">Operator</span><span class="font-label-caps text-label-caps text-on-surface-variant truncate">Warehouse Hub 1</span></div></div></div></aside><div class="pl-64 flex flex-col min-h-screen"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-card/90 backdrop-blur-xl z-40 px-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex items-center justify-between"><div class="flex items-center gap-xl"><div class="flex items-center gap-sm font-label-caps text-label-caps text-on-surface-variant"><span class="text-secondary">Operations</span><span class="material-symbols-outlined text-[14px]">chevron_right</span><span class="text-on-surface font-semibold">Overview</span></div><div class="relative flex items-center w-72"><span class="material-symbols-outlined text-outline absolute left-md text-[18px]">search</span><input class="w-full pl-3xl pr-md py-xs bg-surface-container-low text-on-surface placeholder:text-outline font-label-caps text-label-caps rounded-lg focus:outline-none focus:bg-surface-card transition-all" placeholder="Quick jump to order / tracking..." type="text"></div></div><div class="flex items-center gap-lg"><div class="flex items-center gap-xs px-sm py-xs bg-surface-container-low rounded-lg"><span class="w-2 h-2 rounded-full bg-status-success"></span><span class="font-label-caps text-label-caps text-on-surface-variant">System Operational • Node BR-UB-01</span></div><div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary"><span class="material-symbols-outlined text-[16px]">sync</span><span>Live</span></div><div class="relative flex items-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-status-success ring-2 ring-surface-card"></span></div></div></header><main class="w-full pt-16 bg-surface-base flex-1"><div class="flex flex-col w-full">
+<div class="px-2xl py-xl space-y-xl max-w-7xl mx-auto w-full">
+<!-- Sub-header Breadcrumb & Live Context Sync -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-md">
+<div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary">
+<span class="hover:text-primary transition-colors cursor-pointer">Shipments</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">LX123456789</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs px-sm py-xs bg-surface-container-low rounded-lg text-secondary font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px] text-status-success">wifi_tethering</span>
+<span>Telemetry Stream Active</span>
+</div>
+<button class="hidden md:flex items-center gap-xs px-md py-xs bg-surface-card hover:bg-surface-container-low text-secondary text-label-caps font-label-caps rounded-lg shadow-sm transition-all" onclick="window.print()">
+<span class="material-symbols-outlined text-[16px]">print</span>
+<span>Print Waybill</span>
+</button>
+</div>
+</div>
+<!-- Header & Hero Overview Panel -->
+<div class="bg-surface-card rounded-xl p-xl shadow-sm relative overflow-hidden">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-xl relative z-10">
+<div class="flex flex-col gap-xs">
+<div class="flex items-center gap-md flex-wrap">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Shipment LX123456789</h1>
+<div class="inline-flex items-center gap-xs px-md py-xs bg-secondary-container text-on-secondary-container rounded-full font-status-pill text-status-pill shadow-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span>IN TRANSIT</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+            Outbound courier delivery for <a class="text-primary font-semibold hover:underline" href="#">Order #1042</a>
+</p>
+</div>
+<!-- Quick Primary Action with Confirm Flyout -->
+<div class="relative flex items-center">
+<button class="px-xl py-md bg-primary hover:bg-primary-container text-on-primary font-label-caps text-label-caps rounded-lg flex items-center gap-sm shadow-md transition-all active:scale-95" id="markDeliveredBtn" onclick="togglePopover()">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Mark Delivered</span>
+</button>
+<!-- Interactive Confirmation Popover -->
+<div class="hidden absolute right-0 top-full mt-sm w-72 bg-surface-card rounded-xl shadow-xl p-lg z-30 transform transition-all duration-200" id="confirmPopover">
+<div class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px] mt-xs">help</span>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-primary font-semibold">Confirm Delivery Scan?</span>
+<p class="font-label-caps text-label-caps text-secondary mt-xs">
+                  This will register carrier completion, publish push alerts, and finalize tracking.
+                </p>
+<div class="flex items-center gap-xs mt-md">
+<button class="px-md py-xs bg-primary text-on-primary rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-all" onclick="confirmDelivery()">
+                    Confirm
+                  </button>
+<button class="px-md py-xs bg-surface-container-high text-on-surface-variant rounded-lg font-label-caps text-label-caps hover:bg-surface-container transition-all" onclick="togglePopover()">
+                    Cancel
+                  </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Overview Stats Strip -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md mt-xl pt-lg bg-surface-base p-md rounded-lg">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-card flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Courier Partner</span>
+<span class="font-product-title text-product-title text-primary">Luna Express Courier</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-card flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[20px]">tag</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Tracking Identifier</span>
+<div class="flex items-center gap-xs">
+<span class="font-product-title text-product-title text-primary tracking-wide" id="trackingCode">LX123456789</span>
+<button class="text-secondary hover:text-primary transition-colors flex items-center" onclick="copyTracking()" title="Copy Tracking Number">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+<span class="hidden font-label-caps text-label-caps text-status-success font-medium" id="copyFeedback">Copied!</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-card flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Estimated Delivery</span>
+<span class="font-product-title text-product-title text-primary">Tomorrow by end of day</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Two-Column Architectural Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl items-start">
+<!-- LEFT COLUMN (60% / 7 cols) -->
+<div class="lg:col-span-7 flex flex-col gap-xl">
+<!-- Visual Shipment Transit Milestones -->
+<div class="bg-surface-card rounded-xl p-xl shadow-sm">
+<div class="flex items-center justify-between pb-lg mb-lg bg-gradient-to-r from-transparent to-transparent">
+<div>
+<h2 class="font-product-title text-product-title text-primary">Milestones &amp; Custody Logs</h2>
+<span class="font-label-caps text-label-caps text-secondary">Chronological distribution chain updates</span>
+</div>
+<div class="flex items-center gap-xs px-sm py-xs bg-surface-container rounded-lg font-label-caps text-label-caps text-secondary">
+<span class="material-symbols-outlined text-[14px]">history</span>
+<span>UTC-03:00</span>
+</div>
+</div>
+<div class="relative pl-6 space-y-xl">
+<!-- Continuous track spine -->
+<div class="absolute top-3 bottom-6 left-[19px] w-0.5 bg-surface-container-highest"></div>
+<!-- Milestone 1 -->
+<div class="relative flex items-start gap-lg">
+<div class="relative z-10 w-8 h-8 -ml-4 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[16px]">done</span>
+</div>
+<div class="flex-1 bg-surface-base p-md rounded-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-xs">
+<span class="font-product-title text-product-title text-primary">Shipment Created</span>
+<span class="font-label-caps text-label-caps text-secondary">Today, 11:15</span>
+</div>
+<div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary mt-xs">
+<span class="material-symbols-outlined text-[14px]">warehouse</span>
+<span>Warehouse Hub 1</span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-sm">
+                  Waybill generated and automated packing validation verified. Package sealed into security bag #UB-9812.
+                </p>
+</div>
+</div>
+<!-- Milestone 2 (Active Step) -->
+<div class="relative flex items-start gap-lg">
+<div class="relative z-10 w-8 h-8 -ml-4 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-md">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+</div>
+<div class="flex-1 bg-surface-base p-md rounded-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-xs">
+<div class="flex items-center gap-sm">
+<span class="font-product-title text-product-title text-primary">In Transit</span>
+<span class="px-xs py-0.5 bg-secondary-container text-on-secondary-container font-label-caps text-label-caps rounded-lg">Current Stage</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary">Today, 13:40</span>
+</div>
+<div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary mt-xs">
+<span class="material-symbols-outlined text-[14px]">hub</span>
+<span>Dispatched from Uberlândia Sorting Hub</span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-sm">
+                  Loaded to route carrier vehicle. Scanned by courier agent (Handheld ID #C-4402). Last ping 4.2 km from main depot.
+                </p>
+<!-- Live Spark/Progress Visualization Inline -->
+<div class="mt-md pt-sm bg-surface-card p-sm rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary text-[16px]">route</span>
+<span class="font-label-caps text-label-caps text-secondary">Route Progression</span>
+</div>
+<div class="w-48 bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all duration-500" style="width: 68%;"></div>
+</div>
+<span class="font-label-caps text-label-caps text-primary font-semibold">68%</span>
+</div>
+</div>
+</div>
+<!-- Milestone 3 (Pending Step) -->
+<div class="relative flex items-start gap-lg opacity-80" id="deliveredMilestone">
+<div class="relative z-10 w-8 h-8 -ml-4 rounded-full bg-surface-container-high flex items-center justify-center text-secondary shadow-sm" id="deliveredIcon">
+<span class="material-symbols-outlined text-[16px]">pin_drop</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-md rounded-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-xs">
+<span class="font-product-title text-product-title text-secondary" id="deliveredTitle">Delivered</span>
+<span class="font-label-caps text-label-caps text-secondary" id="deliveredTime">Estimated Tomorrow</span>
+</div>
+<div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary mt-xs">
+<span class="material-symbols-outlined text-[14px]">home</span>
+<span>123 Example Street, Uberlândia, MG</span>
+</div>
+<p class="font-label-caps text-label-caps text-secondary mt-sm" id="deliveredDesc">
+                  Pending final carrier dropoff confirmation, geo-verification signature, and contactless proof photo.
+                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Package & Order Manifest Items -->
+<div class="bg-surface-card rounded-xl p-xl shadow-sm">
+<div class="flex items-center justify-between pb-md mb-md">
+<div>
+<h2 class="font-product-title text-product-title text-primary">Package Contents &amp; Manifest</h2>
+<span class="font-label-caps text-label-caps text-secondary">Associated with Order reference</span>
+</div>
+<a class="flex items-center gap-xs text-primary font-label-caps text-label-caps bg-surface-container-low hover:bg-surface-container px-md py-xs rounded-lg transition-colors" href="#">
+<span>View Order #1042</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+</div>
+<!-- Manifest List -->
+<div class="space-y-md">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-md bg-surface-base rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-card flex items-center justify-center text-secondary shadow-sm overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A minimalist wireless mechanical keyboard in a matte navy casing with slate switches, set on a studio concrete surface under soft diffused warm and cool studio lights, modern industrial tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu5IDKG9qcRAKhTSB1vFKBrMojy4GHWxAt71iABTZpT0WwIl9OnalRGhYqDEBVX6z65HpoJ245dAnDLcnxqb9exPgB4rjlxy3DxLRvfENUNmIa12qxQ_57ldXi-21gwSq0f-OPndSNTrgkC2H0vNV69bhfWFTqC-vrBnAQfdjOiXbZM2ON6y7cdvd510cvvLD_iAfL4-rRNiwDVmqZN9kTD7eRkZKgrFmWVYE5y8w_01ksVo6DuoqC">
+</div>
+<div class="min-w-0">
+<span class="font-product-title text-product-title text-primary block truncate">Wireless Mechanical Keyboard</span>
+<div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary mt-xs">
+<span>SKU: KB-001</span>
+<span>•</span>
+<span>Qty: 1</span>
+</div>
+</div>
+</div>
+<span class="font-product-title text-product-title text-primary text-right pl-md">$129.00</span>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-md bg-surface-base rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-card flex items-center justify-center text-secondary shadow-sm overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Two premium braided USB-C cables rolled precisely, featuring aluminum anodized ends in dark graphite, studio product shot on a neutral background, high tactile clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALKNjZgBLIL2FRT3pP_xAGOI2UKGzcsJBqegT9DqZxSRReqpPS1AZMydkZGEPYobYIG2833FWtB961d-aojeWAwEftyqfiqPPknrOtZ428JC6H388xjXRkpvRH3xLm9IZY-z6L8mJ0SPa8yj0BM7-0RmwbTj-UTLCJmluetRAoKxQ_FyW5NfuAqIBDMz2_pk_QdM9sJR1fo4jINH58Cf_kNv3V6DMsgKj83ODsFnTRxsPtvnZNKdFN">
+</div>
+<div class="min-w-0">
+<span class="font-product-title text-product-title text-primary block truncate">USB-C Fast Charging Cable</span>
+<div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary mt-xs">
+<span>SKU: USB-002</span>
+<span>•</span>
+<span>Qty: 2</span>
+</div>
+</div>
+</div>
+<span class="font-product-title text-product-title text-primary text-right pl-md">$26.00</span>
+</div>
+</div>
+<!-- Parcel Specifications Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-md mt-lg pt-lg bg-surface-container-low p-md rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Gross Weight</span>
+<span class="font-product-title text-product-title text-primary mt-xs">1.2 kg</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Dimensions</span>
+<span class="font-product-title text-product-title text-primary mt-xs">38 × 16 × 6 cm</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Volumetric Wt.</span>
+<span class="font-product-title text-product-title text-primary mt-xs">0.73 kg</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Security Seal</span>
+<span class="font-product-title text-product-title text-status-success mt-xs">Verified Safe</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN (40% / 5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-xl">
+<!-- Destination & Recipient Dossier -->
+<div class="bg-surface-card rounded-xl p-xl shadow-sm">
+<div class="flex items-center justify-between pb-md mb-md">
+<div>
+<h2 class="font-product-title text-product-title text-primary">Destination Details</h2>
+<span class="font-label-caps text-label-caps text-secondary">Verified recipient address</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]">person_pin_circle</span>
+</div>
+<!-- Customer Identity Strip -->
+<div class="p-md bg-surface-base rounded-lg flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-semibold text-body-md flex-shrink-0">
+              JS
+            </div>
+<div class="min-w-0">
+<span class="font-product-title text-product-title text-primary block truncate">John Smith</span>
+<div class="flex items-center gap-xs font-label-caps text-label-caps text-secondary mt-xs">
+<span class="material-symbols-outlined text-[14px]">mail</span>
+<span class="truncate">john.smith@example.com</span>
+</div>
+</div>
+</div>
+<!-- Contact Channels -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-sm mt-md">
+<div class="flex items-center gap-xs p-sm bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-secondary text-[16px]">call</span>
+<span class="font-label-caps text-label-caps text-primary font-medium truncate">+55 (34) 99876-5432</span>
+</div>
+<div class="flex items-center gap-xs p-sm bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-status-success text-[16px]">sms</span>
+<span class="font-label-caps text-label-caps text-secondary">SMS Alerts Opt-in</span>
+</div>
+</div>
+<!-- Street Address Block -->
+<div class="mt-md p-md bg-surface-base rounded-lg">
+<span class="font-label-caps text-label-caps text-secondary uppercase block mb-xs">Physical Drop Location</span>
+<p class="font-body-md text-body-md text-primary font-medium leading-snug">
+              123 Example Street<br>
+              Centro, Uberlândia, MG<br>
+              38400-000, Brazil
+            </p>
+</div>
+<!-- Delivery Static Map Representation with custom coordinates -->
+<div class="mt-md overflow-hidden rounded-lg shadow-sm relative">
+<div class="w-full h-44 bg-cover bg-center" data-location="Uberlandia, MG, Brazil" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAf7G3mwQ-utfQ6xaObevMVGLdV22ks6HNICN7fhx-GvTA7gtyjhp-vHACJArzebSCr7pfDVkgRUZ31lDQuu9T3jO3M80yYCBllJHHztCkKtOirsv3J3frOCdUjXGElyergqvepAY7wYIxTjOQx46X_To4wZXP2FJfgALJj7RGC7N_u0LR6d76pfHNbf90P5heSmUVcrt9o3XYpmAxtYFpkM5mtJ1sTnVIm01efEmFAD45jXrq-gd3G')"></div>
+<div class="absolute bottom-2 left-2 right-2 bg-surface-card/90 backdrop-blur-sm p-xs rounded flex items-center justify-between text-secondary">
+<span class="font-label-caps text-label-caps">Zone: Southeast Sector 4</span>
+<span class="font-label-caps text-label-caps text-status-success flex items-center gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-status-success"></span>
+                Address Standardized
+              </span>
+</div>
+</div>
+</div>
+<!-- Operational Override Action Card -->
+<div class="bg-surface-card rounded-xl p-xl shadow-sm flex flex-col gap-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">admin_panel_settings</span>
+<h2 class="font-product-title text-product-title text-primary">Operational Control</h2>
+</div>
+<span class="font-label-caps text-label-caps text-secondary px-xs py-0.5 bg-surface-container-high rounded">Manual Override</span>
+</div>
+<div class="p-md bg-surface-base rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary">Current Registry State</span>
+<span class="font-product-title text-product-title text-primary mt-xs" id="currentStatusLabel">In Transit</span>
+</div>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+</div>
+</div>
+<p class="font-label-caps text-label-caps text-secondary leading-relaxed">
+            Clicking <strong class="text-primary">Mark Delivered</strong> updates both internal fulfillment records and customer-facing order tracking instantly.
+          </p>
+<button class="w-full py-md bg-primary hover:bg-primary-container text-on-primary font-label-caps text-label-caps rounded-lg flex items-center justify-center gap-sm shadow transition-all active:scale-[0.98]" id="secondaryMarkDelivered" onclick="confirmDelivery()">
+<span class="material-symbols-outlined text-[18px]">task_alt</span>
+<span>Mark Delivered</span>
+</button>
+<!-- Audit Meta Info -->
+<div class="pt-sm bg-surface-base p-sm rounded-lg flex items-center justify-between text-secondary font-label-caps text-label-caps">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>Audited by Operator</span>
+</div>
+<span>Hub-1 Protocol</span>
+</div>
+</div>
+<!-- Carrier Telemetry & Support Card -->
+<div class="bg-surface-container-low rounded-xl p-lg shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-card flex items-center justify-center text-secondary shadow-sm">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+</div>
+<div class="flex flex-col">
+<span class="font-product-title text-product-title text-primary text-[15px]">Carrier Dispatch Hub</span>
+<span class="font-label-caps text-label-caps text-secondary">Hotline: +55 (34) 3210-0900</span>
+</div>
+</div>
+<button class="px-md py-xs bg-surface-card hover:bg-surface-container text-primary font-label-caps text-label-caps rounded-lg shadow-sm transition-colors">
+            Contact
+          </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function togglePopover() {
+    const popover = document.getElementById('confirmPopover');
+    popover.classList.toggle('hidden');
+  }
+
+  function copyTracking() {
+    const tracking = document.getElementById('trackingCode').innerText;
+    navigator.clipboard.writeText(tracking).then(() => {
+      const feedback = document.getElementById('copyFeedback');
+      feedback.classList.remove('hidden');
+      setTimeout(() => {
+        feedback.classList.add('hidden');
+      }, 2000);
+    });
+  }
+
+  function confirmDelivery() {
+    // Hide popover if open
+    document.getElementById('confirmPopover').classList.add('hidden');
+
+    // Update status badges
+    const statusLabel = document.getElementById('currentStatusLabel');
+    if (statusLabel) statusLabel.innerText = "Delivered (Completed)";
+
+    // Update delivered milestone UI
+    const milestone = document.getElementById('deliveredMilestone');
+    milestone.classList.remove('opacity-80');
+    
+    const icon = document.getElementById('deliveredIcon');
+    icon.classList.remove('bg-surface-container-high', 'text-secondary');
+    icon.classList.add('bg-status-success', 'text-on-primary');
+    icon.innerHTML = '<span class="material-symbols-outlined text-[16px]">done_all</span>';
+
+    const title = document.getElementById('deliveredTitle');
+    title.classList.remove('text-secondary');
+    title.classList.add('text-primary');
+
+    const time = document.getElementById('deliveredTime');
+    const now = new Date();
+    time.innerText = `Today, ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    const desc = document.getElementById('deliveredDesc');
+    desc.innerText = "Confirmed delivered by manual operator override. Custody signed off.";
+
+    // Disable action buttons
+    const btn1 = document.getElementById('markDeliveredBtn');
+    if (btn1) {
+      btn1.disabled = true;
+      btn1.classList.add('opacity-50', 'cursor-not-allowed');
+      btn1.innerHTML = '<span class="material-symbols-outlined text-[18px]">check</span><span>Delivered</span>';
+    }
+
+    const btn2 = document.getElementById('secondaryMarkDelivered');
+    if (btn2) {
+      btn2.disabled = true;
+      btn2.classList.add('opacity-50', 'cursor-not-allowed');
+      btn2.innerHTML = '<span class="material-symbols-outlined text-[18px]">check</span><span>Delivered</span>';
+    }
+  }
+
+  // Dismiss popover when clicked outside
+  document.addEventListener('click', function(e) {
+    const popover = document.getElementById('confirmPopover');
+    const btn = document.getElementById('markDeliveredBtn');
+    if (popover && !popover.classList.contains('hidden') && !popover.contains(e.target) && !btn.contains(e.target)) {
+      popover.classList.add('hidden');
+    }
+  });
+</script></main></div></body></html>

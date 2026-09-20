@@ -20,6 +20,7 @@
 - [15. Failure Model](#15-failure-model)
 - [16. Explicitly Out of Scope](#16-explicitly-out-of-scope)
 - [17. Acceptance Criteria](#17-acceptance-criteria)
+- [18. Testing](#18-testing)
 - [23. Implementation Checklist](#23-implementation-checklist)
 
 ## Purpose
@@ -264,9 +265,7 @@ Customer
 Admin
 ```
 
-The Admin role exists for authorization and identity testing.
-
-A dedicated administration UI is out of scope.
+The Admin role exists for authorization, identity testing, and access to the authenticated Operations interface defined below. A general-purpose administration UI remains out of scope.
 
 ---
 # 6. Checkout
@@ -428,13 +427,15 @@ An order must not skip directly from Pending to Delivered.
 
 **Given** an order is Preparing
 
-**When** shipment creation fails
+**When** the shipment creation workflow fails before a shipment is successfully established
 
 **Then** the order becomes:
 
 ```text
 ShippingPendingRetry
 ```
+
+Orders owns this order transition; Shipping reports the shipment operation result and does not arbitrarily change the Order state.
 
 No automatic retry is required in Phase 1.
 
@@ -598,6 +599,95 @@ Once checkout creates the order, Orders stores the selected shipping information
 A Phase 1 order has exactly one shipment.
 
 ---
+
+## SPEC-SHIP-005 - Create shipment from preparing order
+
+**Given** an order is `Preparing`
+
+**When** an authorized operations user creates a shipment
+
+**Then** Shipping creates a shipment associated with that order.
+
+The shipment must contain the information required to fulfill the order, including the order reference and shipping information required by the Shipping service.
+
+A Phase 1 order may have exactly one shipment.
+
+The operation must reject shipment creation when:
+
+- the order does not exist
+- the order is not `Preparing`
+- a shipment already exists for the order
+
+After successful shipment creation:
+
+- the shipment has status `Created`
+- the shipment receives its tracking identifier
+- the order becomes `Shipped`
+
+The tracking identifier must be generated as part of successful shipment creation and must not exist before the shipment is created.
+
+Creating a shipment and associating it with an order is one logical operation from the Operations user's perspective. The frontend must initiate one shipment workflow; it must not coordinate separate requests to create a shipment and mark the order as shipped.
+
+The workflow is rendered by [create_shipment.html](../ui_renderings/luna_ops/create_shipment.html).
+
+---
+
+## SPEC-SHIP-006 - Shipment created state
+
+A newly created shipment must have the status:
+
+```text
+Created
+```
+
+A shipment in `Created` state represents a shipment that exists but has not yet entered transit.
+
+A `Created` shipment may transition to `InTransit`. It must not transition directly to `Delivered`.
+
+A shipment already in `Created` state must not be recreated for the same order.
+
+---
+
+## SPEC-SHIP-007 - Mark shipment in transit
+
+**Given** a shipment is `Created`
+
+**When** an authorized operations user marks the shipment as in transit
+
+**Then** the shipment becomes `InTransit`.
+
+The operation must reject attempts to mark a shipment in transit when the shipment is not currently `Created`.
+
+The associated order remains `Shipped`.
+
+The customer-facing order state may present this as:
+
+```text
+Shipped / On the way
+```
+
+The shipment state remains the authoritative state for shipment progress.
+
+---
+
+## SPEC-SHIP-008 - Mark shipment delivered
+
+**Given** a shipment is `InTransit`
+
+**When** an authorized operations user marks the shipment as delivered
+
+**Then**:
+
+- the shipment becomes `Delivered`
+- the associated order becomes `Delivered`
+
+The operation must reject attempts to deliver a shipment that is not currently `InTransit`.
+
+After successful delivery, the Operations UI must no longer expose an action to advance the shipment. The customer order must display the order as delivered.
+
+The shipment list and detail workflows are rendered by [shipments.html](../ui_renderings/luna_ops/shipments.html) and [shipment_details.html](../ui_renderings/luna_ops/shipment_details.html).
+
+---
 # 11. Payments
 
 ## SPEC-PAY-001 - Authorization only
@@ -679,6 +769,71 @@ It does not model:
 * multiple fulfillment centers
 * split shipments
 
+## SPEC-FUL-003 - Operations fulfillment queue
+
+The Operations interface must provide a fulfillment queue for orders requiring fulfillment action.
+
+The queue must display orders whose lifecycle requires an operations action, including:
+
+- `Confirmed`
+- `Preparing`
+- `ShippingPendingRetry`
+
+Each order entry must provide enough information for an operator to identify the order and its current state.
+
+At minimum, the queue displays:
+
+- order ID
+- customer
+- item count
+- total
+- payment status
+- order status
+- creation date
+- available action
+
+The available action must correspond to the current order state:
+
+```text
+Confirmed
+   -> Start Preparing
+
+Preparing
+   -> Create Shipment
+
+ShippingPendingRetry
+   -> Retry Shipment
+```
+
+The Operations UI must not expose invalid lifecycle actions. The queue does not change order state directly; actions must be processed by the Orders and Shipping APIs.
+
+The queue is rendered by [fullfilment.html](../ui_renderings/luna_ops/fullfilment.html).
+
+---
+
+## SPEC-FUL-004 - Start preparing order
+
+**Given** an order is `Confirmed`
+
+**When** an authorized operations user starts fulfillment
+
+**Then** the order becomes `Preparing`.
+
+The transition must be performed through the Orders application and domain workflow.
+
+The operation must reject attempts to prepare an order that is not currently `Confirmed`.
+
+The operation must not modify:
+
+- order pricing
+- payment state
+- inventory reservation state
+- shipment state
+
+After a successful transition, the order must appear as `Preparing` in the Operations fulfillment queue.
+
+The order-level workflow is rendered by [fullfilment_details.html](../ui_renderings/luna_ops/fullfilment_details.html).
+
 ---
 # 13. Frontend Behavior
 
@@ -724,6 +879,111 @@ Interactive operations must provide loading feedback and prevent invalid repeate
 ## SPEC-FE-004 - Error behavior
 
 Backend failures must be presented as customer-friendly messages. Raw exceptions, stack traces, database errors, and internal implementation details must not be shown.
+
+---
+
+## SPEC-FE-005 - Operations fulfillment UI
+
+The frontend must provide an authenticated Operations fulfillment interface.
+
+The fulfillment interface must allow an authorized operations user to:
+
+1. View the fulfillment queue.
+2. Filter orders by fulfillment state.
+3. Open an order.
+4. Start preparation for a `Confirmed` order.
+5. Create a shipment for a `Preparing` order.
+6. Retry shipment creation for an order in `ShippingPendingRetry`, where supported.
+
+The UI must only display actions valid for the current backend state. The frontend must not implement order state transitions locally.
+
+After an operation succeeds, the frontend must refresh the order state from the backend.
+
+If an operation fails:
+
+- the current state must remain visible
+- an appropriate error must be displayed
+- the UI must not assume that the transition occurred
+
+The Operations interface must not expose customer-only functionality as Operations functionality.
+
+The queue and order workflow are represented by [fullfilment.html](../ui_renderings/luna_ops/fullfilment.html) and [fullfilment_details.html](../ui_renderings/luna_ops/fullfilment_details.html).
+
+---
+
+## SPEC-FE-006 - Operations shipment UI
+
+The frontend must provide an authenticated Operations shipment interface.
+
+The shipment interface must allow an authorized operations user to:
+
+1. View shipments.
+2. Filter shipments by status.
+3. Open shipment details.
+4. Mark a `Created` shipment as `InTransit`.
+5. Mark an `InTransit` shipment as `Delivered`.
+
+The shipment UI must display:
+
+- tracking identifier
+- order reference
+- customer
+- shipment status
+- creation date
+- available action
+
+The UI must only display actions valid for the current shipment state:
+
+```text
+Created
+   -> Mark In Transit
+
+InTransit
+   -> Mark Delivered
+
+Delivered
+   -> No further action
+```
+
+The frontend must not directly modify shipment or order state.
+
+The shipment list and detail workflows are represented by [shipments.html](../ui_renderings/luna_ops/shipments.html) and [shipment_details.html](../ui_renderings/luna_ops/shipment_details.html). Shipment creation is represented by [create_shipment.html](../ui_renderings/luna_ops/create_shipment.html).
+
+---
+
+## SPEC-FE-007 - Customer shipment tracking
+
+The customer order detail page must display fulfillment and shipment progress when shipment information is available.
+
+The customer must be able to see the order lifecycle:
+
+```text
+Order placed
+Payment authorized
+Preparing
+Shipped
+Delivered
+```
+
+When a shipment exists, the customer order detail page must display:
+
+- tracking identifier
+- shipment status
+
+The customer-facing presentation may translate internal shipment terminology into customer-friendly terminology. For example:
+
+```text
+Internal:
+InTransit
+
+Customer:
+Shipped / On the way
+```
+
+The customer must not see internal Operations functionality or controls. The customer must not be able to modify order or shipment state from the tracking interface.
+
+The customer-facing tracking presentation is represented by the existing order detail renderings under `documentation/ui_renderings/orders/`.
+
 # 14. Service API Requirements
 
 The exact request/response schemas are defined by each service's OpenAPI contract.
@@ -754,6 +1014,8 @@ GET /api/v1/orders
 GET /api/v1/orders/{id}
 ```
 
+Orders must also expose operations for retrieving the fulfillment queue and starting fulfillment for a specific order. The exact request and response schemas are defined by the Orders OpenAPI contract.
+
 ---
 
 ## Inventory
@@ -780,6 +1042,8 @@ GET  /api/v1/shipping-methods
 POST /api/v1/quotes
 POST /api/v1/shipments
 ```
+
+Shipping must also expose operations for listing and retrieving shipments and for marking a shipment `InTransit` or `Delivered`. Creating a shipment for an order and advancing the associated order to `Shipped` is one logical workflow from the Operations user's perspective; the frontend must not coordinate separate order and shipment state-changing requests.
 
 ---
 # 15. Failure Model
@@ -830,7 +1094,6 @@ Phase 1 does not implement:
 * split fulfillment
 * customer cancellation
 * warehouse optimization
-* operations dashboard
 * chaos testing
 * advanced operational workflows beyond the current telemetry and SigNoz foundation
 * advanced security hardening
@@ -914,6 +1177,71 @@ The phase is also complete when:
 
 ---
 
+# 18. Testing
+
+## SPEC-TEST-005 - Fulfillment lifecycle integration test
+
+An integration test must verify the fulfillment lifecycle using real Orders persistence.
+
+The test must:
+
+1. Create an order in `Confirmed` state.
+2. Start fulfillment.
+3. Verify the order becomes `Preparing`.
+4. Attempt an invalid preparation transition.
+5. Verify the invalid transition is rejected.
+6. Verify the order remains `Preparing`.
+
+The test must verify that starting fulfillment does not alter:
+
+- order total
+- order item snapshots
+- payment state
+- inventory reservation state
+
+The test should exercise the application and domain boundary rather than directly modifying the order status.
+
+---
+
+## SPEC-TEST-006 - Shipment lifecycle integration test
+
+An integration test must verify the shipment lifecycle across Orders and Shipping.
+
+The successful lifecycle must verify:
+
+```text
+Order: Confirmed
+   v
+Order: Preparing
+   v
+Create Shipment
+   v
+Shipment: Created
+   v
+Order: Shipped
+   v
+Shipment: InTransit
+   v
+Shipment: Delivered
+   v
+Order: Delivered
+```
+
+The test must verify that:
+
+1. A shipment cannot be created for an order that is not `Preparing`.
+2. A preparing order can have only one shipment.
+3. Successful shipment creation produces a tracking identifier.
+4. A newly created shipment has status `Created`.
+5. A `Created` shipment can become `InTransit`.
+6. An `InTransit` shipment can become `Delivered`.
+7. A shipment cannot transition directly from `Created` to `Delivered`.
+8. The associated order becomes `Delivered` when its shipment is delivered.
+
+The test must use the real service persistence boundaries rather than directly manipulating domain state to simulate the lifecycle.
+
+---
+
 # 23. Implementation Checklist
 
 ## Catalog
@@ -974,6 +1302,10 @@ The phase is also complete when:
 - [x] SPEC-SHIP-002 - Quote ownership
 - [x] SPEC-SHIP-003 - Shipping snapshot
 - [x] SPEC-SHIP-004 - Shipment
+- [ ] SPEC-SHIP-005 - Create shipment from preparing order
+- [ ] SPEC-SHIP-006 - Shipment created state
+- [ ] SPEC-SHIP-007 - Mark shipment in transit
+- [ ] SPEC-SHIP-008 - Mark shipment delivered
 
 ## Payments
 
@@ -986,6 +1318,8 @@ The phase is also complete when:
 
 - [x] SPEC-FUL-001 - Fulfillment remains inside Orders
 - [x] SPEC-FUL-002 - Prepare order
+- [ ] SPEC-FUL-003 - Operations fulfillment queue
+- [ ] SPEC-FUL-004 - Start preparing order
 
 ## Frontend
 
@@ -993,6 +1327,9 @@ The phase is also complete when:
 - [x] SPEC-FE-002 - Public catalog behavior
 - [x] SPEC-FE-003 - Interactive behavior
 - [ ] SPEC-FE-004 - Error behavior
+- [ ] SPEC-FE-005 - Operations fulfillment UI
+- [ ] SPEC-FE-006 - Operations shipment UI
+- [ ] SPEC-FE-007 - Customer shipment tracking
 
 ## Database
 
@@ -1006,3 +1343,5 @@ The phase is also complete when:
 - [x] SPEC-TEST-002 - Catalog reads
 - [ ] SPEC-TEST-003 - Cross-service behavior
 - [x] SPEC-TEST-004 - Coverage collection and quality-gate reporting
+- [ ] SPEC-TEST-005 - Fulfillment lifecycle integration test
+- [ ] SPEC-TEST-006 - Shipment lifecycle integration test

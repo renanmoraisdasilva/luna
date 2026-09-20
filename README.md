@@ -179,6 +179,15 @@ See the [Roadmap](documentation/roadmap.md) for the complete progression.
 
 - Docker Desktop
 
+### Environment files
+
+Set up both files before starting Luna:
+
+- `infrastructure/.env`: change `MSSQL_SA_PASSWORD`, `ORDERS_SERVICE_CLIENT_SECRET`, and `LUNA_COOKIE_ENCRYPTION_KEY` (a Base64-encoded 32-byte key).
+- `src/Frontend/.env`: set the local service URLs to `http://localhost:5001` through `http://localhost:5006` and use the same `LUNA_COOKIE_ENCRYPTION_KEY`.
+
+Keep the Docker service URLs (`http://identity:8080`, `http://catalog:8080`, etc.) for container-to-container communication; use `localhost` URLs when running Next.js directly.
+
 Start the Phase 0 environment from the repository root:
 
 ```bash

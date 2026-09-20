@@ -1,9 +1,13 @@
 using Luna.Authentication;
+using Luna.Contracts.Authentication;
+using Luna.Orders.Api.Authorization;
 using Luna.Orders.Api.Middleware;
+using Luna.Orders.Application.Orders;
 using Luna.Orders.Infrastructure;
 using Luna.Observability;
 using Serilog;
 using Serilog.Events;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLunaOpenTelemetry(builder.Configuration, "luna-orders");
@@ -12,8 +16,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddLunaJwtValidation(builder.Configuration);
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.AddPolicy(
+	OrdersAuthorizationPolicies.Operations,
+	policy => policy
+		.AddAuthenticationSchemes(LunaAuthenticationDefaults.ValidationScheme)
+		.RequireAuthenticatedUser()
+		.RequireAssertion(context => context.User.Claims.Any(claim =>
+			(claim.Type == LunaAuthentication.RoleClaim || claim.Type == ClaimTypes.Role)
+			&& claim.Value.Equals("Admin", StringComparison.OrdinalIgnoreCase)))));
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
+builder.Services.AddScoped<GetFulfillmentQueueHandler>();
+builder.Services.AddScoped<GetFulfillmentOrderHandler>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();

@@ -7,13 +7,10 @@ import Icon from './Icon';
 import { getCart } from '../../lib/api/orders';
 import { useCurrentUser } from '../../lib/queries/auth';
 
-const signozUrl = process.env.NEXT_PUBLIC_SIGNOZ_URL || 'http://localhost:8080';
-
 const navigationLinks = [
   { label: 'Shop', href: '/shop' },
   { label: 'Orders', href: '/orders' },
-  { label: 'Swagger', href: '/swagger' },
-  { label: 'SigNoz', href: signozUrl, external: true },
+  { label: 'Operations', href: '/operations/fulfillment' },
 ];
 
 const utilityLinks = [
@@ -48,8 +45,6 @@ export default function Header() {
                 : 'flex h-full items-center text-[#6b7280] transition-colors duration-200 hover:text-[#253347]'}
               href={link.href}
               key={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noreferrer' : undefined}
             >
               {link.label}
             </Link>

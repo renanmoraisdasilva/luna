@@ -76,6 +76,34 @@ export type Order = {
   items: OrderItem[];
 };
 
+export type FulfillmentStatus = 'Confirmed' | 'Preparing' | 'ShippingPendingRetry';
+
+export type FulfillmentOrderSummary = {
+  orderId: string;
+  customerId: string;
+  customerName: string;
+  itemCount: number;
+  total: number;
+  paymentStatus: string;
+  orderStatus: FulfillmentStatus;
+  createdAt: string;
+  availableAction: 'StartPreparing' | 'CreateShipment' | 'RetryShipment' | 'None';
+};
+
+export type FulfillmentQueueResponse = {
+  items: FulfillmentOrderSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
+
+export type FulfillmentQueueParams = {
+  status?: FulfillmentStatus;
+  search?: string;
+  page: number;
+  pageSize: number;
+};
+
 export type AddCartItemRequest = {
   productId: string;
   quantity: number;
@@ -103,6 +131,19 @@ export async function getOrder(id: string): Promise<Order> {
 
 export async function getOrders(): Promise<OrderSummary[]> {
   const response = await ordersApi.get<OrderSummary[]>('/');
+  return response.data;
+}
+
+export async function getFulfillmentQueue(params: FulfillmentQueueParams): Promise<FulfillmentQueueResponse> {
+  const response = await ordersApi.get<FulfillmentQueueResponse>('/fulfillment', {
+    params: {
+      status: params.status,
+      search: params.search || undefined,
+      page: params.page,
+      pageSize: params.pageSize,
+    },
+  });
+
   return response.data;
 }
 
