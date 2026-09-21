@@ -105,11 +105,12 @@ done
 
 if [[ "$changed" == true ]]; then
   echo "New image(s) detected. Updating Luna..."
+  "${COMPOSE[@]}" up -d --wait --force-recreate --remove-orphans "${SERVICES[@]}"
 else
   echo "No image changes detected; reconciling Compose configuration..."
+  "${COMPOSE[@]}" up -d --wait --remove-orphans "${SERVICES[@]}"
 fi
 
-"${COMPOSE[@]}" up -d --wait --remove-orphans "${SERVICES[@]}"
 echo "Luna deployment is up to date."
 
 docker image prune -f >/dev/null
