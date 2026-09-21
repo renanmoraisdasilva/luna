@@ -39,7 +39,13 @@ public sealed class AccountController(
     public async Task<ActionResult<ProfileResponse>> GetCurrentProfile(CancellationToken cancellationToken)
     {
         var user = await GetCurrentUserAsync(cancellationToken);
-        return user is null ? Unauthorized() : Ok(ToProfileResponse(user));
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        return Ok(ToProfileResponse(user, roles));
     }
 
     [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
@@ -65,7 +71,8 @@ public sealed class AccountController(
             });
         }
 
-        return Ok(ToProfileResponse(user));
+        var roles = await userManager.GetRolesAsync(user);
+        return Ok(ToProfileResponse(user, roles));
     }
 
     [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
@@ -100,11 +107,12 @@ public sealed class AccountController(
             : await userManager.FindByIdAsync(userId);
     }
 
-    private static ProfileResponse ToProfileResponse(LunaUser user) => new(
+    private static ProfileResponse ToProfileResponse(LunaUser user, IEnumerable<string> roles) => new(
         user.Id,
         user.Email ?? string.Empty,
         user.FirstName,
-        user.LastName);
+        user.LastName,
+        roles.ToArray());
 
     public sealed record RegisterProfileRequest(
         string Email,
@@ -116,5 +124,5 @@ public sealed class AccountController(
 
     public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
-    public sealed record ProfileResponse(string Id, string Email, string FirstName, string LastName);
+    public sealed record ProfileResponse(string Id, string Email, string FirstName, string LastName, IReadOnlyCollection<string> Roles);
 }

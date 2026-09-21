@@ -44,6 +44,13 @@ public sealed class TokenController(
                 principal.SetClaim(LunaAuthentication.RoleClaim, role);
             }
 
+            principal.SetDestinations(claim => claim.Type switch
+            {
+                LunaAuthentication.EmailClaim or LunaAuthentication.NameClaim or LunaAuthentication.RoleClaim =>
+                    [OpenIddictConstants.Destinations.AccessToken],
+                _ => [],
+            });
+
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 

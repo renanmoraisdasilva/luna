@@ -7,10 +7,14 @@ import Icon from './Icon';
 import { getCart } from '../../lib/api/orders';
 import { useCurrentUser } from '../../lib/queries/auth';
 
+const signozUrl = process.env.NEXT_PUBLIC_SIGNOZ_URL || 'http://localhost:8080';
+
 const navigationLinks = [
   { label: 'Shop', href: '/shop' },
   { label: 'Orders', href: '/orders' },
-  { label: 'Operations', href: '/operations/fulfillment' },
+  { label: 'Swagger', href: '/swagger' },
+  { label: 'SigNoz', href: signozUrl, external: true },
+  { label: 'Operations', href: '/operations/fulfillment', adminOnly: true },
 ];
 
 const utilityLinks = [
@@ -21,6 +25,7 @@ const utilityLinks = [
 export default function Header() {
   const pathname = usePathname();
   const userQuery = useCurrentUser();
+  const isAdmin = userQuery.data?.roles?.some((role) => role.toLowerCase() === 'admin') ?? false;
   const cartQuery = useQuery({
     queryKey: ['cart'],
     queryFn: getCart,
@@ -38,13 +43,15 @@ export default function Header() {
           Luna
         </Link>
         <nav className="absolute left-1/2 hidden h-full -translate-x-1/2 items-center gap-2xl md:flex">
-          {navigationLinks.map((link) => (
+          {navigationLinks.filter((link) => !link.adminOnly || isAdmin).map((link) => (
             <Link
               className={pathname === link.href || pathname.startsWith(`${link.href}/`)
                 ? 'flex h-full items-center border-b-2 border-on-background pt-xs font-bold text-on-background'
                 : 'flex h-full items-center text-[#6b7280] transition-colors duration-200 hover:text-[#253347]'}
               href={link.href}
               key={link.href}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noreferrer' : undefined}
             >
               {link.label}
             </Link>
