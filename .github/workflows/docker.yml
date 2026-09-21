@@ -31,7 +31,6 @@ jobs:
               PAYMENTS_API_INTERNAL_URL=http://payments:8080
               INVENTORY_API_INTERNAL_URL=http://inventory:8080
               SHIPPING_API_INTERNAL_URL=http://shipping:8080
-              NEXT_PUBLIC_SIGNOZ_URL=${{ vars.SIGNOZ_URL }}
           - name: identity
             dockerfile: infrastructure/service.Dockerfile
             context: .

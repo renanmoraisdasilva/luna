@@ -46,9 +46,16 @@ sync_deployment_files() (
   docker cp "$container:$DEPLOYMENT_DIR/." "$staging_dir/"
 
   test -f "$staging_dir/docker-compose.prod.yml"
+  test -f "$staging_dir/docker-compose.observability.yml"
+  test -d "$staging_dir/observability"
   test -f "$staging_dir/update.sh"
 
   cp "$staging_dir/docker-compose.prod.yml" "$APP_DIR/docker-compose.prod.yml"
+  cp "$staging_dir/docker-compose.observability.yml" "$APP_DIR/docker-compose.observability.yml"
+  rm -rf "$APP_DIR/observability.new"
+  cp -R "$staging_dir/observability" "$APP_DIR/observability.new"
+  rm -rf "$APP_DIR/observability"
+  mv "$APP_DIR/observability.new" "$APP_DIR/observability"
   cp "$staging_dir/update.sh" "$APP_DIR/update.sh.new"
   chmod +x "$APP_DIR/update.sh.new"
   mv "$APP_DIR/update.sh.new" "$APP_DIR/update.sh"
@@ -69,7 +76,7 @@ for service in "${SERVICES[@]}"; do
   previous_digests["$service"]="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
 done
 
-COMPOSE=(docker compose --env-file "$APP_DIR/.env" -p luna -f docker-compose.prod.yml)
+COMPOSE=(docker compose --env-file "$APP_DIR/.env" -p luna -f docker-compose.prod.yml -f docker-compose.observability.yml)
 
 repair_stale_network() {
   if docker network inspect luna_default >/dev/null 2>&1; then
@@ -105,10 +112,10 @@ done
 
 if [[ "$changed" == true ]]; then
   echo "New image(s) detected. Updating Luna..."
-  "${COMPOSE[@]}" up -d --wait --force-recreate --remove-orphans "${SERVICES[@]}"
+  "${COMPOSE[@]}" up -d --wait --force-recreate --remove-orphans
 else
   echo "No image changes detected; reconciling Compose configuration..."
-  "${COMPOSE[@]}" up -d --wait --remove-orphans "${SERVICES[@]}"
+  "${COMPOSE[@]}" up -d --wait --remove-orphans
 fi
 
 echo "Luna deployment is up to date."

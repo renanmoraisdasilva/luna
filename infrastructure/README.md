@@ -7,7 +7,7 @@ This directory contains Luna's container definitions and deployment scripts.
 - `docker-compose.yml` provides the base local stack.
 - `docker-compose.dev.yml` exposes backend service ports for local development.
 - `docker-compose.prod.yml` is the tracked production Compose definition. The server receives this file from the published frontend image; server-only values stay in `/opt/luna/.env`.
-- `docker-compose.observability.yml` runs the independent local SigNoz backend and OTLP collector.
+- `docker-compose.observability.yml` defines the SigNoz backend and OTLP collector. It can run independently for local development and is merged into the production stack by `update.sh`.
 
 Important: the production server must have a real `/opt/luna/.env` file before running the updater. The updater sources this file and Compose uses it for `${...}` substitutions. If it is missing or malformed, the backend services will start with empty database connection strings and fail.
 
@@ -55,7 +55,7 @@ SIGNOZ_API_TOKEN='paste-token-in-your-shell-only' \
 
 ## Deployment Synchronization
 
-The frontend image packages the production deployment files under `/opt/luna-deployment/`. The server-side updater pulls that image first, extracts its deployment files, replaces the local Compose definition and updater, then pulls and starts all service images.
+The frontend image packages the production deployment files under `/opt/luna-deployment/`. The server-side updater pulls that image first, extracts the production and observability Compose files plus their configuration directory, replaces the local deployment files and updater, then pulls and starts the complete application and observability stack.
 
 ```text
 Git repo

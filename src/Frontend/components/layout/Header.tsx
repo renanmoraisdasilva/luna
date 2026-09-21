@@ -2,20 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Icon from './Icon';
 import { getCart } from '../../lib/api/orders';
 import { useCurrentUser } from '../../lib/queries/auth';
 
-const signozUrl = process.env.NEXT_PUBLIC_SIGNOZ_URL || 'http://localhost:8080';
-
-const navigationLinks = [
-  { label: 'Shop', href: '/shop' },
-  { label: 'Orders', href: '/orders' },
-  { label: 'Swagger', href: '/swagger' },
-  { label: 'SigNoz', href: signozUrl, external: true },
-  { label: 'Operations', href: '/operations/fulfillment', adminOnly: true },
-];
+const configuredSignozUrl = process.env.NEXT_PUBLIC_SIGNOZ_URL;
+const noopSubscribe = () => () => {};
+const getSignozUrl = () => `${window.location.protocol}//${window.location.hostname}:8080`;
 
 const utilityLinks = [
   { label: 'Account', icon: 'account' as const, href: '/account' },
@@ -24,6 +19,8 @@ const utilityLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const browserSignozUrl = useSyncExternalStore(noopSubscribe, getSignozUrl, () => 'http://localhost:8080');
+  const signozUrl = configuredSignozUrl || browserSignozUrl;
   const userQuery = useCurrentUser();
   const isAdmin = userQuery.data?.roles?.some((role) => role.toLowerCase() === 'admin') ?? false;
   const cartQuery = useQuery({
@@ -35,6 +32,14 @@ export default function Header() {
   const cartItemCount = userQuery.data
     ? cartQuery.data?.items.reduce((total, item) => total + item.quantity, 0) ?? 0
     : 0;
+
+  const navigationLinks = [
+    { label: 'Shop', href: '/shop' },
+    { label: 'Orders', href: '/orders' },
+    { label: 'Swagger', href: '/swagger' },
+    { label: 'SigNoz', href: signozUrl, external: true },
+    { label: 'Operations', href: '/operations/fulfillment', adminOnly: true },
+  ];
 
   return (
     <header className="fixed top-0 z-50 flex h-4xl w-full justify-center border-b border-[#e5e7eb] bg-[#fbf9fa] shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
