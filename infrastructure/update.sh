@@ -58,7 +58,6 @@ rollback_or_cleanup() {
       --project-name luna
       --env-file "$APP_DIR/.env"
       -f "$previous_release/docker-compose.prod.yml"
-      -f "$previous_release/docker-compose.observability.yml"
     )
     "${previous_compose[@]}" up -d --wait --remove-orphans || {
       echo "Rollback failed; inspect the Luna Compose project immediately." >&2
@@ -89,7 +88,6 @@ extract_release() (
 
   if [[ -d "$release_dir" ]]; then
     test -f "$release_dir/docker-compose.prod.yml"
-    test -f "$release_dir/docker-compose.observability.yml"
     test -f "$release_dir/update.sh"
     printf '%s\n' "$release_dir"
     exit 0
@@ -99,8 +97,6 @@ extract_release() (
   docker cp "$container:$DEPLOYMENT_DIR/." "$staging_dir/"
 
   test -f "$staging_dir/docker-compose.prod.yml"
-  test -f "$staging_dir/docker-compose.observability.yml"
-  test -d "$staging_dir/observability"
   test -f "$staging_dir/update.sh"
   bash -n "$staging_dir/update.sh"
   mv "$staging_dir" "$release_dir"
@@ -124,13 +120,12 @@ COMPOSE=(
   --project-name luna
   --env-file "$APP_DIR/.env"
   -f "$release_dir/docker-compose.prod.yml"
-  -f "$release_dir/docker-compose.observability.yml"
 )
 
 echo "Validating release $LUNA_IMAGE_TAG..."
 "${COMPOSE[@]}" config --quiet
 services="$("${COMPOSE[@]}" config --services)"
-for service in frontend signoz otel-collector; do
+for service in frontend; do
   grep -qx "$service" <<<"$services" || {
     echo "Release is missing required service: $service" >&2
     exit 1
@@ -146,7 +141,6 @@ deployment_started=true
 
 echo "Running deployment smoke checks..."
 curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/dev/null
-curl --fail --silent --show-error http://127.0.0.1:8080/api/v1/health >/dev/null
 
 temporary_link="$APP_DIR/.current.$$"
 temporary_updater="$APP_DIR/.update.sh.$$"

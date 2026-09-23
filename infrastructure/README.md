@@ -7,7 +7,7 @@ This directory contains Luna's container definitions and deployment scripts.
 - `docker-compose.yml` provides the base local stack.
 - `docker-compose.dev.yml` exposes backend service ports for local development.
 - `docker-compose.prod.yml` is the application half of the production Compose definition. The server receives it from the published frontend image; server-only values stay in `/opt/luna/.env`.
-- `docker-compose.observability.yml` defines the SigNoz backend and OTLP collector. It can run independently for local development and is deployed with the production file as one Compose project.
+- `docker-compose.observability.yml` remains a local-development compatibility file during migration. Production SigNoz is owned by the separate `server-infra` repository.
 
 Important: the production server must have a real `/opt/luna/.env` file before running the updater. Compose uses it for `${...}` substitutions. If it is missing or malformed, the deployment is rejected before containers are changed.
 
@@ -37,14 +37,14 @@ docker compose \
    signoz signoz-migrator otel-collector
 ```
 
-Start or stop observability independently:
+For local development only, start or stop the compatibility observability stack:
 
 ```bash
 docker compose -f infrastructure/docker-compose.observability.yml up -d
 docker compose -f infrastructure/docker-compose.observability.yml down
 ```
 
-See [observability documentation](../documentation/observability.md) for OTLP configuration and checkout trace verification.
+See the infrastructure repository's SigNoz documentation for production OTLP configuration and recovery.
 
 Provision the tracked Luna Service Health dashboard with a SigNoz API key supplied through the shell:
 
@@ -55,7 +55,7 @@ SIGNOZ_API_TOKEN='paste-token-in-your-shell-only' \
 
 ## Deployment Synchronization
 
-The frontend image packages the production deployment files under `/opt/luna-deployment/`. The server-side updater pulls that image first, extracts the production and observability Compose files plus their configuration directory into an immutable release directory, validates the complete Compose configuration, then pulls and starts the complete application and observability stack.
+The frontend image packages the production application deployment files under `/opt/luna-deployment/`. The server-side updater pulls that image first, extracts the application Compose file into an immutable release directory, validates it, then pulls and starts the Luna application stack. Production SigNoz is reconciled separately by `server-infra`.
 
 ```text
 Git repo
@@ -69,8 +69,6 @@ Docker Publish
    +-- luna-frontend
    |      \-- /opt/luna-deployment/
    |             +-- docker-compose.prod.yml
-   |             +-- docker-compose.observability.yml
-   |             +-- observability/
    |             \-- update.sh
    |
    \-- other Luna images
@@ -88,18 +86,18 @@ Docker Publish
  stage immutable release
           |
           v
- validate Compose configuration
+ validate application Compose configuration
           |
           v
  pull all service images
           |
           v
- docker compose up --wait and verify health
+ docker compose up --wait and verify frontend health
 ```
 
 `update.sh` is the versioned source for the updater. On the server, `/opt/luna/update.sh` follows `/opt/luna/current/update.sh`, while `/opt/luna/current` points to the last release that passed validation and health checks. Previous releases remain under `/opt/luna/releases/` for rollback.
 
-The updater uses the fixed Compose project name `luna`, validates the merged production and observability configuration before changing containers, waits for Compose health checks, and probes the frontend and SigNoz health endpoints before activating the release.
+The updater uses the fixed Compose project name `luna`, validates the production application configuration before changing containers, waits for Compose health checks, and probes the frontend health endpoint before activating the release.
 
 To inspect the active release on the server:
 
@@ -109,6 +107,5 @@ docker compose \
    --project-name luna \
    --env-file /opt/luna/.env \
    -f /opt/luna/current/docker-compose.prod.yml \
-   -f /opt/luna/current/docker-compose.observability.yml \
    ps
 ```
