@@ -6,41 +6,94 @@ REGISTRY="ghcr.io"
 IMAGE_PREFIX="ghcr.io/renanmoraisdasilva"
 DEPLOYMENT_IMAGE="$IMAGE_PREFIX/luna-frontend:latest"
 DEPLOYMENT_DIR="/opt/luna-deployment"
-
-SERVICES=(sqlserver frontend identity catalog orders payments inventory shipping)
+RELEASES_DIR="$APP_DIR/releases"
+CURRENT_LINK="$APP_DIR/current"
+UPDATER_LINK="$APP_DIR/update.sh"
+KEEP_RELEASES=3
 
 cd "$APP_DIR"
+mkdir -p "$RELEASES_DIR"
 
 exec 9>"$APP_DIR/.update.lock"
 flock -n 9 || { echo "Another Luna update is already running."; exit 0; }
 
-if [[ -f "$APP_DIR/.env" ]]; then
-  set -a
-  source <(sed 's/\r$//' "$APP_DIR/.env")
-  set +a
-fi
+[[ -f "$APP_DIR/.env" ]] || { echo "Missing $APP_DIR/.env" >&2; exit 1; }
+
+env_value() {
+  local key="$1"
+  awk -v key="$key" '
+    index($0, key "=") == 1 {
+      value = substr($0, length(key) + 2)
+      sub(/\r$/, "", value)
+      if (value ~ /^".*"$/ || value ~ /^'"'"'.*'"'"'$/) {
+        value = substr(value, 2, length(value) - 2)
+      }
+      print value
+      exit
+    }
+  ' "$APP_DIR/.env"
+}
+
+GHCR_USER="${GHCR_USER:-$(env_value GHCR_USER)}"
+GHCR_PAT="${GHCR_PAT:-$(env_value GHCR_PAT)}"
+
+previous_release="$(readlink -f "$CURRENT_LINK" 2>/dev/null || true)"
+release_dir=""
+deployment_started=false
+deployment_succeeded=false
 
 cleanup_login() {
   if [[ -n "${GHCR_PAT:-}" ]]; then
     docker logout "$REGISTRY" >/dev/null 2>&1 || true
   fi
 }
-trap cleanup_login EXIT
+
+rollback_or_cleanup() {
+  local status=$?
+
+  if [[ "$deployment_started" == true && "$deployment_succeeded" != true && -n "$previous_release" ]]; then
+    echo "Deployment failed; restoring $previous_release..." >&2
+    previous_compose=(
+      docker compose
+      --project-name luna
+      --env-file "$APP_DIR/.env"
+      -f "$previous_release/docker-compose.prod.yml"
+      -f "$previous_release/docker-compose.observability.yml"
+    )
+    "${previous_compose[@]}" up -d --wait --remove-orphans || {
+      echo "Rollback failed; inspect the Luna Compose project immediately." >&2
+    }
+  fi
+
+  cleanup_login
+  exit "$status"
+}
+trap rollback_or_cleanup EXIT
 
 if [[ -n "${GHCR_PAT:-}" ]]; then
   : "${GHCR_USER:?GHCR_USER must be set when GHCR_PAT is set}"
   printf '%s' "$GHCR_PAT" | docker login "$REGISTRY" --username "$GHCR_USER" --password-stdin
 fi
 
-sync_deployment_files() (
+extract_release() (
+  local revision="$1"
   container="luna-deployment-sync-$$"
-  staging_dir="$(mktemp -d)"
+  release_dir="$RELEASES_DIR/$revision"
+  staging_dir="$(mktemp -d "$RELEASES_DIR/.staging.XXXXXX")"
 
   cleanup() {
     docker rm "$container" >/dev/null 2>&1 || true
-    rm -rf "$staging_dir"
+    [[ -z "$staging_dir" ]] || rm -rf -- "$staging_dir"
   }
   trap cleanup EXIT
+
+  if [[ -d "$release_dir" ]]; then
+    test -f "$release_dir/docker-compose.prod.yml"
+    test -f "$release_dir/docker-compose.observability.yml"
+    test -f "$release_dir/update.sh"
+    printf '%s\n' "$release_dir"
+    exit 0
+  fi
 
   docker create --name "$container" "$DEPLOYMENT_IMAGE" >/dev/null
   docker cp "$container:$DEPLOYMENT_DIR/." "$staging_dir/"
@@ -49,75 +102,66 @@ sync_deployment_files() (
   test -f "$staging_dir/docker-compose.observability.yml"
   test -d "$staging_dir/observability"
   test -f "$staging_dir/update.sh"
-
-  cp "$staging_dir/docker-compose.prod.yml" "$APP_DIR/docker-compose.prod.yml"
-  cp "$staging_dir/docker-compose.observability.yml" "$APP_DIR/docker-compose.observability.yml"
-  rm -rf "$APP_DIR/observability.new"
-  cp -R "$staging_dir/observability" "$APP_DIR/observability.new"
-  rm -rf "$APP_DIR/observability"
-  mv "$APP_DIR/observability.new" "$APP_DIR/observability"
-  cp "$staging_dir/update.sh" "$APP_DIR/update.sh.new"
-  chmod +x "$APP_DIR/update.sh.new"
-  mv "$APP_DIR/update.sh.new" "$APP_DIR/update.sh"
+  bash -n "$staging_dir/update.sh"
+  mv "$staging_dir" "$release_dir"
+  staging_dir=""
+  printf '%s\n' "$release_dir"
 )
 
 echo "Pulling Luna deployment configuration..."
 docker pull "$DEPLOYMENT_IMAGE"
 LUNA_IMAGE_TAG="$(docker image inspect "$DEPLOYMENT_IMAGE" --format='{{index .Config.Labels "org.opencontainers.image.revision"}}')"
-: "${LUNA_IMAGE_TAG:?The deployment image is missing org.opencontainers.image.revision}"
+if [[ ! "$LUNA_IMAGE_TAG" =~ ^[0-9a-fA-F]{7,64}$ ]]; then
+  echo "The deployment image is missing a valid Git revision label." >&2
+  exit 1
+fi
 export LUNA_IMAGE_TAG
-sync_deployment_files
 
-declare -A previous_digests
+release_dir="$(extract_release "$LUNA_IMAGE_TAG")"
 
-for service in "${SERVICES[@]}"; do
-  [[ "$service" == sqlserver ]] && continue
-  image="$IMAGE_PREFIX/luna-$service:$LUNA_IMAGE_TAG"
-  previous_digests["$service"]="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
+COMPOSE=(
+  docker compose
+  --project-name luna
+  --env-file "$APP_DIR/.env"
+  -f "$release_dir/docker-compose.prod.yml"
+  -f "$release_dir/docker-compose.observability.yml"
+)
+
+echo "Validating release $LUNA_IMAGE_TAG..."
+"${COMPOSE[@]}" config --quiet
+services="$("${COMPOSE[@]}" config --services)"
+for service in frontend signoz otel-collector; do
+  grep -qx "$service" <<<"$services" || {
+    echo "Release is missing required service: $service" >&2
+    exit 1
+  }
 done
-
-COMPOSE=(docker compose --env-file "$APP_DIR/.env" -p luna -f docker-compose.prod.yml -f docker-compose.observability.yml)
-
-repair_stale_network() {
-  if docker network inspect luna_default >/dev/null 2>&1; then
-    current_label="$(docker network inspect luna_default --format '{{index .Labels "com.docker.compose.network"}}' 2>/dev/null || true)"
-    if [[ -z "$current_label" || "$current_label" != "luna" ]]; then
-      echo "Removing stale Docker network luna_default (label: ${current_label:-<unset>})"
-      docker network rm luna_default >/dev/null 2>&1 || true
-    fi
-  fi
-}
-
-echo "Reconciling existing Compose state..."
-repair_stale_network
 
 echo "Pulling Luna images..."
 "${COMPOSE[@]}" pull
 
-changed=false
+echo "Starting Luna release $LUNA_IMAGE_TAG..."
+deployment_started=true
+"${COMPOSE[@]}" up -d --wait --remove-orphans
 
-for service in "${SERVICES[@]}"; do
-  [[ "$service" == sqlserver ]] && continue
-  image="$IMAGE_PREFIX/luna-$service:$LUNA_IMAGE_TAG"
-  old_digest="${previous_digests[$service]}"
-  new_digest="$(docker image inspect "$image" --format='{{index .RepoDigests 0}}' 2>/dev/null || true)"
+echo "Running deployment smoke checks..."
+curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/dev/null
+curl --fail --silent --show-error http://127.0.0.1:8080/api/v1/health >/dev/null
 
-  if [[ "$old_digest" != "$new_digest" ]]; then
-    echo "$service changed"
-    echo "  old: ${old_digest:-<not installed>}"
-    echo "  new: ${new_digest:-<unknown>}"
-    changed=true
-  fi
-done
-
-if [[ "$changed" == true ]]; then
-  echo "New image(s) detected. Updating Luna..."
-  "${COMPOSE[@]}" up -d --wait --force-recreate --remove-orphans
-else
-  echo "No image changes detected; reconciling Compose configuration..."
-  "${COMPOSE[@]}" up -d --wait --remove-orphans
-fi
+temporary_link="$APP_DIR/.current.$$"
+temporary_updater="$APP_DIR/.update.sh.$$"
+ln -s "$CURRENT_LINK/update.sh" "$temporary_updater"
+mv -Tf "$temporary_updater" "$UPDATER_LINK"
+ln -s "$release_dir" "$temporary_link"
+mv -Tf "$temporary_link" "$CURRENT_LINK"
+deployment_succeeded=true
 
 echo "Luna deployment is up to date."
 
-docker image prune -f >/dev/null
+current_release="$(readlink -f "$CURRENT_LINK")"
+find "$RELEASES_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+  | sort -nr \
+  | awk -v keep="$KEEP_RELEASES" 'NR > keep { sub(/^[^ ]+ /, ""); print }' \
+  | while IFS= read -r old_release; do
+      [[ "$old_release" == "$current_release" ]] || rm -rf -- "$old_release"
+    done

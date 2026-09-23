@@ -2,6 +2,7 @@ services:
   init-clickhouse:
     image: clickhouse/clickhouse-server:25.5.6
     container_name: luna-signoz-init-clickhouse
+    networks: [luna]
     command:
       - bash
       - -c
@@ -21,6 +22,7 @@ services:
     image: signoz/zookeeper:3.7.1
     container_name: luna-signoz-zookeeper
     user: root
+    networks: [luna]
     environment:
       ZOO_SERVER_ID: "1"
       ALLOW_ANONYMOUS_LOGIN: "yes"
@@ -38,6 +40,7 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:25.5.6
     container_name: luna-signoz-clickhouse
+    networks: [luna]
     depends_on:
       init-clickhouse:
         condition: service_completed_successfully
@@ -65,6 +68,7 @@ services:
   signoz-migrator:
     image: signoz/signoz-otel-collector:v0.144.5
     container_name: luna-signoz-migrator
+    networks: [luna]
     depends_on:
       clickhouse:
         condition: service_healthy
@@ -85,6 +89,7 @@ services:
   signoz:
     image: signoz/signoz:v0.142.1
     container_name: luna-signoz
+    networks: [luna]
     depends_on:
       clickhouse:
         condition: service_healthy
@@ -106,6 +111,7 @@ services:
   otel-collector:
     image: signoz/signoz-otel-collector:v0.144.5
     container_name: luna-signoz-otel-collector
+    networks: [luna]
     pid: host
     depends_on:
       clickhouse:
@@ -139,3 +145,7 @@ volumes:
   luna-signoz-clickhouse:
   luna-signoz-sqlite:
   luna-signoz-zookeeper:
+
+networks:
+  luna:
+    driver: bridge

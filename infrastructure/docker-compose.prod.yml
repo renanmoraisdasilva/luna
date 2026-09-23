@@ -1,6 +1,5 @@
 networks:
   luna:
-    name: luna_default
     driver: bridge
 
 x-app-hardening: &app-hardening
@@ -22,7 +21,7 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}"
       MSSQL_COLLATION: "SQL_Latin1_General_CP1_CI_AS"
     ports:
       - "1433:1433"
@@ -64,8 +63,8 @@ services:
       PAYMENTS_API_INTERNAL_URL: http://payments:8080
       INVENTORY_API_INTERNAL_URL: http://inventory:8080
       SHIPPING_API_INTERNAL_URL: http://shipping:8080
-      LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY}"
-      AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE}"
+      LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY:?Set LUNA_COOKIE_ENCRYPTION_KEY in .env}"
+      AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE:?Set AUTH_COOKIE_SECURE in .env}"
     networks:
       - luna
     healthcheck:

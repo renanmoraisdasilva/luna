@@ -83,6 +83,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Validate production deployment files
+        run: |
+          bash -n infrastructure/update.sh
+          LUNA_IMAGE_TAG=ci docker compose \
+            --env-file infrastructure/.env.example \
+            -f infrastructure/docker-compose.prod.yml \
+            -f infrastructure/docker-compose.observability.yml \
+            config --quiet
+
       - name: Start compose stack
         run: docker compose --env-file infrastructure/.env.example -f infrastructure/docker-compose.yml up -d --build --wait --wait-timeout 120
 
