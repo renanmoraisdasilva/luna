@@ -50,7 +50,7 @@ services:
     <<: *app-hardening
     user: node
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       OTEL_SERVICE_NAME: "${OTEL_SERVICE_NAME_FRONTEND:-luna-frontend}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_HTTP_ENDPOINT:-}"

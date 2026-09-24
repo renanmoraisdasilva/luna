@@ -140,7 +140,7 @@ deployment_started=true
 "${COMPOSE[@]}" up -d --wait --remove-orphans
 
 echo "Running deployment smoke checks..."
-curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/dev/null
+curl --fail --silent --show-error http://127.0.0.1:3001/api/health >/dev/null
 
 temporary_link="$APP_DIR/.current.$$"
 temporary_updater="$APP_DIR/.update.sh.$$"
