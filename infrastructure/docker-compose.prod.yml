@@ -78,7 +78,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-identity:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     <<: *app-hardening
-    user: app
+    user: "1654:1654"
     environment:
       <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -100,7 +100,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-catalog:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     <<: *app-hardening
-    user: app
+    user: "1654:1654"
     environment:
       <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -116,7 +116,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-orders:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     <<: *app-hardening
-    user: app
+    user: "1654:1654"
     environment:
       <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -135,7 +135,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-payments:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     <<: *app-hardening
-    user: app
+    user: "1654:1654"
     environment:
       <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -151,7 +151,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-inventory:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     <<: *app-hardening
-    user: app
+    user: "1654:1654"
     environment:
       <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
@@ -167,7 +167,7 @@ services:
     image: ghcr.io/renanmoraisdasilva/luna-shipping:${LUNA_IMAGE_TAG:?Set LUNA_IMAGE_TAG in .env}
     restart: unless-stopped
     <<: *app-hardening
-    user: app
+    user: "1654:1654"
     environment:
       <<: *telemetry-environment
       ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
