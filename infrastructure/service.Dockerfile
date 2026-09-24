@@ -11,8 +11,10 @@ WORKDIR /app
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends curl \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& if ! getent group app >/dev/null; then addgroup --system app; fi \
-	&& if ! getent passwd app >/dev/null; then adduser --system --ingroup app --home /home/app app; fi
+	&& if ! getent group app >/dev/null; then groupadd --system app; fi \
+	&& if ! getent passwd app >/dev/null; then useradd --system --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app; fi \
+	&& getent group app >/dev/null \
+	&& getent passwd app >/dev/null
 COPY --from=build /app/publish .
 RUN APP_NAME="$(basename "$PROJECT" .csproj)" \
 	&& printf '%s\n' "#!/bin/sh" "set -eu" "exec dotnet \"${APP_NAME}.dll\"" > /startup.sh \
