@@ -2,7 +2,11 @@ import './globals.css';
 import Header from '../components/layout/Header';
 import QueryProvider from '../components/providers/QueryProvider';
 
-export const metadata = { title: 'Luna Shop', description: 'Commerce and logistics simulation' };
+export const metadata = {
+  title: 'Luna Shop',
+  description: 'Commerce and logistics simulation',
+  icons: { icon: '/luna-browser-icon.png' },
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
