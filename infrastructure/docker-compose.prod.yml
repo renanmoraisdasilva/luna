@@ -130,6 +130,10 @@ services:
       ServiceAuthentication__ClientId: orders
       ServiceAuthentication__ClientSecret: "${ORDERS_SERVICE_CLIENT_SECRET:?Set ORDERS_SERVICE_CLIENT_SECRET in .env}"
       ServiceAuthentication__TokenEndpoint: http://identity:8080/api/v1/identity/connect/token
+      CatalogApi: http://catalog:8080/
+      ShippingApi: http://shipping:8080/
+      InventoryApi: http://inventory:8080/
+      PaymentsApi: http://payments:8080/
     depends_on:
       sqlserver:
         condition: service_healthy
