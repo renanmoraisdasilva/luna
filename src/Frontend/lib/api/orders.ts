@@ -106,6 +106,11 @@ export type FulfillmentOrder = {
   availableAction: FulfillmentOrderSummary['availableAction'];
 };
 
+export type FulfillmentCommandResponse = {
+  orderId: string;
+  orderStatus: FulfillmentStatus;
+};
+
 export type FulfillmentQueueResponse = {
   items: FulfillmentOrderSummary[];
   totalCount: number;
@@ -160,6 +165,11 @@ export async function getFulfillmentQueue(params: FulfillmentQueueParams): Promi
     },
   });
 
+  return response.data;
+}
+
+export async function prepareFulfillmentOrder(orderId: string): Promise<FulfillmentCommandResponse> {
+  const response = await ordersApi.post<FulfillmentCommandResponse>(`/fulfillment/${orderId}/prepare`);
   return response.data;
 }
 

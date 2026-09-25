@@ -12,4 +12,7 @@ Authorization: Bearer {{accessToken}}
 
 ### Get a missing fulfillment order
 GET {{baseUrl}}/api/v1/orders/fulfillment/00000000-0000-0000-0000-000000000000
+
+### Start preparing a fulfillment order
+POST {{baseUrl}}/api/v1/orders/fulfillment/{{orderId}}/prepare
 Authorization: Bearer {{accessToken}}

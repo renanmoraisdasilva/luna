@@ -47,6 +47,41 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
     }
 
     [Fact]
+    public async Task Admin_can_start_preparing_a_confirmed_order()
+    {
+        await fixture.ResetAsync();
+        var order = await SeedConfirmedOrderAsync("Jane Operator");
+        using var factory = new OrdersApiFactory(fixture);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
+
+        var response = await client.PostAsync($"/api/v1/orders/fulfillment/{order.Id}/prepare", content: null);
+        var command = await response.Content.ReadFromJsonAsync<FulfillmentCommandDto>();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        command!.OrderId.Should().Be(order.Id);
+        command.OrderStatus.Should().Be("Preparing");
+
+        await using var db = fixture.CreateDbContext();
+        (await db.Orders.FindAsync(order.Id))!.Status.Should().Be(OrderStatus.Preparing);
+    }
+
+    [Fact]
+    public async Task Admin_gets_conflict_when_preparing_an_order_twice()
+    {
+        await fixture.ResetAsync();
+        var order = await SeedConfirmedOrderAsync("Jane Operator");
+        using var factory = new OrdersApiFactory(fixture);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
+
+        (await client.PostAsync($"/api/v1/orders/fulfillment/{order.Id}/prepare", content: null)).StatusCode.Should().Be(HttpStatusCode.OK);
+        var response = await client.PostAsync($"/api/v1/orders/fulfillment/{order.Id}/prepare", content: null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
     public async Task Customer_cannot_read_the_operations_queue()
     {
         await fixture.ResetAsync();
@@ -107,4 +142,6 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
         object ShippingAddress,
         IReadOnlyCollection<object> Items,
         string AvailableAction);
+
+    private sealed record FulfillmentCommandDto(Guid OrderId, string OrderStatus);
 }

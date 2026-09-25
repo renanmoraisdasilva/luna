@@ -27,6 +27,7 @@ builder.Services.AddAuthorization(options => options.AddPolicy(
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GetFulfillmentQueueHandler>();
 builder.Services.AddScoped<GetFulfillmentOrderHandler>();
+builder.Services.AddScoped<PrepareFulfillmentOrderHandler>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();

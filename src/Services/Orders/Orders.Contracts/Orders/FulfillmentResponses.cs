@@ -34,3 +34,8 @@ public sealed record FulfillmentOrderResponse(
     ShippingAddressResponse ShippingAddress,
     IReadOnlyCollection<OrderItemResponse> Items,
     string AvailableAction);
+
+/// <summary>Returns the state produced by an Operations fulfillment command.</summary>
+public sealed record FulfillmentCommandResponse(
+    Guid OrderId,
+    string OrderStatus);

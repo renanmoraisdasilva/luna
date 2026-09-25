@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { getFulfillmentQueue } from '../../../lib/api/orders';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { getFulfillmentQueue, prepareFulfillmentOrder } from '../../../lib/api/orders';
 import FulfillmentQueue from '../../../components/operations/FulfillmentQueue';
 
 vi.mock('../../../lib/api/orders', async () => {
   const actual = await vi.importActual<typeof import('../../../lib/api/orders')>('../../../lib/api/orders');
-  return { ...actual, getFulfillmentQueue: vi.fn() };
+  return { ...actual, getFulfillmentQueue: vi.fn(), prepareFulfillmentOrder: vi.fn() };
 });
 
 const orders = [
@@ -40,6 +40,7 @@ function renderQueue() {
 
 describe('FulfillmentQueue', () => {
   beforeEach(() => {
+    vi.mocked(prepareFulfillmentOrder).mockResolvedValue({ orderId: 'order-1042', orderStatus: 'Preparing' });
     vi.mocked(getFulfillmentQueue).mockImplementation(async (params) => {
       const filtered = orders.filter((order) => {
         const matchesStatus = !params.status || order.orderStatus === params.status;
@@ -72,10 +73,22 @@ describe('FulfillmentQueue', () => {
     expect(getFulfillmentQueue).toHaveBeenCalledWith(expect.objectContaining({ status: 'ShippingPendingRetry', search: 'Joao' }));
   });
 
-  it('keeps lifecycle actions disabled until command endpoints are available', async () => {
+  it('executes preparation and keeps later shipment commands disabled', async () => {
     renderQueue();
 
-    expect(await screen.findByRole('button', { name: 'Start Preparing' })).toBeDisabled();
+    fireEvent.click(await screen.findByRole('button', { name: 'Start Preparing' }));
+
+    await waitFor(() => expect(prepareFulfillmentOrder).toHaveBeenCalledWith('order-1042', expect.anything()));
     expect(screen.getByRole('button', { name: 'Retry Shipment' })).toBeDisabled();
+  });
+
+  it('shows a preparation command failure without changing the queue state', async () => {
+    vi.mocked(prepareFulfillmentOrder).mockRejectedValueOnce(new Error('Preparation failed.'));
+
+    renderQueue();
+    fireEvent.click(await screen.findByRole('button', { name: 'Start Preparing' }));
+
+    expect(await screen.findByText('The fulfillment command could not be completed.')).toBeInTheDocument();
+    expect(screen.getByText('#order-1042')).toBeInTheDocument();
   });
 });

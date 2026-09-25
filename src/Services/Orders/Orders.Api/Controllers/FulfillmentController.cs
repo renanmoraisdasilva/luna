@@ -16,13 +16,16 @@ public sealed class FulfillmentController : ControllerBase
 {
     private readonly GetFulfillmentQueueHandler getQueue;
     private readonly GetFulfillmentOrderHandler getOrder;
+    private readonly PrepareFulfillmentOrderHandler prepareOrder;
 
     public FulfillmentController(
         GetFulfillmentQueueHandler getQueue,
-        GetFulfillmentOrderHandler getOrder)
+        GetFulfillmentOrderHandler getOrder,
+        PrepareFulfillmentOrderHandler prepareOrder)
     {
         this.getQueue = getQueue;
         this.getOrder = getOrder;
+        this.prepareOrder = prepareOrder;
     }
 
     [HttpGet]
@@ -46,5 +49,19 @@ public sealed class FulfillmentController : ControllerBase
     {
         var order = await getOrder.HandleAsync(orderId, cancellationToken);
         return order is null ? NotFound() : Ok(order);
+    }
+
+    [HttpPost("{orderId:guid}/prepare")]
+    [ProducesResponseType<FulfillmentCommandResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<FulfillmentCommandResponse>> Prepare(
+        Guid orderId,
+        CancellationToken cancellationToken)
+    {
+        var response = await prepareOrder.HandleAsync(
+            new PrepareFulfillmentOrderCommand(orderId),
+            cancellationToken);
+        return response is null ? NotFound() : Ok(response);
     }
 }

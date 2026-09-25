@@ -27,6 +27,7 @@ public sealed class ExceptionHandlingMiddleware(
                 CheckoutRejectedException rejected => (StatusCodes.Status422UnprocessableEntity, new ApiError(rejected.Code, rejected.Message)),
                 ArgumentException => (StatusCodes.Status400BadRequest, new ApiError("INVALID_REQUEST", exception.Message)),
                 KeyNotFoundException => (StatusCodes.Status404NotFound, new ApiError("CART_NOT_FOUND", exception.Message)),
+                InvalidOperationException => (StatusCodes.Status409Conflict, new ApiError("FULFILLMENT_CONFLICT", exception.Message)),
                 _ => (StatusCodes.Status500InternalServerError, new ApiError("INTERNAL_ERROR", "An unexpected error occurred.")),
             };
 
