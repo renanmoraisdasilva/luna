@@ -90,6 +90,22 @@ export type FulfillmentOrderSummary = {
   availableAction: 'StartPreparing' | 'CreateShipment' | 'RetryShipment' | 'None';
 };
 
+export type FulfillmentOrder = {
+  orderId: string;
+  customerId: string;
+  customerName: string;
+  orderStatus: FulfillmentStatus;
+  paymentStatus: string;
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+  shippingMethodCode: string;
+  createdAt: string;
+  shippingAddress: Order['shippingAddress'];
+  items: OrderItem[];
+  availableAction: FulfillmentOrderSummary['availableAction'];
+};
+
 export type FulfillmentQueueResponse = {
   items: FulfillmentOrderSummary[];
   totalCount: number;

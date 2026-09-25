@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Footer from '../../../components/layout/Footer';
 import FulfillmentQueue from '../../../components/operations/FulfillmentQueue';
 import { getCurrentUserServer } from '../../../lib/auth-server';
 
@@ -9,9 +8,6 @@ export default async function FulfillmentPage() {
   if (!currentUser.roles?.some((role) => role.toLowerCase() === 'admin')) redirect('/shop');
 
   return (
-    <>
-      <FulfillmentQueue />
-      <Footer />
-    </>
+    <FulfillmentQueue />
   );
 }

@@ -33,6 +33,8 @@ export default function Header() {
     ? cartQuery.data?.items.reduce((total, item) => total + item.quantity, 0) ?? 0
     : 0;
 
+  if (pathname?.startsWith('/operations')) return null;
+
   const navigationLinks = [
     { label: 'Shop', href: '/shop' },
     { label: 'Orders', href: '/orders' },

@@ -1,4 +1,4 @@
-type IconName = 'account' | 'cart' | 'search' | 'expand-more' | 'add' | 'remove' | 'delete' | 'chevron-right' | 'chevron-left' | 'shopping-bag' | 'description' | 'monitoring' | 'inventory' | 'assignment' | 'precision' | 'sync-problem' | 'refresh' | 'play' | 'replay' | 'info' | 'download' | 'copy' | 'location';
+type IconName = 'account' | 'cart' | 'search' | 'expand-more' | 'add' | 'remove' | 'delete' | 'chevron-right' | 'chevron-left' | 'shopping-bag' | 'description' | 'monitoring' | 'inventory' | 'assignment' | 'precision' | 'sync-problem' | 'refresh' | 'play' | 'replay' | 'info' | 'download' | 'copy' | 'location' | 'external-link';
 
 export default function Icon({ name, className = '' }: { name: IconName; className?: string }) {
   const commonProps = {
@@ -100,6 +100,10 @@ export default function Icon({ name, className = '' }: { name: IconName; classNa
 
   if (name === 'location') {
     return <svg {...commonProps}><path d="M19 10c0 5-7 10-7 10S5 15 5 10a7 7 0 1 1 14 0Z" /><circle cx="12" cy="10" r="2.2" /></svg>;
+  }
+
+  if (name === 'external-link') {
+    return <svg {...commonProps}><path d="M14 5h5v5M19 5l-8 8" /><path d="M17 13v5H5V6h5" /></svg>;
   }
 
   return <svg {...commonProps}><circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" /><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.5L20.5 8H6" /></svg>;
