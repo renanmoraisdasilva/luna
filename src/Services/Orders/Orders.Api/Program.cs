@@ -28,6 +28,7 @@ builder.Services.AddOrdersInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GetFulfillmentQueueHandler>();
 builder.Services.AddScoped<GetFulfillmentOrderHandler>();
 builder.Services.AddScoped<PrepareFulfillmentOrderHandler>();
+builder.Services.AddScoped<CreateShipmentHandler>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();

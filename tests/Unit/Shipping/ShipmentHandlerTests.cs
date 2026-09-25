@@ -48,6 +48,9 @@ public sealed class ShipmentHandlerTests
     {
         public Shipment? Shipment { get; private set; }
 
+        public Task<bool> ExistsByOrderIdAsync(Guid orderId, CancellationToken cancellationToken) =>
+            Task.FromResult(Shipment?.OrderId == orderId);
+
         public Task AddAsync(Shipment shipment, CancellationToken cancellationToken)
         {
             Shipment = shipment;

@@ -5,7 +5,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import Link from 'next/link';
 import { useState } from 'react';
 import Icon from '../layout/Icon';
-import { getFulfillmentQueue, prepareFulfillmentOrder } from '../../lib/api/orders';
+import { createShipment, getFulfillmentQueue, prepareFulfillmentOrder } from '../../lib/api/orders';
 import type { FulfillmentOrderSummary, FulfillmentStatus } from '../../lib/api/orders';
 import { formatCurrency } from '../../lib/formatters/currency';
 
@@ -58,6 +58,13 @@ export default function FulfillmentQueue() {
 
   const prepareMutation = useMutation({
     mutationFn: prepareFulfillmentOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fulfillment-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['fulfillment-count'] });
+    },
+  });
+  const shipmentMutation = useMutation({
+    mutationFn: createShipment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fulfillment-queue'] });
       queryClient.invalidateQueries({ queryKey: ['fulfillment-count'] });
@@ -189,14 +196,14 @@ export default function FulfillmentQueue() {
                   <td className="overflow-hidden px-xl py-lg align-top"><span className={`inline-flex max-w-full items-center gap-xs rounded-full px-sm py-xs font-label-caps text-label-caps ${order.paymentStatus === 'Authorized' ? 'bg-status-success/10 text-status-success' : 'bg-surface-container text-secondary'}`}><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${order.paymentStatus === 'Authorized' ? 'bg-status-success' : 'bg-secondary'}`} aria-hidden="true" /><span className="truncate">{order.paymentStatus}</span></span></td>
                   <td className="overflow-hidden px-xl py-lg align-top"><span className={`inline-flex max-w-full rounded-full px-sm py-xs font-label-caps text-label-caps font-semibold ${statusClass(order.orderStatus)}`}><span className="truncate">{statusLabel(order.orderStatus)}</span></span></td>
                   <td className="whitespace-normal px-xl py-lg align-top font-label-caps text-[12px] text-on-surface">{formatCreatedAt(order.createdAt)}</td>
-                  <td className="px-xl py-lg text-right align-top"><button className={`inline-flex min-w-[150px] items-center justify-center gap-xs whitespace-nowrap rounded-button px-md py-sm text-center font-label-caps text-label-caps uppercase tracking-wider shadow-sm disabled:cursor-not-allowed ${order.orderStatus === 'ShippingPendingRetry' ? 'bg-status-error text-on-primary' : order.orderStatus === 'Preparing' ? 'bg-surface-container-high text-on-surface' : 'bg-primary text-on-primary'}`} type="button" disabled={order.availableAction !== 'StartPreparing' || prepareMutation.isPending} onClick={() => prepareMutation.mutate(order.orderId)}><Icon name={actionIcon(order.availableAction)} className="h-4 w-4 shrink-0" /><span>{prepareMutation.isPending && prepareMutation.variables === order.orderId ? 'Starting...' : actionLabel(order.availableAction)}</span></button></td>
+                  <td className="px-xl py-lg text-right align-top"><button className={`inline-flex min-w-[150px] items-center justify-center gap-xs whitespace-nowrap rounded-button px-md py-sm text-center font-label-caps text-label-caps uppercase tracking-wider shadow-sm disabled:cursor-not-allowed ${order.orderStatus === 'ShippingPendingRetry' ? 'bg-status-error text-on-primary' : order.orderStatus === 'Preparing' ? 'bg-surface-container-high text-on-surface' : 'bg-primary text-on-primary'}`} type="button" disabled={order.availableAction === 'StartPreparing' ? prepareMutation.isPending : (order.availableAction !== 'CreateShipment' && order.availableAction !== 'RetryShipment') || shipmentMutation.isPending} onClick={() => { if (order.availableAction === 'StartPreparing') prepareMutation.mutate(order.orderId); else if (order.availableAction === 'CreateShipment' || order.availableAction === 'RetryShipment') shipmentMutation.mutate(order.orderId); }}><Icon name={actionIcon(order.availableAction)} className="h-4 w-4 shrink-0" /><span>{prepareMutation.isPending && prepareMutation.variables === order.orderId ? 'Starting...' : shipmentMutation.isPending && shipmentMutation.variables === order.orderId ? 'Creating...' : actionLabel(order.availableAction)}</span></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {prepareMutation.isError ? <p className="border-t border-border-standard px-xl py-md font-status-pill text-status-pill text-status-error" role="alert">{commandErrorMessage(prepareMutation.error)}</p> : null}
+        {prepareMutation.isError || shipmentMutation.isError ? <p className="border-t border-border-standard px-xl py-md font-status-pill text-status-pill text-status-error" role="alert">{commandErrorMessage(prepareMutation.error ?? shipmentMutation.error)}</p> : null}
 
         {!queueQuery.isLoading && !queueQuery.isError && orders.length === 0 ? <p className="p-2xl text-center font-body-md text-body-md text-secondary">No fulfillment orders match the current filters.</p> : null}
         <div className="flex flex-col justify-between gap-md border-t border-border-standard bg-surface-container-low px-xl py-md font-label-caps text-label-caps text-secondary sm:flex-row sm:items-center">

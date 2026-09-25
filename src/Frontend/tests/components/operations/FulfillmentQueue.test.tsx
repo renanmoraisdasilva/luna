@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { getFulfillmentQueue, prepareFulfillmentOrder } from '../../../lib/api/orders';
+import { createShipment, getFulfillmentQueue, prepareFulfillmentOrder } from '../../../lib/api/orders';
 import FulfillmentQueue from '../../../components/operations/FulfillmentQueue';
 
 vi.mock('../../../lib/api/orders', async () => {
   const actual = await vi.importActual<typeof import('../../../lib/api/orders')>('../../../lib/api/orders');
-  return { ...actual, getFulfillmentQueue: vi.fn(), prepareFulfillmentOrder: vi.fn() };
+  return { ...actual, createShipment: vi.fn(), getFulfillmentQueue: vi.fn(), prepareFulfillmentOrder: vi.fn() };
 });
 
 const orders = [
@@ -41,6 +41,7 @@ function renderQueue() {
 describe('FulfillmentQueue', () => {
   beforeEach(() => {
     vi.mocked(prepareFulfillmentOrder).mockResolvedValue({ orderId: 'order-1042', orderStatus: 'Preparing' });
+    vi.mocked(createShipment).mockResolvedValue({ orderId: 'order-1039', orderStatus: 'Shipped' });
     vi.mocked(getFulfillmentQueue).mockImplementation(async (params) => {
       const filtered = orders.filter((order) => {
         const matchesStatus = !params.status || order.orderStatus === params.status;
@@ -73,13 +74,15 @@ describe('FulfillmentQueue', () => {
     expect(getFulfillmentQueue).toHaveBeenCalledWith(expect.objectContaining({ status: 'ShippingPendingRetry', search: 'Joao' }));
   });
 
-  it('executes preparation and keeps later shipment commands disabled', async () => {
+  it('executes preparation and retry shipment commands', async () => {
     renderQueue();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Start Preparing' }));
 
     await waitFor(() => expect(prepareFulfillmentOrder).toHaveBeenCalledWith('order-1042', expect.anything()));
-    expect(screen.getByRole('button', { name: 'Retry Shipment' })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry Shipment' }));
+    await waitFor(() => expect(createShipment).toHaveBeenCalledWith('order-1039', expect.anything()));
   });
 
   it('shows a preparation command failure without changing the queue state', async () => {

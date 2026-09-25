@@ -2,14 +2,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import FulfillmentOrderDetails from '../../../components/operations/FulfillmentOrderDetails';
-import { prepareFulfillmentOrder, type FulfillmentOrder } from '../../../lib/api/orders';
+import { createShipment, prepareFulfillmentOrder, type FulfillmentOrder } from '../../../lib/api/orders';
 
 const router = vi.hoisted(() => ({ refresh: vi.fn() }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 vi.mock('../../../lib/api/orders', async () => {
   const actual = await vi.importActual<typeof import('../../../lib/api/orders')>('../../../lib/api/orders');
-  return { ...actual, prepareFulfillmentOrder: vi.fn() };
+  return { ...actual, createShipment: vi.fn(), prepareFulfillmentOrder: vi.fn() };
 });
 
 const confirmedOrder: FulfillmentOrder = {
@@ -37,6 +37,7 @@ describe('FulfillmentOrderDetails', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(prepareFulfillmentOrder).mockResolvedValue({ orderId: 'order-1', orderStatus: 'Preparing' });
+    vi.mocked(createShipment).mockResolvedValue({ orderId: 'order-1', orderStatus: 'Shipped' });
   });
 
   it('prepares a confirmed order and refreshes the server-backed detail', async () => {
@@ -59,9 +60,12 @@ describe('FulfillmentOrderDetails', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('does not enable a command for an order whose next action is later in the workflow', () => {
+  it('creates a shipment when the order is ready for shipment', async () => {
     renderDetails({ ...confirmedOrder, orderStatus: 'Preparing', availableAction: 'CreateShipment' });
 
-    expect(screen.getByRole('button', { name: 'Create Shipment' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Create Shipment' }));
+
+    await waitFor(() => expect(createShipment).toHaveBeenCalledWith('order-1'));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
   });
 });

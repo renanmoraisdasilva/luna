@@ -76,7 +76,7 @@ export type Order = {
   items: OrderItem[];
 };
 
-export type FulfillmentStatus = 'Confirmed' | 'Preparing' | 'ShippingPendingRetry';
+export type FulfillmentStatus = 'Confirmed' | 'Preparing' | 'ShippingPendingRetry' | 'Shipped' | 'Delivered';
 
 export type FulfillmentOrderSummary = {
   orderId: string;
@@ -170,6 +170,11 @@ export async function getFulfillmentQueue(params: FulfillmentQueueParams): Promi
 
 export async function prepareFulfillmentOrder(orderId: string): Promise<FulfillmentCommandResponse> {
   const response = await ordersApi.post<FulfillmentCommandResponse>(`/fulfillment/${orderId}/prepare`);
+  return response.data;
+}
+
+export async function createShipment(orderId: string): Promise<FulfillmentCommandResponse> {
+  const response = await ordersApi.post<FulfillmentCommandResponse>(`/fulfillment/${orderId}/shipment`);
   return response.data;
 }
 

@@ -13,6 +13,11 @@ public sealed class CreateShipmentHandler(
         CreateShipmentCommand command,
         CancellationToken cancellationToken)
     {
+        if (await shipmentRepository.ExistsByOrderIdAsync(command.OrderId, cancellationToken))
+        {
+            throw new InvalidOperationException("A shipment already exists for this order.");
+        }
+
         var quote = await quoteRepository.GetQuoteAsync(command.QuoteId, cancellationToken);
         if (quote.OrderId != command.OrderId)
         {

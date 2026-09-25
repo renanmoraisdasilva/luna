@@ -178,7 +178,8 @@ public sealed class CheckoutHandler(
             quote.ShippingMethodCode,
             quote.Cost,
             idempotencyKey,
-            orderId);
+            orderId,
+            quote.QuoteId);
     }
 
     private async Task<InventoryReservationSnapshot> ReserveInventoryAsync(

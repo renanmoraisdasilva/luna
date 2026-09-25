@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using Luna.Catalog.Contracts.Products;
 using Luna.Inventory.Contracts.Reservations;
 using Luna.Orders.Application.Checkout;
+using Luna.Orders.Application.Orders;
 using Luna.Orders.Domain;
 using Luna.Payments.Contracts;
 using Luna.Shipping.Contracts;
@@ -38,6 +39,29 @@ public sealed class ShippingCheckoutClient(HttpClient httpClient) : IShippingChe
         var quote = await response.Content.ReadFromJsonAsync<ShippingQuoteResponse>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Shipping returned an empty quote response.");
         return new ShippingQuoteSnapshot(quote.QuoteId, quote.ShippingMethodCode, quote.Cost);
+    }
+}
+
+public sealed class ShippingFulfillmentClient(HttpClient httpClient) : IShippingFulfillmentClient
+{
+    public async Task<ShipmentSnapshot> CreateShipmentAsync(
+        Guid orderId,
+        Guid shippingQuoteId,
+        CancellationToken cancellationToken)
+    {
+        var response = await httpClient.PostAsJsonAsync(
+            "api/v1/shipments",
+            new CreateShipmentRequest(orderId, shippingQuoteId),
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
+        var shipment = await response.Content.ReadFromJsonAsync<ShipmentResponse>(cancellationToken: cancellationToken)
+            ?? throw new InvalidOperationException("Shipping returned an empty shipment response.");
+        return new ShipmentSnapshot(
+            shipment.ShipmentId,
+            shipment.OrderId,
+            shipment.QuoteId,
+            shipment.Status,
+            shipment.TrackingNumber);
     }
 }
 

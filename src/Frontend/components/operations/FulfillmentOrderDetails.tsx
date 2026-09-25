@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import Icon from '../layout/Icon';
-import { prepareFulfillmentOrder, type FulfillmentOrder } from '../../lib/api/orders';
+import { createShipment, prepareFulfillmentOrder, type FulfillmentOrder } from '../../lib/api/orders';
 import { formatCurrency } from '../../lib/formatters/currency';
 
 const pipeline = [
@@ -17,7 +17,10 @@ const pipeline = [
 ];
 
 function pipelineIndex(status: FulfillmentOrder['orderStatus']) {
-  return status === 'Confirmed' ? 0 : 1;
+  if (status === 'Confirmed') return 0;
+  if (status === 'Preparing' || status === 'ShippingPendingRetry') return 1;
+  if (status === 'Shipped') return 2;
+  return 4;
 }
 
 function actionLabel(action: FulfillmentOrder['availableAction']) {
@@ -29,6 +32,11 @@ function actionLabel(action: FulfillmentOrder['availableAction']) {
 
 function statusLabel(status: FulfillmentOrder['orderStatus']) {
   return status === 'ShippingPendingRetry' ? 'Shipping Pending Retry' : status;
+}
+
+function actionIcon(action: FulfillmentOrder['availableAction']) {
+  if (action === 'StartPreparing') return 'precision' as const;
+  return 'inventory' as const;
 }
 
 function formatAddress(order: FulfillmentOrder) {
@@ -55,10 +63,17 @@ export default function FulfillmentOrderDetails({ order }: { order: FulfillmentO
     mutationFn: () => prepareFulfillmentOrder(order.orderId),
     onSuccess: () => router.refresh(),
   });
+  const shipmentMutation = useMutation({
+    mutationFn: () => createShipment(order.orderId),
+    onSuccess: () => router.refresh(),
+  });
   const activePipelineIndex = pipelineIndex(order.orderStatus);
   const createdAt = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(order.createdAt));
   const addressLines = formatAddress(order);
   const canPrepare = order.availableAction === 'StartPreparing';
+  const canCreateShipment = order.availableAction === 'CreateShipment' || order.availableAction === 'RetryShipment';
+  const commandPending = prepareMutation.isPending || shipmentMutation.isPending;
+  const commandError = prepareMutation.error ?? shipmentMutation.error;
 
   return (
     <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-xl px-lg py-3xl md:px-xl">
@@ -108,7 +123,7 @@ export default function FulfillmentOrderDetails({ order }: { order: FulfillmentO
         </div>
 
         <aside className="space-y-xl lg:col-span-4">
-          <section className="space-y-lg rounded-lg bg-primary p-xl text-on-primary shadow-md" aria-labelledby="fulfillment-action-heading"><div className="flex items-center justify-between"><span className="font-label-caps text-label-caps uppercase tracking-wider text-on-primary-container">Fulfillment Action</span><span className="rounded-full bg-primary-container px-sm py-xs font-label-caps text-label-caps text-on-primary">Step {activePipelineIndex + 1}</span></div><div><h2 id="fulfillment-action-heading" className="font-headline-lg text-headline-lg-mobile">{actionLabel(order.availableAction)}</h2><p className="mt-xs font-body-md text-body-md text-on-primary-container">Actions are processed by the Orders workflow.</p></div><button className="flex h-control w-full items-center justify-center gap-sm rounded-button bg-surface-card px-xl py-sm font-label-caps text-label-caps uppercase text-primary transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60" type="button" disabled={!canPrepare || prepareMutation.isPending} onClick={() => prepareMutation.mutate()}><Icon name="precision" className="h-5 w-5" />{prepareMutation.isPending ? 'Starting Preparation...' : actionLabel(order.availableAction)}</button>{prepareMutation.isError ? <p className="border-t border-primary-container pt-md text-center font-status-pill text-status-pill text-on-primary" role="alert">{commandErrorMessage(prepareMutation.error)}</p> : <p className="border-t border-primary-container pt-md text-center font-status-pill text-status-pill text-on-primary-container">{canPrepare ? 'This command updates the order through the Orders workflow.' : 'The next workflow command will be available from this order state.'}</p>}</section>
+          <section className="space-y-lg rounded-lg bg-primary p-xl text-on-primary shadow-md" aria-labelledby="fulfillment-action-heading"><div className="flex items-center justify-between"><span className="font-label-caps text-label-caps uppercase tracking-wider text-on-primary-container">Fulfillment Action</span><span className="rounded-full bg-primary-container px-sm py-xs font-label-caps text-label-caps text-on-primary">Step {activePipelineIndex + 1}</span></div><div><h2 id="fulfillment-action-heading" className="font-headline-lg text-headline-lg-mobile">{actionLabel(order.availableAction)}</h2><p className="mt-xs font-body-md text-body-md text-on-primary-container">Actions are processed by the Orders workflow.</p></div><button className="flex h-control w-full items-center justify-center gap-sm rounded-button bg-surface-card px-xl py-sm font-label-caps text-label-caps uppercase text-primary transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60" type="button" disabled={(!canPrepare && !canCreateShipment) || commandPending} onClick={() => { if (canPrepare) prepareMutation.mutate(); else if (canCreateShipment) shipmentMutation.mutate(); }}><Icon name={actionIcon(order.availableAction)} className="h-5 w-5" />{commandPending ? 'Processing...' : actionLabel(order.availableAction)}</button>{commandError ? <p className="border-t border-primary-container pt-md text-center font-status-pill text-status-pill text-on-primary" role="alert">{commandErrorMessage(commandError)}</p> : <p className="border-t border-primary-container pt-md text-center font-status-pill text-status-pill text-on-primary-container">{canPrepare || canCreateShipment ? 'This command updates the order through the Orders workflow.' : 'The next workflow command will be available from this order state.'}</p>}</section>
           <section className="space-y-lg rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm" aria-labelledby="order-metadata-heading"><div className="flex items-center justify-between border-b border-border-standard pb-sm"><h2 id="order-metadata-heading" className="font-product-title text-product-title text-on-surface">Metadata &amp; Routing</h2><Icon name="info" className="h-5 w-5 text-secondary" /></div><div className="space-y-md"><div className="flex items-center justify-between rounded-button bg-surface-container-low p-sm"><div className="flex flex-col"><span className="font-label-caps text-label-caps uppercase text-secondary">Payment Status</span><span className="font-status-pill text-status-pill text-secondary">{order.paymentStatus}</span></div><span className="rounded-full bg-status-success/10 px-sm py-xs font-label-caps text-label-caps font-semibold text-status-success">{order.paymentStatus}</span></div><div className="flex items-center justify-between"><span className="font-label-caps text-label-caps uppercase text-secondary">Customer</span><span className="font-status-pill text-status-pill font-semibold text-on-surface">{order.customerName}</span></div><div className="flex items-center justify-between"><span className="font-label-caps text-label-caps uppercase text-secondary">Order ID</span><span className="max-w-[180px] truncate font-label-caps text-label-caps font-semibold text-primary">#{order.orderId}</span></div></div></section>
         </aside>
       </div>

@@ -26,6 +26,10 @@ public static class OrdersInfrastructureExtensions
             .AddHttpMessageHandler(serviceProvider => new ServiceTokenHandler(
                 serviceProvider.GetRequiredService<ServiceTokenProvider>(),
                 LunaServiceScopes.ShippingShipmentsWrite));
+        services.AddHttpClient<IShippingFulfillmentClient, ShippingFulfillmentClient>(client => client.BaseAddress = GetServiceUri(configuration, "ShippingApi"))
+            .AddHttpMessageHandler(serviceProvider => new ServiceTokenHandler(
+                serviceProvider.GetRequiredService<ServiceTokenProvider>(),
+                LunaServiceScopes.ShippingShipmentsWrite));
         services.AddHttpClient<IInventoryCheckoutClient, InventoryCheckoutClient>(client => client.BaseAddress = GetServiceUri(configuration, "InventoryApi"))
             .AddHttpMessageHandler(serviceProvider => new ServiceTokenHandler(
                 serviceProvider.GetRequiredService<ServiceTokenProvider>(),

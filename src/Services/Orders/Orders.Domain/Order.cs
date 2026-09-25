@@ -11,6 +11,7 @@ public sealed class Order
     private Order(
         Guid id,
         Guid customerId,
+        Guid? shippingQuoteId,
         string shippingMethodCode,
         decimal shippingCost,
         ShippingAddress shippingAddress,
@@ -18,6 +19,7 @@ public sealed class Order
     {
         Id = id;
         CustomerId = customerId;
+        ShippingQuoteId = shippingQuoteId;
         ShippingMethodCode = shippingMethodCode;
         ShippingCost = shippingCost;
         ShippingAddress = shippingAddress;
@@ -31,6 +33,7 @@ public sealed class Order
     public string IdempotencyKey { get; private set; } = string.Empty;
     public Guid? InventoryReservationId { get; private set; }
     public Guid? PaymentId { get; private set; }
+    public Guid? ShippingQuoteId { get; private set; }
     public OrderStatus Status { get; private set; }
     public string ShippingMethodCode { get; private set; } = string.Empty;
     public decimal ShippingCost { get; private set; }
@@ -46,7 +49,8 @@ public sealed class Order
         string shippingMethodCode,
         decimal shippingCost,
         string idempotencyKey,
-        Guid? id = null)
+        Guid? id = null,
+        Guid? shippingQuoteId = null)
     {
         if (customerId == Guid.Empty)
         {
@@ -73,7 +77,12 @@ public sealed class Order
             throw new ArgumentException("Idempotency key is required.", nameof(idempotencyKey));
         }
 
-        var order = new Order(id ?? Guid.NewGuid(), customerId, shippingMethodCode.Trim().ToUpperInvariant(), decimal.Round(shippingCost, 2), shippingAddress, idempotencyKey.Trim());
+        if (shippingQuoteId == Guid.Empty)
+        {
+            throw new ArgumentException("Shipping quote ID must be valid.", nameof(shippingQuoteId));
+        }
+
+        var order = new Order(id ?? Guid.NewGuid(), customerId, shippingQuoteId, shippingMethodCode.Trim().ToUpperInvariant(), decimal.Round(shippingCost, 2), shippingAddress, idempotencyKey.Trim());
         order.items.AddRange(itemSnapshots.Select(snapshot => OrderItem.Create(
             order.Id,
             snapshot.ProductId,
@@ -121,21 +130,23 @@ public sealed class Order
 
     public void MarkShipped()
     {
-        EnsureStatus(OrderStatus.Preparing);
+        EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);
         Status = OrderStatus.Shipped;
     }
 
+    public void EnsureShipmentCreationAllowed() => EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);
+
     public void MarkShippingPendingRetry()
     {
-        EnsureStatus(OrderStatus.Preparing);
+        EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);
         Status = OrderStatus.ShippingPendingRetry;
     }
 
-    private void EnsureStatus(OrderStatus expectedStatus)
+    private void EnsureStatus(params OrderStatus[] expectedStatuses)
     {
-        if (Status != expectedStatus)
+        if (!expectedStatuses.Contains(Status))
         {
-            throw new InvalidOperationException($"Order {Id} must be {expectedStatus} to perform this transition.");
+            throw new InvalidOperationException($"Order {Id} must be {string.Join(" or ", expectedStatuses)} to perform this transition.");
         }
     }
 }
