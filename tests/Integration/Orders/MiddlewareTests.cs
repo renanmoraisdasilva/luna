@@ -18,7 +18,7 @@ public sealed class MiddlewareTests
         {
             (new ArgumentException("bad request"), StatusCodes.Status400BadRequest, "INVALID_REQUEST"),
             (new KeyNotFoundException("missing"), StatusCodes.Status404NotFound, "CART_NOT_FOUND"),
-            (new InvalidOperationException("unexpected"), StatusCodes.Status500InternalServerError, "INTERNAL_ERROR"),
+            (new InvalidOperationException("unexpected"), StatusCodes.Status409Conflict, "FULFILLMENT_CONFLICT"),
         };
 
         foreach (var testCase in cases)
