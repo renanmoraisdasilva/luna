@@ -154,16 +154,16 @@ export default function FulfillmentQueue() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] table-fixed border-collapse text-left lg:min-w-0">
+          <table className="w-full min-w-[1100px] table-fixed border-collapse text-left lg:min-w-0">
             <colgroup>
-              <col className="w-[15%]" />
-              <col className="w-[16%]" />
-              <col className="w-[9%]" />
-              <col className="w-[9%]" />
               <col className="w-[13%]" />
+              <col className="w-[15%]" />
+              <col className="w-[8%]" />
+              <col className="w-[8%]" />
+              <col className="w-[12%]" />
               <col className="w-[14%]" />
               <col className="w-[12%]" />
-              <col className="w-[12%]" />
+              <col className="w-[18%]" />
             </colgroup>
             <thead>
               <tr className="bg-surface-container-low font-label-caps text-label-caps uppercase tracking-wider text-secondary">
@@ -189,7 +189,7 @@ export default function FulfillmentQueue() {
                   <td className="overflow-hidden px-xl py-lg align-top"><span className={`inline-flex max-w-full items-center gap-xs rounded-full px-sm py-xs font-label-caps text-label-caps ${order.paymentStatus === 'Authorized' ? 'bg-status-success/10 text-status-success' : 'bg-surface-container text-secondary'}`}><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${order.paymentStatus === 'Authorized' ? 'bg-status-success' : 'bg-secondary'}`} aria-hidden="true" /><span className="truncate">{order.paymentStatus}</span></span></td>
                   <td className="overflow-hidden px-xl py-lg align-top"><span className={`inline-flex max-w-full rounded-full px-sm py-xs font-label-caps text-label-caps font-semibold ${statusClass(order.orderStatus)}`}><span className="truncate">{statusLabel(order.orderStatus)}</span></span></td>
                   <td className="whitespace-normal px-xl py-lg align-top font-label-caps text-[12px] text-on-surface">{formatCreatedAt(order.createdAt)}</td>
-                  <td className="px-xl py-lg text-right align-top"><button className={`inline-flex max-w-full items-center justify-end gap-xs rounded-button px-md py-sm text-right font-label-caps text-label-caps uppercase tracking-wider shadow-sm disabled:cursor-not-allowed ${order.orderStatus === 'ShippingPendingRetry' ? 'bg-status-error text-on-primary' : order.orderStatus === 'Preparing' ? 'bg-surface-container-high text-on-surface' : 'bg-primary text-on-primary'}`} type="button" disabled={order.availableAction !== 'StartPreparing' || prepareMutation.isPending} onClick={() => prepareMutation.mutate(order.orderId)}><Icon name={actionIcon(order.availableAction)} className="h-4 w-4 shrink-0" /><span>{prepareMutation.isPending && prepareMutation.variables === order.orderId ? 'Starting...' : actionLabel(order.availableAction)}</span></button></td>
+                  <td className="px-xl py-lg text-right align-top"><button className={`inline-flex min-w-[150px] items-center justify-center gap-xs whitespace-nowrap rounded-button px-md py-sm text-center font-label-caps text-label-caps uppercase tracking-wider shadow-sm disabled:cursor-not-allowed ${order.orderStatus === 'ShippingPendingRetry' ? 'bg-status-error text-on-primary' : order.orderStatus === 'Preparing' ? 'bg-surface-container-high text-on-surface' : 'bg-primary text-on-primary'}`} type="button" disabled={order.availableAction !== 'StartPreparing' || prepareMutation.isPending} onClick={() => prepareMutation.mutate(order.orderId)}><Icon name={actionIcon(order.availableAction)} className="h-4 w-4 shrink-0" /><span>{prepareMutation.isPending && prepareMutation.variables === order.orderId ? 'Starting...' : actionLabel(order.availableAction)}</span></button></td>
                 </tr>
               ))}
             </tbody>

@@ -27,9 +27,13 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
         queue!.TotalCount.Should().Be(1);
         queue.Items.Single().CustomerName.Should().Be("Jane Operator");
         queue.Items.Single().AvailableAction.Should().Be("StartPreparing");
+        queue.Items.Single().Total.Should().Be(30m);
         detailResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         detail!.OrderId.Should().Be(order.Id);
         detail.AvailableAction.Should().Be("StartPreparing");
+        detail.Subtotal.Should().Be(25m);
+        detail.ShippingCost.Should().Be(5m);
+        detail.Total.Should().Be(30m);
         detail.Items.Should().ContainSingle();
     }
 
