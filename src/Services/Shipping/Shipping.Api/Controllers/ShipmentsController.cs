@@ -16,6 +16,17 @@ public sealed class ShipmentsController(CreateShipmentHandler handler) : Control
         CreateShipmentRequest request,
         CancellationToken cancellationToken) =>
         Ok(await handler.HandleAsync(
-            new CreateShipmentCommand(request.OrderId, request.QuoteId),
+            new CreateShipmentCommand(
+                request.OrderId,
+                request.QuoteId,
+                new ShipmentRecipientCommand(
+                    request.Recipient.CustomerId,
+                    request.Recipient.FullName,
+                    request.Recipient.AddressLine1,
+                    request.Recipient.AddressLine2,
+                    request.Recipient.City,
+                    request.Recipient.StateOrProvince,
+                    request.Recipient.PostalCode,
+                    request.Recipient.Country)),
             cancellationToken));
 }

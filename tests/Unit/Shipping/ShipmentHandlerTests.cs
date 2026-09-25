@@ -15,12 +15,15 @@ public sealed class ShipmentHandlerTests
         var repository = new FakeShipmentRepository();
         var handler = new CreateShipmentHandler(new FakeQuoteRepository(orderId, quoteId), repository);
 
-        var response = await handler.HandleAsync(new CreateShipmentCommand(orderId, quoteId), CancellationToken.None);
+        var response = await handler.HandleAsync(new CreateShipmentCommand(orderId, quoteId, Recipient()), CancellationToken.None);
 
         response.OrderId.Should().Be(orderId);
         response.QuoteId.Should().Be(quoteId);
         response.Status.Should().Be(nameof(ShipmentStatus.Created));
         response.TrackingNumber.Should().StartWith("LUNA-");
+        response.Recipient.CustomerId.Should().Be(repository.Shipment!.Recipient.CustomerId);
+        response.Recipient.FullName.Should().Be("Jane Doe");
+        response.Recipient.AddressLine1.Should().Be("1 Main Street");
         repository.Shipment.Should().NotBeNull();
     }
 
@@ -32,11 +35,21 @@ public sealed class ShipmentHandlerTests
             new FakeShipmentRepository());
 
         var act = () => handler.HandleAsync(
-            new CreateShipmentCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
+            new CreateShipmentCommand(Guid.NewGuid(), Guid.NewGuid(), Recipient()), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("The shipping quote does not belong to the order.");
     }
+
+    private static ShipmentRecipientCommand Recipient() => new(
+        Guid.NewGuid(),
+        "Jane Doe",
+        "1 Main Street",
+        null,
+        "Austin",
+        "Texas",
+        "78701",
+        "US");
 
     private sealed class FakeQuoteRepository(Guid orderId, Guid quoteId) : IShippingQuoteReadRepository
     {

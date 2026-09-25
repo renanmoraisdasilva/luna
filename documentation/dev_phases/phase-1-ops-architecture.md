@@ -79,6 +79,7 @@ Shipping is the authoritative owner of:
 
 - Shipment
 - tracking identifier
+- shipment recipient and delivery address snapshot
 - shipment status and timestamps
 - tracking events
 

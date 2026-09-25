@@ -42,6 +42,18 @@ public sealed class ShippingDbContext(DbContextOptions<ShippingDbContext> option
             entity.Property(shipment => shipment.Status).HasConversion<string>().HasMaxLength(30).IsRequired();
             entity.HasIndex(shipment => shipment.OrderId).IsUnique();
             entity.HasIndex(shipment => shipment.TrackingNumber).IsUnique();
+            entity.OwnsOne(shipment => shipment.Recipient, recipient =>
+            {
+                recipient.Property(value => value.CustomerId).HasColumnName("RecipientCustomerId").IsRequired();
+                recipient.Property(value => value.FullName).HasColumnName("RecipientFullName").HasMaxLength(200).IsRequired();
+                recipient.Property(value => value.AddressLine1).HasColumnName("RecipientAddressLine1").HasMaxLength(200).IsRequired();
+                recipient.Property(value => value.AddressLine2).HasColumnName("RecipientAddressLine2").HasMaxLength(200);
+                recipient.Property(value => value.City).HasColumnName("RecipientCity").HasMaxLength(120).IsRequired();
+                recipient.Property(value => value.StateOrProvince).HasColumnName("RecipientStateOrProvince").HasMaxLength(120).IsRequired();
+                recipient.Property(value => value.PostalCode).HasColumnName("RecipientPostalCode").HasMaxLength(20).IsRequired();
+                recipient.Property(value => value.Country).HasColumnName("RecipientCountry").HasMaxLength(2).IsRequired();
+            });
+            entity.Navigation(shipment => shipment.Recipient).IsRequired();
             entity.Navigation(shipment => shipment.TrackingEvents).UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.HasMany(shipment => shipment.TrackingEvents)
                 .WithOne()

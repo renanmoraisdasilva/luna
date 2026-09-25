@@ -47,7 +47,19 @@ public sealed class CreateShipmentHandler(
 
         try
         {
-            await shippingClient.CreateShipmentAsync(order.Id, shippingQuoteId, cancellationToken);
+            await shippingClient.CreateShipmentAsync(
+                order.Id,
+                shippingQuoteId,
+                new ShipmentRecipientSnapshot(
+                    order.CustomerId,
+                    order.ShippingAddress.FullName,
+                    order.ShippingAddress.AddressLine1,
+                    order.ShippingAddress.AddressLine2,
+                    order.ShippingAddress.City,
+                    order.ShippingAddress.StateOrProvince,
+                    order.ShippingAddress.PostalCode,
+                    order.ShippingAddress.Country),
+                cancellationToken);
             order.MarkShipped();
             await repository.SaveChangesAsync(cancellationToken);
         }

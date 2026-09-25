@@ -22,6 +22,9 @@ public sealed class FulfillmentCommandTests
         order.Status.Should().Be(OrderStatus.Shipped);
         shipping.OrderId.Should().Be(order.Id);
         shipping.ShippingQuoteId.Should().Be(quoteId);
+        shipping.Recipient!.CustomerId.Should().Be(order.CustomerId);
+        shipping.Recipient.FullName.Should().Be(order.ShippingAddress.FullName);
+        shipping.Recipient.AddressLine1.Should().Be(order.ShippingAddress.AddressLine1);
         repository.SaveCount.Should().Be(1);
     }
 
@@ -112,11 +115,13 @@ public sealed class FulfillmentCommandTests
         public bool Failure { get; init; }
         public Guid? OrderId { get; private set; }
         public Guid? ShippingQuoteId { get; private set; }
+        public ShipmentRecipientSnapshot? Recipient { get; private set; }
 
-        public Task<ShipmentSnapshot> CreateShipmentAsync(Guid orderId, Guid shippingQuoteId, CancellationToken cancellationToken)
+        public Task<ShipmentSnapshot> CreateShipmentAsync(Guid orderId, Guid shippingQuoteId, ShipmentRecipientSnapshot recipient, CancellationToken cancellationToken)
         {
             OrderId = orderId;
             ShippingQuoteId = shippingQuoteId;
+            Recipient = recipient;
             if (Failure)
             {
                 throw new InvalidOperationException("Shipping unavailable.");

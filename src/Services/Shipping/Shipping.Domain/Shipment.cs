@@ -8,12 +8,13 @@ public sealed class Shipment
     {
     }
 
-    private Shipment(Guid id, Guid orderId, Guid quoteId, string trackingNumber)
+    private Shipment(Guid id, Guid orderId, Guid quoteId, string trackingNumber, ShipmentRecipientSnapshot recipient)
     {
         Id = id;
         OrderId = orderId;
         QuoteId = quoteId;
         TrackingNumber = trackingNumber;
+        Recipient = recipient;
         Status = ShipmentStatus.Created;
         trackingEvents.Add(TrackingEvent.Create(id, ShipmentStatus.Created.ToString()));
     }
@@ -22,11 +23,17 @@ public sealed class Shipment
     public Guid OrderId { get; private set; }
     public Guid QuoteId { get; private set; }
     public string TrackingNumber { get; private set; } = string.Empty;
+    public ShipmentRecipientSnapshot Recipient { get; private set; } = null!;
     public ShipmentStatus Status { get; private set; }
     public DateTimeOffset? DeliveredAt { get; private set; }
     public IReadOnlyCollection<TrackingEvent> TrackingEvents => trackingEvents.AsReadOnly();
 
-    public static Shipment Create(Guid orderId, Guid quoteId, string trackingNumber, Guid? id = null)
+    public static Shipment Create(
+        Guid orderId,
+        Guid quoteId,
+        string trackingNumber,
+        ShipmentRecipientSnapshot recipient,
+        Guid? id = null)
     {
         if (orderId == Guid.Empty || quoteId == Guid.Empty)
         {
@@ -38,7 +45,8 @@ public sealed class Shipment
             throw new ArgumentException("Tracking number is required.", nameof(trackingNumber));
         }
 
-        return new Shipment(id ?? Guid.NewGuid(), orderId, quoteId, trackingNumber.Trim());
+        ArgumentNullException.ThrowIfNull(recipient);
+        return new Shipment(id ?? Guid.NewGuid(), orderId, quoteId, trackingNumber.Trim(), recipient);
     }
 
     public void MarkInTransit()

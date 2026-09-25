@@ -47,11 +47,23 @@ public sealed class ShippingFulfillmentClient(HttpClient httpClient) : IShipping
     public async Task<ShipmentSnapshot> CreateShipmentAsync(
         Guid orderId,
         Guid shippingQuoteId,
+        ShipmentRecipientSnapshot recipient,
         CancellationToken cancellationToken)
     {
         var response = await httpClient.PostAsJsonAsync(
             "api/v1/shipments",
-            new CreateShipmentRequest(orderId, shippingQuoteId),
+            new CreateShipmentRequest(
+                orderId,
+                shippingQuoteId,
+                new ShipmentRecipientRequest(
+                    recipient.CustomerId,
+                    recipient.FullName,
+                    recipient.AddressLine1,
+                    recipient.AddressLine2,
+                    recipient.City,
+                    recipient.StateOrProvince,
+                    recipient.PostalCode,
+                    recipient.Country)),
             cancellationToken);
         response.EnsureSuccessStatusCode();
         var shipment = await response.Content.ReadFromJsonAsync<ShipmentResponse>(cancellationToken: cancellationToken)

@@ -23,7 +23,27 @@ public sealed record ShippingQuoteResponse(
     int EstimatedDeliveryDays,
     DateTimeOffset CreatedAt);
 
-public sealed record CreateShipmentRequest(Guid OrderId, Guid QuoteId);
+public sealed record ShipmentRecipientRequest(
+    Guid CustomerId,
+    string FullName,
+    string AddressLine1,
+    string? AddressLine2,
+    string City,
+    string StateOrProvince,
+    string PostalCode,
+    string Country);
+
+public sealed record ShipmentRecipientResponse(
+    Guid CustomerId,
+    string FullName,
+    string AddressLine1,
+    string? AddressLine2,
+    string City,
+    string StateOrProvince,
+    string PostalCode,
+    string Country);
+
+public sealed record CreateShipmentRequest(Guid OrderId, Guid QuoteId, ShipmentRecipientRequest Recipient);
 
 public sealed record ShipmentResponse(
     Guid ShipmentId,
@@ -31,4 +51,5 @@ public sealed record ShipmentResponse(
     Guid QuoteId,
     string Status,
     string TrackingNumber,
-    DateTimeOffset? DeliveredAt);
+    DateTimeOffset? DeliveredAt,
+    ShipmentRecipientResponse Recipient);

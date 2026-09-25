@@ -610,6 +610,8 @@ A Phase 1 order has exactly one shipment.
 
 The shipment must contain the information required to fulfill the order, including the order reference and shipping information required by the Shipping service.
 
+Shipping stores the recipient and delivery address as an immutable shipment snapshot. This is a fulfillment-specific copy of the address captured by Orders at checkout; later customer profile changes must not alter an existing shipment destination.
+
 A Phase 1 order may have exactly one shipment.
 
 The operation must reject shipment creation when:

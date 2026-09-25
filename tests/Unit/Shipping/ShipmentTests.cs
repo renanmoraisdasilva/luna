@@ -9,7 +9,7 @@ public sealed class ShipmentTests
     [Fact]
     public void Shipment_transitions_from_created_to_in_transit_to_delivered()
     {
-        var shipment = Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), "LUNA-123");
+        var shipment = Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), "LUNA-123", Recipient());
 
         shipment.MarkInTransit();
         shipment.MarkDelivered();
@@ -23,7 +23,7 @@ public sealed class ShipmentTests
     [Fact]
     public void Shipment_cannot_be_delivered_before_in_transit()
     {
-        var shipment = Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), "LUNA-123");
+        var shipment = Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), "LUNA-123", Recipient());
 
         var act = () => shipment.MarkDelivered();
 
@@ -38,7 +38,8 @@ public sealed class ShipmentTests
         var act = () => Shipment.Create(
             emptyOrderId ? Guid.Empty : Guid.NewGuid(),
             emptyQuoteId ? Guid.Empty : Guid.NewGuid(),
-            "LUNA-123");
+            "LUNA-123",
+            Recipient());
 
         act.Should().Throw<ArgumentException>();
     }
@@ -46,7 +47,7 @@ public sealed class ShipmentTests
     [Fact]
     public void Shipment_requires_a_tracking_number()
     {
-        var act = () => Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), " ");
+        var act = () => Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), " ", Recipient());
 
         act.Should().Throw<ArgumentException>();
     }
@@ -56,7 +57,7 @@ public sealed class ShipmentTests
     {
         var id = Guid.NewGuid();
         var deliveredAt = DateTimeOffset.UtcNow.AddMinutes(-1);
-        var shipment = Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), " LUNA-123 ", id);
+        var shipment = Shipment.Create(Guid.NewGuid(), Guid.NewGuid(), " LUNA-123 ", Recipient(), id);
 
         shipment.MarkInTransit();
         shipment.MarkDelivered(deliveredAt);
@@ -65,6 +66,32 @@ public sealed class ShipmentTests
         shipment.TrackingNumber.Should().Be("LUNA-123");
         shipment.DeliveredAt.Should().Be(deliveredAt);
     }
+
+    [Fact]
+    public void Shipment_keeps_the_recipient_snapshot()
+    {
+        var customerId = Guid.NewGuid();
+        var shipment = Shipment.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "LUNA-123",
+            ShipmentRecipientSnapshot.Create(customerId, " Jane Doe ", " 1 Main Street ", null, " Austin ", " Texas ", " 78701 ", " US "));
+
+        shipment.Recipient.CustomerId.Should().Be(customerId);
+        shipment.Recipient.FullName.Should().Be("Jane Doe");
+        shipment.Recipient.AddressLine1.Should().Be("1 Main Street");
+        shipment.Recipient.City.Should().Be("Austin");
+    }
+
+    private static ShipmentRecipientSnapshot Recipient() => ShipmentRecipientSnapshot.Create(
+        Guid.NewGuid(),
+        "Jane Doe",
+        "1 Main Street",
+        null,
+        "Austin",
+        "Texas",
+        "78701",
+        "US");
 
     [Theory]
     [InlineData(true, "InTransit")]
