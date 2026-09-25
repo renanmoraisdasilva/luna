@@ -16,7 +16,7 @@ public sealed class OrderReadRepository(OrdersDbContext dbContext) : IOrderReadR
             .Select(order => new OrderSummaryResponse(
                 order.Id,
                 order.Status.ToString(),
-                order.Total,
+                order.Items.Sum(item => item.LineTotal) + order.ShippingCost,
                 order.CreatedAt,
                 order.Items.Count))
             .ToArrayAsync(cancellationToken);
@@ -89,7 +89,7 @@ public sealed class OrderReadRepository(OrdersDbContext dbContext) : IOrderReadR
                         order.CustomerId,
                         CustomerName = order.ShippingAddress.FullName,
                         ItemCount = order.Items.Count,
-                        order.Total,
+                        Total = order.Items.Sum(item => item.LineTotal) + order.ShippingCost,
                         PaymentStatus = order.PaymentId.HasValue ? "Authorized" : "NotAuthorized",
                         order.Status,
                         order.CreatedAt,
@@ -127,7 +127,7 @@ public sealed class OrderReadRepository(OrdersDbContext dbContext) : IOrderReadR
                         PaymentStatus = order.PaymentId.HasValue ? "Authorized" : "NotAuthorized",
                         Subtotal = order.Items.Sum(item => item.LineTotal),
                         order.ShippingCost,
-                        order.Total,
+                        Total = order.Items.Sum(item => item.LineTotal) + order.ShippingCost,
                         order.ShippingMethodCode,
                         order.CreatedAt,
                         ShippingAddress = new ShippingAddressResponse(
