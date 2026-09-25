@@ -100,7 +100,7 @@ Docker Desktop on Windows may encounter ClickHouse Keeper or filesystem issues i
 
 The application Compose files support these environment variables:
 
-- `TELEMETRY_ENABLED`: enables or disables .NET telemetry. Local default: `true`; production Compose default: `false` until explicitly enabled.
+- `TELEMETRY_ENABLED`: enables or disables .NET telemetry. Local and production Compose default: `true`; set it to `false` when telemetry must be disabled.
 - `TELEMETRY_ENVIRONMENT`: value exported as `deployment.environment`.
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: .NET OTLP endpoint. Production deployments must provide a reachable endpoint when telemetry is enabled.
 - `OTEL_EXPORTER_OTLP_HTTP_ENDPOINT`: Next.js OTLP HTTP endpoint.

@@ -82,7 +82,7 @@ describe('FulfillmentQueue', () => {
     await waitFor(() => expect(prepareFulfillmentOrder).toHaveBeenCalledWith('order-1042', expect.anything()));
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry Shipment' }));
-    await waitFor(() => expect(createShipment).toHaveBeenCalledWith('order-1039', expect.anything()));
+    await waitFor(() => expect(createShipment).toHaveBeenCalledWith('order-1039'));
   });
 
   it('shows a preparation command failure without changing the queue state', async () => {
