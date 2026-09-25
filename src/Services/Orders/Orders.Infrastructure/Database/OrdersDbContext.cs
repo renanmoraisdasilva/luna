@@ -43,6 +43,7 @@ public sealed class OrdersDbContext(DbContextOptions<OrdersDbContext> options) :
             entity.Property(order => order.InventoryReservationId);
             entity.Property(order => order.PaymentId);
             entity.Property(order => order.ShippingQuoteId);
+            entity.Property(order => order.ShipmentId);
             entity.Property(order => order.Status).HasConversion<string>().HasMaxLength(40).IsRequired();
             entity.Property(order => order.ShippingMethodCode).HasMaxLength(40).IsRequired();
             entity.Property(order => order.ShippingCost).HasPrecision(18, 2).IsRequired();

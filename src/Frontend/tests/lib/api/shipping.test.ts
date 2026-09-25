@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getShippingMethods, shippingApi } from '../../../lib/api/shipping';
+import { getShipment, getShipments, getShippingMethods, shippingApi } from '../../../lib/api/shipping';
 
 describe('Shipping API client', () => {
   beforeEach(() => {
@@ -18,5 +18,21 @@ describe('Shipping API client', () => {
     vi.spyOn(shippingApi, 'get').mockRejectedValue(new Error('Shipping unavailable.'));
 
     await expect(getShippingMethods()).rejects.toThrow('Shipping unavailable.');
+  });
+
+  it('loads paged shipment operations data with filters', async () => {
+    const data = { items: [], totalCount: 0, page: 1, pageSize: 25 };
+    const get = vi.spyOn(shippingApi, 'get').mockResolvedValue({ data });
+
+    await expect(getShipments({ status: 'InTransit', search: 'LUNA-1', page: 1, pageSize: 25 })).resolves.toEqual(data);
+    expect(get).toHaveBeenCalledWith('/shipments', { params: { status: 'InTransit', search: 'LUNA-1', page: 1, pageSize: 25 } });
+  });
+
+  it('loads a shipment detail by tracking aggregate ID', async () => {
+    const data = { shipmentId: 'shipment-1' };
+    const get = vi.spyOn(shippingApi, 'get').mockResolvedValue({ data });
+
+    await expect(getShipment('shipment-1')).resolves.toEqual(data);
+    expect(get).toHaveBeenCalledWith('/shipments/shipment-1');
   });
 });

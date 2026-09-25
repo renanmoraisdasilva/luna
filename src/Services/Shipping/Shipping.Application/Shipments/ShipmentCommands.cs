@@ -46,21 +46,6 @@ public sealed class CreateShipmentHandler(
         var shipment = Shipment.Create(command.OrderId, command.QuoteId, $"LUNA-{Guid.NewGuid():N}"[..18].ToUpperInvariant(), recipient);
         await shipmentRepository.AddAsync(shipment, cancellationToken);
 
-        return new ShipmentResponse(
-            shipment.Id,
-            shipment.OrderId,
-            shipment.QuoteId,
-            shipment.Status.ToString(),
-            shipment.TrackingNumber,
-            shipment.DeliveredAt,
-            new ShipmentRecipientResponse(
-                shipment.Recipient.CustomerId,
-                shipment.Recipient.FullName,
-                shipment.Recipient.AddressLine1,
-                shipment.Recipient.AddressLine2,
-                shipment.Recipient.City,
-                shipment.Recipient.StateOrProvince,
-                shipment.Recipient.PostalCode,
-                shipment.Recipient.Country));
+        return ShipmentResponseMapper.Map(shipment);
     }
 }

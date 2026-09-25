@@ -29,6 +29,8 @@ builder.Services.AddScoped<GetFulfillmentQueueHandler>();
 builder.Services.AddScoped<GetFulfillmentOrderHandler>();
 builder.Services.AddScoped<PrepareFulfillmentOrderHandler>();
 builder.Services.AddScoped<CreateShipmentHandler>();
+builder.Services.AddScoped<MarkShipmentInTransitHandler>();
+builder.Services.AddScoped<MarkShipmentDeliveredHandler>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();

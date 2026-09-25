@@ -75,6 +75,30 @@ public sealed class ShippingFulfillmentClient(HttpClient httpClient) : IShipping
             shipment.Status,
             shipment.TrackingNumber);
     }
+
+    public Task<ShipmentSnapshot> MarkInTransitAsync(
+        Guid shipmentId,
+        CancellationToken cancellationToken) =>
+        MarkShipmentAsync($"api/v1/shipments/{shipmentId}/in-transit", cancellationToken);
+
+    public Task<ShipmentSnapshot> MarkDeliveredAsync(
+        Guid shipmentId,
+        CancellationToken cancellationToken) =>
+        MarkShipmentAsync($"api/v1/shipments/{shipmentId}/delivered", cancellationToken);
+
+    private async Task<ShipmentSnapshot> MarkShipmentAsync(string endpoint, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.PostAsync(endpoint, null, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        var shipment = await response.Content.ReadFromJsonAsync<ShipmentResponse>(cancellationToken: cancellationToken)
+            ?? throw new InvalidOperationException("Shipping returned an empty shipment response.");
+        return new ShipmentSnapshot(
+            shipment.ShipmentId,
+            shipment.OrderId,
+            shipment.QuoteId,
+            shipment.Status,
+            shipment.TrackingNumber);
+    }
 }
 
 public sealed class InventoryCheckoutClient(HttpClient httpClient) : IInventoryCheckoutClient

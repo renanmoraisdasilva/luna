@@ -25,6 +25,7 @@ public sealed class FulfillmentCommandTests
         shipping.Recipient!.CustomerId.Should().Be(order.CustomerId);
         shipping.Recipient.FullName.Should().Be(order.ShippingAddress.FullName);
         shipping.Recipient.AddressLine1.Should().Be(order.ShippingAddress.AddressLine1);
+        order.ShipmentId.Should().NotBeEmpty();
         repository.SaveCount.Should().Be(1);
     }
 
@@ -101,6 +102,7 @@ public sealed class FulfillmentCommandTests
         public int SaveCount { get; private set; }
 
         public Task<Order?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken) => Task.FromResult<Order?>(order.Id == orderId ? order : null);
+        public Task<Order?> GetByShipmentIdAsync(Guid shipmentId, CancellationToken cancellationToken) => Task.FromResult<Order?>(order.ShipmentId == shipmentId ? order : null);
         public Task<Order?> GetByIdempotencyKeyAsync(Guid customerId, string idempotencyKey, CancellationToken cancellationToken) => Task.FromResult<Order?>(null);
         public Task AddAsync(Order order, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task SaveChangesAsync(CancellationToken cancellationToken)
@@ -129,5 +131,11 @@ public sealed class FulfillmentCommandTests
 
             return Task.FromResult(new ShipmentSnapshot(Guid.NewGuid(), orderId, shippingQuoteId, "Created", "LUNA-TEST"));
         }
+
+        public Task<ShipmentSnapshot> MarkInTransitAsync(Guid shipmentId, CancellationToken cancellationToken) =>
+            Task.FromResult(new ShipmentSnapshot(shipmentId, Guid.NewGuid(), Guid.NewGuid(), "InTransit", "LUNA-TEST"));
+
+        public Task<ShipmentSnapshot> MarkDeliveredAsync(Guid shipmentId, CancellationToken cancellationToken) =>
+            Task.FromResult(new ShipmentSnapshot(shipmentId, Guid.NewGuid(), Guid.NewGuid(), "Delivered", "LUNA-TEST"));
     }
 }

@@ -178,6 +178,16 @@ export async function createShipment(orderId: string): Promise<FulfillmentComman
   return response.data;
 }
 
+export async function markShipmentInTransit(shipmentId: string): Promise<FulfillmentCommandResponse> {
+  const response = await ordersApi.post<FulfillmentCommandResponse>(`/fulfillment/shipments/${shipmentId}/in-transit`);
+  return response.data;
+}
+
+export async function markShipmentDelivered(shipmentId: string): Promise<FulfillmentCommandResponse> {
+  const response = await ordersApi.post<FulfillmentCommandResponse>(`/fulfillment/shipments/${shipmentId}/delivered`);
+  return response.data;
+}
+
 export async function changeCartItemQuantity(productId: string, quantity: number): Promise<Cart> {
   const response = await ordersApi.put<Cart>(`/cart/items/${productId}`, { quantity });
   return response.data;

@@ -19,6 +19,7 @@ public static class ShippingInfrastructureExtensions
         services.AddScoped<IShippingQuoteWriteRepository, ShippingQuoteWriteRepository>();
         services.AddScoped<IShippingQuoteReadRepository, ShippingQuoteReadRepository>();
         services.AddScoped<IShipmentWriteRepository, ShipmentWriteRepository>();
+        services.AddScoped<IShipmentReadRepository, ShipmentReadRepository>();
         return services;
     }
 

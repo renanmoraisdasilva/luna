@@ -596,10 +596,10 @@ In compact form:
 - [ ] Orders fulfillment order detail read model and endpoint
 - [ ] `Confirmed -> Preparing` application command
 - [ ] Orders-coordinated shipment creation command
-- [ ] Shipping shipment lifecycle commands
-- [ ] `Shipped -> Delivered` coordination
-- [ ] Operations authorization policy
-- [ ] Operations UI refreshes from backend state after commands
+- [x] Shipping shipment lifecycle commands
+- [x] `Shipped -> Delivered` coordination
+- [x] Operations authorization policy
+- [x] Operations UI refreshes from backend state after commands
 - [ ] Customer order tracking includes shipment information
 - [ ] Fulfillment and shipment lifecycle integration tests
 

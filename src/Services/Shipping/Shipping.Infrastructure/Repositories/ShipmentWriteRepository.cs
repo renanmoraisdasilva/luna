@@ -9,9 +9,17 @@ public sealed class ShipmentWriteRepository(ShippingDbContext db) : IShipmentWri
     public Task<bool> ExistsByOrderIdAsync(Guid orderId, CancellationToken cancellationToken) =>
         db.Shipments.AnyAsync(shipment => shipment.OrderId == orderId, cancellationToken);
 
+    public Task<Shipment?> GetByIdAsync(Guid shipmentId, CancellationToken cancellationToken) =>
+        db.Shipments
+            .Include(shipment => shipment.TrackingEvents)
+            .SingleOrDefaultAsync(shipment => shipment.Id == shipmentId, cancellationToken);
+
     public async Task AddAsync(Shipment shipment, CancellationToken cancellationToken)
     {
         db.Shipments.Add(shipment);
         await db.SaveChangesAsync(cancellationToken);
     }
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken) =>
+        db.SaveChangesAsync(cancellationToken);
 }

@@ -11,6 +11,9 @@ public sealed class OrderRepository(OrdersDbContext dbContext) : IOrderWriteRepo
     public Task<Order?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken) =>
         dbContext.Orders.SingleOrDefaultAsync(order => order.Id == orderId, cancellationToken);
 
+    public Task<Order?> GetByShipmentIdAsync(Guid shipmentId, CancellationToken cancellationToken) =>
+        dbContext.Orders.SingleOrDefaultAsync(order => order.ShipmentId == shipmentId, cancellationToken);
+
     public Task<Order?> GetByIdempotencyKeyAsync(Guid customerId, string idempotencyKey, CancellationToken cancellationToken) =>
         dbContext.Orders.SingleOrDefaultAsync(order => order.CustomerId == customerId && order.IdempotencyKey == idempotencyKey, cancellationToken);
 

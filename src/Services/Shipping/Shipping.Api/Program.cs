@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Luna.Shipping.Api.Authorization;
 using Luna.Shipping.Api.Middleware;
 using Luna.Shipping.Application.Quotes;
 using Luna.Shipping.Application.Shipments;
@@ -22,15 +24,30 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddLunaJwtValidation(builder.Configuration);
-builder.Services.AddAuthorization(options => options.AddPolicy(
-    LunaServicePolicies.OrdersShippingShipmentsWrite,
-    policy => policy.RequireLunaService(
-        LunaServiceClients.Orders,
-        LunaServiceScopes.ShippingShipmentsWrite)));
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        LunaServicePolicies.OrdersShippingShipmentsWrite,
+        policy => policy.RequireLunaService(
+            LunaServiceClients.Orders,
+            LunaServiceScopes.ShippingShipmentsWrite));
+    options.AddPolicy(
+        ShippingAuthorizationPolicies.Operations,
+        policy => policy
+            .AddAuthenticationSchemes(LunaAuthenticationDefaults.ValidationScheme)
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context => context.User.Claims.Any(claim =>
+                (claim.Type == LunaAuthentication.RoleClaim || claim.Type == ClaimTypes.Role)
+                && claim.Value.Equals("Admin", StringComparison.OrdinalIgnoreCase))));
+});
 builder.Services.AddShippingInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GetShippingMethodsHandler>();
 builder.Services.AddScoped<QuoteShippingHandler>();
 builder.Services.AddScoped<CreateShipmentHandler>();
+builder.Services.AddScoped<GetShipmentsHandler>();
+builder.Services.AddScoped<GetShipmentHandler>();
+builder.Services.AddScoped<MarkShipmentInTransitHandler>();
+builder.Services.AddScoped<MarkShipmentDeliveredHandler>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();

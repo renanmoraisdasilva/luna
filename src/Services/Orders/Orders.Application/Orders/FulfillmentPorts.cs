@@ -24,4 +24,12 @@ public interface IShippingFulfillmentClient
         Guid shippingQuoteId,
         ShipmentRecipientSnapshot recipient,
         CancellationToken cancellationToken);
+
+    Task<ShipmentSnapshot> MarkInTransitAsync(
+        Guid shipmentId,
+        CancellationToken cancellationToken);
+
+    Task<ShipmentSnapshot> MarkDeliveredAsync(
+        Guid shipmentId,
+        CancellationToken cancellationToken);
 }

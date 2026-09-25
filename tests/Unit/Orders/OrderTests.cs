@@ -85,6 +85,22 @@ public sealed class OrderTests
     }
 
     [Fact]
+    public void Delivered_order_keeps_the_shipment_reference()
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "delivered-lifecycle");
+        var shipmentId = Guid.NewGuid();
+
+        order.Confirm();
+        order.Prepare();
+        order.MarkShipped();
+        order.RecordShipment(shipmentId);
+        order.MarkDelivered();
+
+        order.Status.Should().Be(OrderStatus.Delivered);
+        order.ShipmentId.Should().Be(shipmentId);
+    }
+
+    [Fact]
     public void Preparing_order_can_be_marked_for_shipping_retry()
     {
         var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "shipping-retry");

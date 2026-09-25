@@ -47,7 +47,7 @@ public sealed class CreateShipmentHandler(
 
         try
         {
-            await shippingClient.CreateShipmentAsync(
+            var shipment = await shippingClient.CreateShipmentAsync(
                 order.Id,
                 shippingQuoteId,
                 new ShipmentRecipientSnapshot(
@@ -60,6 +60,7 @@ public sealed class CreateShipmentHandler(
                     order.ShippingAddress.PostalCode,
                     order.ShippingAddress.Country),
                 cancellationToken);
+            order.RecordShipment(shipment.ShipmentId);
             order.MarkShipped();
             await repository.SaveChangesAsync(cancellationToken);
         }
@@ -70,6 +71,52 @@ public sealed class CreateShipmentHandler(
             throw;
         }
 
+        return new FulfillmentCommandResponse(order.Id, order.Status.ToString());
+    }
+}
+
+public sealed record MarkShipmentInTransitCommand(Guid ShipmentId);
+
+public sealed class MarkShipmentInTransitHandler(
+    IOrderWriteRepository repository,
+    IShippingFulfillmentClient shippingClient)
+{
+    public async Task<FulfillmentCommandResponse?> HandleAsync(
+        MarkShipmentInTransitCommand command,
+        CancellationToken cancellationToken)
+    {
+        var order = await repository.GetByShipmentIdAsync(command.ShipmentId, cancellationToken);
+        if (order is null)
+        {
+            return null;
+        }
+
+        order.EnsureStatusForShipmentInTransit();
+        await shippingClient.MarkInTransitAsync(command.ShipmentId, cancellationToken);
+        return new FulfillmentCommandResponse(order.Id, order.Status.ToString());
+    }
+}
+
+public sealed record MarkShipmentDeliveredCommand(Guid ShipmentId);
+
+public sealed class MarkShipmentDeliveredHandler(
+    IOrderWriteRepository repository,
+    IShippingFulfillmentClient shippingClient)
+{
+    public async Task<FulfillmentCommandResponse?> HandleAsync(
+        MarkShipmentDeliveredCommand command,
+        CancellationToken cancellationToken)
+    {
+        var order = await repository.GetByShipmentIdAsync(command.ShipmentId, cancellationToken);
+        if (order is null)
+        {
+            return null;
+        }
+
+        order.EnsureDeliveryAllowed();
+        await shippingClient.MarkDeliveredAsync(command.ShipmentId, cancellationToken);
+        order.MarkDelivered();
+        await repository.SaveChangesAsync(cancellationToken);
         return new FulfillmentCommandResponse(order.Id, order.Status.ToString());
     }
 }

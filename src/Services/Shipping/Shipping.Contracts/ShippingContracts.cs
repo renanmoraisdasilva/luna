@@ -53,3 +53,40 @@ public sealed record ShipmentResponse(
     string TrackingNumber,
     DateTimeOffset? DeliveredAt,
     ShipmentRecipientResponse Recipient);
+
+public sealed record ShipmentSummaryResponse(
+    Guid ShipmentId,
+    Guid OrderId,
+    Guid CustomerId,
+    string CustomerName,
+    string Destination,
+    string TrackingNumber,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? InTransitAt,
+    DateTimeOffset? DeliveredAt,
+    string AvailableAction);
+
+public sealed record ShipmentTrackingEventResponse(
+    Guid Id,
+    string Status,
+    DateTimeOffset OccurredAt);
+
+public sealed record ShipmentDetailResponse(
+    Guid ShipmentId,
+    Guid OrderId,
+    Guid CustomerId,
+    string TrackingNumber,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? InTransitAt,
+    DateTimeOffset? DeliveredAt,
+    ShipmentRecipientResponse Recipient,
+    IReadOnlyCollection<ShipmentTrackingEventResponse> TrackingEvents,
+    string AvailableAction);
+
+public sealed record ShipmentListResponse(
+    IReadOnlyCollection<ShipmentSummaryResponse> Items,
+    int TotalCount,
+    int Page,
+    int PageSize);

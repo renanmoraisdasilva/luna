@@ -41,6 +41,28 @@ public sealed class ShipmentHandlerTests
             .WithMessage("The shipping quote does not belong to the order.");
     }
 
+    [Fact]
+    public async Task Lifecycle_handlers_persist_in_transit_and_delivery_transitions()
+    {
+        var orderId = Guid.NewGuid();
+        var quoteId = Guid.NewGuid();
+        var repository = new FakeShipmentRepository();
+        var createHandler = new CreateShipmentHandler(new FakeQuoteRepository(orderId, quoteId), repository);
+        var created = await createHandler.HandleAsync(
+            new CreateShipmentCommand(orderId, quoteId, Recipient()),
+            CancellationToken.None);
+
+        var inTransit = await new MarkShipmentInTransitHandler(repository)
+            .HandleAsync(new MarkShipmentInTransitCommand(created.ShipmentId), CancellationToken.None);
+        var delivered = await new MarkShipmentDeliveredHandler(repository)
+            .HandleAsync(new MarkShipmentDeliveredCommand(created.ShipmentId), CancellationToken.None);
+
+        inTransit!.Status.Should().Be(nameof(ShipmentStatus.InTransit));
+        delivered!.Status.Should().Be(nameof(ShipmentStatus.Delivered));
+        repository.Shipment!.TrackingEvents.Select(trackingEvent => trackingEvent.Status)
+            .Should().Equal("Created", "InTransit", "Delivered");
+    }
+
     private static ShipmentRecipientCommand Recipient() => new(
         Guid.NewGuid(),
         "Jane Doe",
@@ -64,10 +86,15 @@ public sealed class ShipmentHandlerTests
         public Task<bool> ExistsByOrderIdAsync(Guid orderId, CancellationToken cancellationToken) =>
             Task.FromResult(Shipment?.OrderId == orderId);
 
+        public Task<Shipment?> GetByIdAsync(Guid shipmentId, CancellationToken cancellationToken) =>
+            Task.FromResult(Shipment?.Id == shipmentId ? Shipment : null);
+
         public Task AddAsync(Shipment shipment, CancellationToken cancellationToken)
         {
             Shipment = shipment;
             return Task.CompletedTask;
         }
+
+        public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

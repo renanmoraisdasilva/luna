@@ -18,17 +18,23 @@ public sealed class FulfillmentController : ControllerBase
     private readonly GetFulfillmentOrderHandler getOrder;
     private readonly PrepareFulfillmentOrderHandler prepareOrder;
     private readonly CreateShipmentHandler createShipment;
+    private readonly MarkShipmentInTransitHandler markShipmentInTransit;
+    private readonly MarkShipmentDeliveredHandler markShipmentDelivered;
 
     public FulfillmentController(
         GetFulfillmentQueueHandler getQueue,
         GetFulfillmentOrderHandler getOrder,
         PrepareFulfillmentOrderHandler prepareOrder,
-        CreateShipmentHandler createShipment)
+        CreateShipmentHandler createShipment,
+        MarkShipmentInTransitHandler markShipmentInTransit,
+        MarkShipmentDeliveredHandler markShipmentDelivered)
     {
         this.getQueue = getQueue;
         this.getOrder = getOrder;
         this.prepareOrder = prepareOrder;
         this.createShipment = createShipment;
+        this.markShipmentInTransit = markShipmentInTransit;
+        this.markShipmentDelivered = markShipmentDelivered;
     }
 
     [HttpGet]
@@ -78,6 +84,34 @@ public sealed class FulfillmentController : ControllerBase
     {
         var response = await createShipment.HandleAsync(
             new CreateShipmentCommand(orderId),
+            cancellationToken);
+        return response is null ? NotFound() : Ok(response);
+    }
+
+    [HttpPost("shipments/{shipmentId:guid}/in-transit")]
+    [ProducesResponseType<FulfillmentCommandResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<FulfillmentCommandResponse>> MarkShipmentInTransit(
+        Guid shipmentId,
+        CancellationToken cancellationToken)
+    {
+        var response = await markShipmentInTransit.HandleAsync(
+            new MarkShipmentInTransitCommand(shipmentId),
+            cancellationToken);
+        return response is null ? NotFound() : Ok(response);
+    }
+
+    [HttpPost("shipments/{shipmentId:guid}/delivered")]
+    [ProducesResponseType<FulfillmentCommandResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<FulfillmentCommandResponse>> MarkShipmentDelivered(
+        Guid shipmentId,
+        CancellationToken cancellationToken)
+    {
+        var response = await markShipmentDelivered.HandleAsync(
+            new MarkShipmentDeliveredCommand(shipmentId),
             cancellationToken);
         return response is null ? NotFound() : Ok(response);
     }

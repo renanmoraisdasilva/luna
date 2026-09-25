@@ -34,6 +34,7 @@ public sealed class Order
     public Guid? InventoryReservationId { get; private set; }
     public Guid? PaymentId { get; private set; }
     public Guid? ShippingQuoteId { get; private set; }
+    public Guid? ShipmentId { get; private set; }
     public OrderStatus Status { get; private set; }
     public string ShippingMethodCode { get; private set; } = string.Empty;
     public decimal ShippingCost { get; private set; }
@@ -132,6 +133,31 @@ public sealed class Order
     {
         EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);
         Status = OrderStatus.Shipped;
+    }
+
+    public void RecordShipment(Guid shipmentId)
+    {
+        if (shipmentId == Guid.Empty)
+        {
+            throw new ArgumentException("Shipment ID is required.", nameof(shipmentId));
+        }
+
+        if (ShipmentId is not null && ShipmentId != shipmentId)
+        {
+            throw new InvalidOperationException("The order already has a different shipment.");
+        }
+
+        ShipmentId = shipmentId;
+    }
+
+    public void EnsureStatusForShipmentInTransit() => EnsureStatus(OrderStatus.Shipped);
+
+    public void EnsureDeliveryAllowed() => EnsureStatus(OrderStatus.Shipped);
+
+    public void MarkDelivered()
+    {
+        EnsureStatus(OrderStatus.Shipped);
+        Status = OrderStatus.Delivered;
     }
 
     public void EnsureShipmentCreationAllowed() => EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);

@@ -196,6 +196,7 @@ public sealed class CheckoutHandlerTests
         public Order? Order { get; private set; }
         public Order? ExistingOrder { get; init; }
         public Task<Order?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken) => Task.FromResult<Order?>(null);
+        public Task<Order?> GetByShipmentIdAsync(Guid shipmentId, CancellationToken cancellationToken) => Task.FromResult<Order?>(null);
         public Task<Order?> GetByIdempotencyKeyAsync(Guid customerId, string idempotencyKey, CancellationToken cancellationToken) => Task.FromResult(ExistingOrder);
         public Task AddAsync(Order order, CancellationToken cancellationToken) { Order = order; return Task.CompletedTask; }
         public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
