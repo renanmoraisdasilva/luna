@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Luna.Orders.Domain;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Luna.IntegrationTests.Orders;
@@ -67,7 +68,15 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
         command.OrderStatus.Should().Be("Preparing");
 
         await using var db = fixture.CreateDbContext();
-        (await db.Orders.FindAsync(order.Id))!.Status.Should().Be(OrderStatus.Preparing);
+        var persistedOrder = await db.Orders
+            .Include(item => item.Items)
+            .SingleAsync(item => item.Id == order.Id);
+        persistedOrder.Status.Should().Be(OrderStatus.Preparing);
+        persistedOrder.Total.Should().Be(order.Total);
+        persistedOrder.Items.Select(item => new { item.ProductId, item.Sku, item.UnitPrice, item.Quantity, item.LineTotal })
+            .Should().BeEquivalentTo(order.Items.Select(item => new { item.ProductId, item.Sku, item.UnitPrice, item.Quantity, item.LineTotal }));
+        persistedOrder.PaymentId.Should().Be(order.PaymentId);
+        persistedOrder.InventoryReservationId.Should().Be(order.InventoryReservationId);
     }
 
     [Fact]
@@ -83,6 +92,9 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
         var response = await client.PostAsync($"/api/v1/orders/fulfillment/{order.Id}/prepare", content: null);
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        await using var db = fixture.CreateDbContext();
+        (await db.Orders.FindAsync(order.Id))!.Status.Should().Be(OrderStatus.Preparing);
     }
 
     [Fact]

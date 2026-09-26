@@ -72,6 +72,16 @@ public sealed record ShipmentTrackingEventResponse(
     string Status,
     DateTimeOffset OccurredAt);
 
+public sealed record ShipmentTrackingResponse(
+    Guid ShipmentId,
+    Guid OrderId,
+    string TrackingNumber,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? InTransitAt,
+    DateTimeOffset? DeliveredAt,
+    IReadOnlyCollection<ShipmentTrackingEventResponse> TrackingEvents);
+
 public sealed record ShipmentDetailResponse(
     Guid ShipmentId,
     Guid OrderId,

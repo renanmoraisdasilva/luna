@@ -246,7 +246,7 @@ The architecture and development foundation are established, including service b
 
 **Phase 1 — In closure**
 
-The synchronous commerce path and the initial Luna Ops fulfillment/shipment workflow are implemented. Closure now focuses on customer-facing shipment tracking, real cross-service lifecycle tests, and the final Docker-dependent quality gates before Phase 2 messaging work begins.
+The synchronous commerce path, customer shipment tracking, and the initial Luna Ops fulfillment/shipment workflow are implemented. Closure now focuses on the remaining real-boundary checkout failure matrix and the final Docker-dependent quality gates before Phase 2 messaging work begins.
 
 ---
 

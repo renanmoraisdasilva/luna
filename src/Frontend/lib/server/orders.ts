@@ -1,6 +1,7 @@
 import { getAccessToken } from '../auth-server';
 import type { CatalogProduct } from '../../types/catalog';
 import type { FulfillmentOrder, Order, OrderSummary } from '../api/orders';
+import type { ShipmentTracking } from '../api/shipping';
 
 function getHeaders(accessToken: string) {
   return { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' };
@@ -61,6 +62,26 @@ export async function getFulfillmentOrderById(orderId: string): Promise<Fulfillm
     throw new Error('Unable to load the fulfillment order.');
   }
   return response.json() as Promise<FulfillmentOrder>;
+}
+
+export async function getShipmentTracking(shipmentId: string): Promise<ShipmentTracking | null> {
+  const accessToken = await getAccessToken();
+  const shippingUrl = process.env.SHIPPING_API_INTERNAL_URL;
+  if (!accessToken || !shippingUrl) {
+    throw new Error('Shipping service is not configured.');
+  }
+
+  const response = await fetch(`${shippingUrl}/api/v1/shipments/${encodeURIComponent(shipmentId)}/tracking`, {
+    headers: getHeaders(accessToken),
+    cache: 'no-store',
+  });
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error('Unable to load shipment tracking.');
+  }
+  return response.json() as Promise<ShipmentTracking>;
 }
 
 export async function getOrderProducts(order: Order): Promise<Record<string, CatalogProduct>> {

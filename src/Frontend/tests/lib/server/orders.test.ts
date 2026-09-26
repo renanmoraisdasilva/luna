@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ getAccessToken: vi.fn() }));
 
 vi.mock('../../../lib/auth-server', () => ({ getAccessToken: mocks.getAccessToken }));
 
-import { getOrderById, getOrderProducts, getOrderSummaries } from '../../../lib/server/orders';
+import { getOrderById, getOrderProducts, getOrderSummaries, getShipmentTracking } from '../../../lib/server/orders';
 
 function response(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -17,6 +17,7 @@ describe('server order helpers', () => {
     mocks.getAccessToken.mockResolvedValue('access-token');
     vi.stubEnv('ORDERS_API_INTERNAL_URL', 'http://orders');
     vi.stubEnv('CATALOG_API_INTERNAL_URL', 'http://catalog');
+    vi.stubEnv('SHIPPING_API_INTERNAL_URL', 'http://shipping');
     vi.stubGlobal('fetch', vi.fn());
   });
 
@@ -48,6 +49,28 @@ describe('server order helpers', () => {
     await expect(getOrderById('missing')).resolves.toBeNull();
     await expect(getOrderById('broken')).rejects.toThrow('Unable to load the order.');
     expect(fetch).toHaveBeenNthCalledWith(1, 'http://orders/api/v1/orders/order%2F1', expect.any(Object));
+  });
+
+  it('loads customer-scoped shipment tracking and handles missing shipments', async () => {
+    const tracking = { shipmentId: 'shipment-1', status: 'InTransit', trackingNumber: 'LUNA-TRACK-1' };
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(response(200, tracking))
+      .mockResolvedValueOnce(response(404, {}));
+
+    await expect(getShipmentTracking('shipment/1')).resolves.toEqual(tracking);
+    await expect(getShipmentTracking('missing')).resolves.toBeNull();
+    expect(fetch).toHaveBeenNthCalledWith(1, 'http://shipping/api/v1/shipments/shipment%2F1/tracking', expect.objectContaining({
+      headers: { Authorization: 'Bearer access-token', Accept: 'application/json' },
+      cache: 'no-store',
+    }));
+  });
+
+  it('rejects when shipment tracking is unavailable or not configured', async () => {
+    vi.mocked(fetch).mockResolvedValue(response(503, {}));
+    await expect(getShipmentTracking('shipment-1')).rejects.toThrow('Unable to load shipment tracking.');
+
+    vi.stubEnv('SHIPPING_API_INTERNAL_URL', '');
+    await expect(getShipmentTracking('shipment-1')).rejects.toThrow('Shipping service is not configured.');
   });
 
   it('returns only catalog products that load successfully', async () => {

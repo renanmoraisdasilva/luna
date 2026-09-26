@@ -445,14 +445,14 @@ The initial Luna Ops workflow is also implemented: operators can review and filt
 
 The project also has a delivered observability foundation ahead of the original phase sequence: OpenTelemetry instrumentation, OTLP collection, SigNoz local infrastructure, host metrics, a tracked service-health dashboard, checkout stage logging, health checks, and a frontend SigNoz link. This is not yet the Phase 9 Operations Console or Phase 11 failure-injection tooling.
 
-Phase 1 closure is still pending because the repository does not yet prove the complete checkout, compensation, and fulfillment/shipment flows across real service boundaries. The customer order detail route is implemented, but it still needs shipment identifiers/status from Shipping rather than only the current order-status timeline. Docker-dependent integration, Compose smoke, and full build/coverage gates also need a current run. Frontend checkout error-state coverage is present and is no longer a closure blocker.
+Phase 1 closure is still pending because the repository does not yet prove the complete checkout and compensation failure matrix across real service boundaries. Customer order details now read customer-scoped shipment identifiers, status, and tracking events from Shipping, and real Orders/Shipping HTTP lifecycle tests cover fulfillment through delivery plus invalid and duplicate shipment transitions. Docker-dependent integration, Compose smoke, and full build/coverage gates also need a current run. Frontend checkout error-state coverage is present and is no longer a closure blocker.
 
 ### Phase position
 
 | Phase | Position | Notes |
 | --- | --- | --- |
 | 0 | Complete | Foundation, service boundaries, infrastructure, CI, and baseline security are implemented. |
-| 1 | In closure | Synchronous commerce path is implemented; cross-service proof and remaining UI failure-state verification are pending. |
+| 1 | In closure | Synchronous commerce path, customer tracking, and the Orders/Shipping lifecycle proof are implemented; checkout failure-matrix proof and Docker quality gates remain. |
 | 2-7 | Not started | Messaging, simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
 | 8 | Foundation delivered | Telemetry and local SigNoz are implemented; operational dashboards and workflows remain later work. |
 | 9-16 | Not started | Operations Console, redundancy, chaos, advanced security, production infrastructure, AWS, and scenario exercises remain future work. |
@@ -460,8 +460,7 @@ Phase 1 closure is still pending because the repository does not yet prove the c
 ### Next steps
 
 1. Add real cross-service integration or end-to-end coverage for successful checkout, insufficient inventory, payment failure with reservation release, shipment failure, and repeated idempotent checkout requests.
-2. Add the customer shipment read path and update the order detail UI to show tracking number/status and the rendering's lifecycle timeline without exposing Operations controls.
-3. Add real Orders/Shipping fulfillment and shipment lifecycle tests, then run the Docker-dependent integration suite, frontend build, Compose smoke checks, and coverage as one recorded quality gate.
-4. Close Phase 1 with an implementation review, then begin Phase 2 by introducing RabbitMQ around one bounded workflow while preserving synchronous HTTP where an immediate response is required.
+2. Run the Docker-dependent integration suite, frontend build, Compose smoke checks, and coverage as one recorded quality gate.
+3. Close Phase 1 with an implementation review, then begin Phase 2 by introducing RabbitMQ around one bounded workflow while preserving synchronous HTTP where an immediate response is required.
 
 RabbitMQ, asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.

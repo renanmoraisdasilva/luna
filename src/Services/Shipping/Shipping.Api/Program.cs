@@ -27,6 +27,11 @@ builder.Services.AddLunaJwtValidation(builder.Configuration);
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(
+        ShippingAuthorizationPolicies.Customer,
+        policy => policy
+            .AddAuthenticationSchemes(LunaAuthenticationDefaults.ValidationScheme)
+            .RequireAuthenticatedUser());
+    options.AddPolicy(
         LunaServicePolicies.OrdersShippingShipmentsWrite,
         policy => policy.RequireLunaService(
             LunaServiceClients.Orders,
@@ -46,6 +51,7 @@ builder.Services.AddScoped<QuoteShippingHandler>();
 builder.Services.AddScoped<CreateShipmentHandler>();
 builder.Services.AddScoped<GetShipmentsHandler>();
 builder.Services.AddScoped<GetShipmentHandler>();
+builder.Services.AddScoped<GetShipmentTrackingHandler>();
 builder.Services.AddScoped<MarkShipmentInTransitHandler>();
 builder.Services.AddScoped<MarkShipmentDeliveredHandler>();
 builder.Services.AddHealthChecks();

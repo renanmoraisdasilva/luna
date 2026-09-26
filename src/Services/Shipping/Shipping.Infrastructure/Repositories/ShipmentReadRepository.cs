@@ -56,6 +56,21 @@ public sealed class ShipmentReadRepository(ShippingDbContext db) : IShipmentRead
         return shipment is null ? null : MapDetail(shipment);
     }
 
+    public async Task<ShipmentTrackingResponse?> GetTrackingByIdAsync(
+        Guid shipmentId,
+        Guid customerId,
+        CancellationToken cancellationToken)
+    {
+        var shipment = await db.Shipments
+            .AsNoTracking()
+            .Include(value => value.TrackingEvents)
+            .SingleOrDefaultAsync(
+                value => value.Id == shipmentId && value.Recipient.CustomerId == customerId,
+                cancellationToken);
+
+        return shipment is null ? null : MapTracking(shipment);
+    }
+
     private static ShipmentSummaryResponse MapSummary(Shipment shipment)
     {
         var events = shipment.TrackingEvents.OrderBy(trackingEvent => trackingEvent.OccurredAt).ToArray();
@@ -99,6 +114,23 @@ public sealed class ShipmentReadRepository(ShippingDbContext db) : IShipmentRead
                 trackingEvent.Status,
                 trackingEvent.OccurredAt)).ToArray(),
             ShipmentResponseMapper.AvailableAction(shipment.Status));
+    }
+
+    private static ShipmentTrackingResponse MapTracking(Shipment shipment)
+    {
+        var events = shipment.TrackingEvents.OrderBy(trackingEvent => trackingEvent.OccurredAt).ToArray();
+        return new ShipmentTrackingResponse(
+            shipment.Id,
+            shipment.OrderId,
+            shipment.TrackingNumber,
+            shipment.Status.ToString(),
+            events[0].OccurredAt,
+            events.FirstOrDefault(trackingEvent => trackingEvent.Status == nameof(ShipmentStatus.InTransit))?.OccurredAt,
+            shipment.DeliveredAt,
+            events.Select(trackingEvent => new ShipmentTrackingEventResponse(
+                trackingEvent.Id,
+                trackingEvent.Status,
+                trackingEvent.OccurredAt)).ToArray());
     }
 
     private static IReadOnlyCollection<ShipmentStatus> ParseStatuses(string? status)

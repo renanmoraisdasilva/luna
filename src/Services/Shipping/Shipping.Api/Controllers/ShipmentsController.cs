@@ -14,6 +14,7 @@ public sealed class ShipmentsController(
     CreateShipmentHandler createShipment,
     GetShipmentsHandler getShipments,
     GetShipmentHandler getShipment,
+    GetShipmentTrackingHandler getShipmentTracking,
     MarkShipmentInTransitHandler markInTransit,
     MarkShipmentDeliveredHandler markDelivered) : ControllerBase
 {
@@ -34,6 +35,23 @@ public sealed class ShipmentsController(
         CancellationToken cancellationToken)
     {
         var response = await getShipment.HandleAsync(shipmentId, cancellationToken);
+        return response is null ? NotFound() : Ok(response);
+    }
+
+    [HttpGet("{shipmentId:guid}/tracking")]
+    [Authorize(AuthenticationSchemes = LunaAuthenticationDefaults.ValidationScheme, Policy = ShippingAuthorizationPolicies.Customer)]
+    [ProducesResponseType<ShipmentTrackingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ShipmentTrackingResponse>> GetTracking(
+        Guid shipmentId,
+        CancellationToken cancellationToken)
+    {
+        if (!User.TryGetSubjectId(out var customerId))
+        {
+            throw new InvalidOperationException("The authenticated customer ID is missing or invalid.");
+        }
+
+        var response = await getShipmentTracking.HandleAsync(shipmentId, customerId, cancellationToken);
         return response is null ? NotFound() : Ok(response);
     }
 

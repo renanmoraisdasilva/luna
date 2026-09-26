@@ -59,6 +59,7 @@ export type Order = {
   id: string;
   customerId: string;
   status: string;
+  shipmentId?: string | null;
   subtotal: number;
   shippingCost: number;
   total: number;

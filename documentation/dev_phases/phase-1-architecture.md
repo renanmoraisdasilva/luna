@@ -26,7 +26,7 @@ Phase 1 architecture should preserve the service boundaries established in Phase
 
 ## Implementation status
 
-**Substantially implemented; closure pending cross-service verification as of 2026-09-26.** The current implementation follows this architecture for the synchronous commerce path and the initial Luna Ops fulfillment/shipment workflow, including the Next.js thin gateway, service-owned contracts and persistence, Orders application orchestration, local JWT validation, authenticated service clients, checkout idempotency, and CQRS-style read/write boundaries. OpenTelemetry and local SigNoz infrastructure are also implemented as an early cross-cutting capability. Customer shipment reads and cross-service integration or end-to-end workflow coverage remain the main Phase 1 gaps.
+**Substantially implemented; closure pending cross-service verification as of 2026-09-26.** The current implementation follows this architecture for the synchronous commerce path, customer shipment tracking, and the initial Luna Ops fulfillment/shipment workflow, including the Next.js thin gateway, service-owned contracts and persistence, Orders application orchestration, local JWT validation, authenticated service clients, checkout idempotency, and CQRS-style read/write boundaries. OpenTelemetry and local SigNoz infrastructure are also implemented as an early cross-cutting capability. The remaining Phase 1 gaps are the complete real-boundary checkout failure matrix and Docker-backed quality-gate execution.
 
 # 2. Service Boundaries
 
@@ -623,5 +623,5 @@ Distributed tracing and metrics are no longer deferred at the foundation level: 
 
 - [x] Aggregate invariants have focused unit tests.
 - [x] Persistence behavior has integration tests against real database infrastructure.
-- [ ] Cross-service workflows have integration or end-to-end coverage (the current checkout test substitutes downstream HTTP clients with test handlers).
+- [ ] Cross-service workflows have complete integration or end-to-end coverage (the Orders/Shipping lifecycle now uses real HTTP test servers; checkout still substitutes downstream HTTP clients with test handlers).
 - [x] Architecture changes are reviewed against the bounded-context and ownership rules above.

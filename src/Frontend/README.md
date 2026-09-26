@@ -206,7 +206,6 @@ Server-side OpenTelemetry uses the standard `OTEL_EXPORTER_OTLP_ENDPOINT` and `O
 
 The frontend does not yet implement:
 
-- Customer shipment data in the order detail response and tracking view
 - A real browser-level Playwright workflow
 - Production analytics or monitoring
 

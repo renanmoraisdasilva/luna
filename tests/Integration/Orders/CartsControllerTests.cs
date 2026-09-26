@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenIddict.Abstractions;
 using System.Net.Http.Json;
 using Xunit;
 
@@ -113,6 +114,7 @@ internal sealed class TestAuthenticationHandler(
 {
     public const string CustomerHeader = "X-Test-Customer";
     public const string AdminHeader = "X-Test-Admin";
+    public const string ServiceHeader = "X-Test-Service";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -121,6 +123,15 @@ internal sealed class TestAuthenticationHandler(
             var adminIdentity = new ClaimsIdentity(Scheme.Name);
             adminIdentity.AddClaim(new Claim(LunaAuthentication.RoleClaim, "Admin"));
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(adminIdentity), Scheme.Name)));
+        }
+
+        if (Request.Headers.TryGetValue(ServiceHeader, out var serviceValue)
+            && serviceValue.ToString().Equals(Luna.Contracts.Authentication.LunaServiceClients.Orders, StringComparison.Ordinal))
+        {
+            var serviceIdentity = new ClaimsIdentity(Scheme.Name);
+            serviceIdentity.AddClaim(new Claim(OpenIddictConstants.Claims.ClientId, Luna.Contracts.Authentication.LunaServiceClients.Orders));
+            serviceIdentity.AddClaim(new Claim(OpenIddictConstants.Claims.Scope, Luna.Contracts.Authentication.LunaServiceScopes.ShippingShipmentsWrite));
+            return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(serviceIdentity), Scheme.Name)));
         }
 
         if (!Request.Headers.TryGetValue(CustomerHeader, out var value)

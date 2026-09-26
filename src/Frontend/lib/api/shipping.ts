@@ -50,6 +50,17 @@ export type ShipmentTrackingEvent = {
   occurredAt: string;
 };
 
+export type ShipmentTracking = {
+  shipmentId: string;
+  orderId: string;
+  trackingNumber: string;
+  status: ShipmentStatus;
+  createdAt: string;
+  inTransitAt?: string | null;
+  deliveredAt?: string | null;
+  trackingEvents: ShipmentTrackingEvent[];
+};
+
 export type ShipmentDetail = {
   shipmentId: string;
   orderId: string;

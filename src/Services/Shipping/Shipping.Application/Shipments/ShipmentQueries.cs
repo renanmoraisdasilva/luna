@@ -9,6 +9,7 @@ public interface IShipmentReadRepository
 {
     Task<ShipmentListResponse> GetListAsync(ShipmentQuery query, CancellationToken cancellationToken);
     Task<ShipmentDetailResponse?> GetByIdAsync(Guid shipmentId, CancellationToken cancellationToken);
+    Task<ShipmentTrackingResponse?> GetTrackingByIdAsync(Guid shipmentId, Guid customerId, CancellationToken cancellationToken);
 }
 
 public sealed class GetShipmentsHandler(IShipmentReadRepository repository)
@@ -48,4 +49,13 @@ public static class ShipmentResponseMapper
         ShipmentStatus.InTransit => "MarkDelivered",
         _ => "None",
     };
+}
+
+public sealed class GetShipmentTrackingHandler(IShipmentReadRepository repository)
+{
+    public Task<ShipmentTrackingResponse?> HandleAsync(
+        Guid shipmentId,
+        Guid customerId,
+        CancellationToken cancellationToken) =>
+        repository.GetTrackingByIdAsync(shipmentId, customerId, cancellationToken);
 }

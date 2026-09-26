@@ -46,7 +46,7 @@ Phase 1 does **not** attempt to solve distributed reliability.
 
 ## Implementation status
 
-**Substantially implemented; closure pending cross-service proof as of 2026-09-26.** The repository contains the required catalog, cart, authentication, checkout, order history/detail, inventory, payment authorization, fulfillment, shipping, Luna Ops, and customer frontend surfaces. Checkout also has customer-scoped idempotency for repeated requests using the same `Idempotency-Key`, and frontend checkout error-state coverage is present. The current checkout integration test verifies Orders orchestration with HTTP boundary handlers; a complete workflow across real service persistence boundaries, customer shipment tracking, and the fulfillment/shipment lifecycle integration tests remain outstanding.
+**Substantially implemented; closure pending cross-service proof as of 2026-09-26.** The repository contains the required catalog, cart, authentication, checkout, order history/detail, inventory, payment authorization, fulfillment, shipping, Luna Ops, and customer frontend surfaces. Checkout also has customer-scoped idempotency for repeated requests using the same `Idempotency-Key`, and frontend checkout error-state coverage is present. Customer shipment tracking and real Orders/Shipping fulfillment-to-delivery HTTP integration tests are implemented, including invalid and duplicate shipment transitions. The remaining gaps are the complete real-boundary checkout failure matrix and Docker-backed quality-gate execution.
 
 ---
 
@@ -1043,9 +1043,10 @@ POST /api/v1/payments/authorize
 GET  /api/v1/shipping-methods
 POST /api/v1/quotes
 POST /api/v1/shipments
+GET  /api/v1/shipments/{id}/tracking
 ```
 
-Shipping must also expose operations for listing and retrieving shipments and for marking a shipment `InTransit` or `Delivered`. Creating a shipment for an order and advancing the associated order to `Shipped` is one logical workflow from the Operations user's perspective; the frontend must not coordinate separate order and shipment state-changing requests.
+Shipping must also expose operations for listing and retrieving shipments and for marking a shipment `InTransit` or `Delivered`. Customer-authenticated users may read tracking for their own shipment only; the response must not expose the recipient or address snapshot. Creating a shipment for an order and advancing the associated order to `Shipped` is one logical workflow from the Operations user's perspective; the frontend must not coordinate separate order and shipment state-changing requests.
 
 ---
 # 15. Failure Model
@@ -1331,7 +1332,7 @@ The test must use the real service persistence boundaries rather than directly m
 - [x] SPEC-FE-004 - Error behavior
 - [x] SPEC-FE-005 - Operations fulfillment UI
 - [x] SPEC-FE-006 - Operations shipment UI
-- [ ] SPEC-FE-007 - Customer shipment tracking
+- [x] SPEC-FE-007 - Customer shipment tracking
 
 ## Database
 
@@ -1345,5 +1346,5 @@ The test must use the real service persistence boundaries rather than directly m
 - [x] SPEC-TEST-002 - Catalog reads
 - [ ] SPEC-TEST-003 - Cross-service behavior across real service boundaries
 - [x] SPEC-TEST-004 - Coverage collection and quality-gate reporting
-- [ ] SPEC-TEST-005 - Fulfillment lifecycle integration test
-- [ ] SPEC-TEST-006 - Shipment lifecycle integration test
+- [x] SPEC-TEST-005 - Fulfillment lifecycle integration test
+- [x] SPEC-TEST-006 - Shipment lifecycle integration test

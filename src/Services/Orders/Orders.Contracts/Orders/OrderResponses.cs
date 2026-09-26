@@ -11,6 +11,7 @@ public sealed record OrderResponse(
     Guid Id,
     Guid CustomerId,
     string Status,
+    Guid? ShipmentId,
     decimal Subtotal,
     decimal ShippingCost,
     decimal Total,
