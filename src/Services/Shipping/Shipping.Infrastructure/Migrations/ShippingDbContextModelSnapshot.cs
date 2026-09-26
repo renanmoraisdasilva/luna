@@ -134,7 +134,6 @@ namespace Luna.Shipping.Infrastructure.Migrations
             modelBuilder.Entity("Luna.Shipping.Domain.TrackingEvent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("OccurredAt")

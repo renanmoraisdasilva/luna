@@ -18,6 +18,7 @@
     <ProjectReference Include="../../src/Services/Payments/Payments.Domain/Payments.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Application/Shipping.Application.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Domain/Shipping.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Shipping/Shipping.Infrastructure/Shipping.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
     <ProjectReference Include="../../src/Shared/Luna.Authentication/Luna.Authentication.csproj" />
     <ProjectReference Include="../../src/Shared/Luna.Observability/Luna.Observability.csproj" />
@@ -25,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.22" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
