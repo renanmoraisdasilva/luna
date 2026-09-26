@@ -221,7 +221,7 @@ Shipping owns the rate calculation. Orders snapshots the resulting shipping cost
 | Frontend testing | Vitest, Testing Library, Playwright |
 | Messaging | RabbitMQ |
 | Infrastructure | Docker, Docker Compose |
-| Observability | OpenTelemetry, Prometheus, Grafana, structured logging |
+| Observability | OpenTelemetry, SigNoz, structured logging |
 | Testing | xUnit, FluentAssertions, Moq, Testcontainers, Playwright |
 | Cloud | AWS equivalents explored in later phases |
 
@@ -319,7 +319,7 @@ Frontend rendering and data-fetching boundaries:
 
 ### Phase 8: Observability
 
-**Goal:** Add structured logs, distributed traces, metrics, and health checks using OpenTelemetry, Prometheus, and Grafana.
+**Goal:** Add structured logs, distributed traces, metrics, and health checks using OpenTelemetry and SigNoz.
 
 Track order and payment durations, failures, queue depth, DLQ size, and correlation and trace IDs.
 

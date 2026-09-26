@@ -85,7 +85,6 @@ jobs:
 
       - name: Validate production deployment files
         run: |
-          bash -n infrastructure/update.sh
           LUNA_IMAGE_TAG=ci docker compose \
             --env-file infrastructure/.env.example \
             -f infrastructure/docker-compose.prod.yml \

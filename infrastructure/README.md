@@ -1,17 +1,17 @@
 # Infrastructure
 
-This directory contains Luna's container definitions and deployment scripts.
+This directory contains Luna's container definitions, local Compose stacks, and observability tooling.
 
 ## Compose Files
 
 - `docker-compose.yml` provides the base local stack.
 - `docker-compose.dev.yml` exposes backend service ports for local development.
-- `docker-compose.prod.yml` is the application half of the production Compose definition. The server receives it from the published frontend image; server-only values stay in `/opt/luna/.env`.
-- `docker-compose.observability.yml` remains a local-development compatibility file during migration. Production SigNoz is owned by the separate `server-infra` repository.
+- `docker-compose.prod.yml` is the production Compose definition. Dokploy reads it directly from this repository; server-only values are supplied through the Dokploy application environment.
+- `docker-compose.observability.yml` is a local-development compatibility file. Production SigNoz is owned by the separate `server-infra` repository.
 
-Important: the production server must have a real `/opt/luna/.env` file before running the updater. Compose uses it for `${...}` substitutions. If it is missing or malformed, the deployment is rejected before containers are changed.
+Important: `docker-compose.prod.yml` uses `${...}` substitutions and required-value checks (`${VAR:?...}`). Compose rejects the deployment when a required value is missing or malformed, so every required variable must be present in the Dokploy application environment before the stack starts.
 
-A sample file is provided at `.env.example` for reference. Copy it to `/opt/luna/.env` on the server and replace the example values with the real database connection strings.
+A sample file is provided at `.env.example` for reference. Use it as the checklist of required values when configuring the application environment in Dokploy, replacing the example values with the real database connection strings.
 
 `ORDERS_SERVICE_CLIENT_SECRET` must be a long random secret shared only by Identity and Orders. It is used to issue and validate Orders' service-to-service tokens.
 
@@ -53,59 +53,45 @@ SIGNOZ_API_TOKEN='paste-token-in-your-shell-only' \
    bash infrastructure/observability/provision-luna-dashboard.sh
 ```
 
-## Deployment Synchronization
+## Deployment
 
-The frontend image packages the production application deployment files under `/opt/luna-deployment/`. The server-side updater pulls that image first, extracts the application Compose file into an immutable release directory, validates it, then pulls and starts the Luna application stack. Production SigNoz is reconciled separately by `server-infra`.
+Luna is deployed by Dokploy, the only application deployment authority (Ansible
+provisions it in the `server-infra` repository). Dokploy reads
+`infrastructure/docker-compose.prod.yml` straight from this repository, supplies
+the application environment, and pulls the service images from GHCR by
+immutable commit-SHA tag. Health checks, Swarm updates, and rollback live in
+Dokploy's application configuration, not in this repository. Production SigNoz
+is reconciled separately by `server-infra`.
 
 ```text
 Git repo
    |
    v
-Luna CI
+Luna CI (build, unit + integration tests, frontend checks, Compose smoke check)
    |
    v
-Docker Publish
+Docker Publish -> GHCR (luna-frontend, luna-identity, ... tagged by commit SHA)
    |
-   +-- luna-frontend
-   |      \-- /opt/luna-deployment/
-   |             +-- docker-compose.prod.yml
-   |             \-- update.sh
+   v
+Dokploy compose project
    |
-   \-- other Luna images
-          |
-          v
-         GHCR
-          |
-          v
-      Luna server
-          |
-          v
-   pull frontend image
-          |
-          v
- stage immutable release
-          |
-          v
- validate application Compose configuration
-          |
-          v
- pull all service images
-          |
-          v
- docker compose up --wait and verify frontend health
+   +-- reads infrastructure/docker-compose.prod.yml from this repository
+   +-- injects the application environment (secrets, LUNA_IMAGE_TAG, OTLP endpoints)
+   +-- pulls the images by commit-SHA tag
+   +-- runs the Compose health checks and owns deployment history and rollback
 ```
 
-`update.sh` is the versioned source for the updater. On the server, `/opt/luna/update.sh` follows `/opt/luna/current/update.sh`, while `/opt/luna/current` points to the last release that passed validation and health checks. Previous releases remain under `/opt/luna/releases/` for rollback.
+To ship a new release:
 
-The updater uses the fixed Compose project name `luna`, validates the production application configuration before changing containers, waits for Compose health checks, and probes the frontend health endpoint before activating the release.
+1. Merge to `main` and let Luna CI pass; the Docker Publish workflow pushes every image tagged with that commit SHA.
+2. Set `LUNA_IMAGE_TAG` to the new SHA in the Dokploy application environment.
+3. Deploy from Dokploy (or let the configured webhook trigger it) and confirm the frontend health check passes.
 
-To inspect the active release on the server:
+The application is published on host port `3001`. Services export OTLP to the
+shared SigNoz collector on the host (`4317` gRPC, `4318` HTTP), and the SigNoz
+UI is served from the infrastructure host on `8080`. Dokploy retains host ports
+`80`, `443`, and `3000`.
 
-```bash
-readlink -f /opt/luna/current
-docker compose \
-   --project-name luna \
-   --env-file /opt/luna/.env \
-   -f /opt/luna/current/docker-compose.prod.yml \
-   ps
-```
+To inspect a deployment, use Dokploy's deployment view for status, history, and
+rollback; `docker compose ps` inside the project directory on the server shows
+the same container state.

@@ -23,7 +23,7 @@
 - `src/Services/` contains the backend services and their bounded contexts.
 - `src/Frontend/` contains the Next.js customer application and gateway.
 - `tests/Unit/`, `tests/Integration/`, and `tests/Smoke/` contain the centralized test suites.
-- `infrastructure/` contains Docker Compose files, Dockerfiles, environment examples, and deployment scripts.
+- `infrastructure/` contains Docker Compose files, Dockerfiles, environment examples, and observability configuration.
 - `.github/workflows/` contains CI validation and Docker image publishing workflows.
 - `scripts/` contains project helper scripts.
 
