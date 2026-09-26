@@ -46,7 +46,7 @@ Phase 1 does **not** attempt to solve distributed reliability.
 
 ## Implementation status
 
-**Substantially implemented; closure pending cross-service proof as of 2026-09-19.** The repository contains the required catalog, cart, authentication, checkout, order history/detail, inventory, payment authorization, fulfillment, shipping, and customer frontend surfaces. Checkout also has customer-scoped idempotency for repeated requests using the same `Idempotency-Key`. Unit, persistence integration, frontend, build, and coverage checks exist, but a complete checkout and compensation workflow has not yet been demonstrated by a cross-service integration or end-to-end test.
+**Substantially implemented; closure pending cross-service proof as of 2026-09-26.** The repository contains the required catalog, cart, authentication, checkout, order history/detail, inventory, payment authorization, fulfillment, shipping, Luna Ops, and customer frontend surfaces. Checkout also has customer-scoped idempotency for repeated requests using the same `Idempotency-Key`, and frontend checkout error-state coverage is present. The current checkout integration test verifies Orders orchestration with HTTP boundary handlers; a complete workflow across real service persistence boundaries, customer shipment tracking, and the fulfillment/shipment lifecycle integration tests remain outstanding.
 
 ---
 
@@ -107,7 +107,7 @@ Phase 1 behavior is intentionally limited to:
 - no customer cancellation
 - no anonymous cart or checkout
 
-Distributed reliability concerns such as messaging, retries, idempotency, outbox processing, compensation, and distributed recovery are outside this phase.
+Distributed reliability concerns such as messaging, retries, outbox processing, compensation after timeouts, and distributed recovery are outside this phase. Request-level checkout idempotency is implemented as a Phase 1 safety feature; distributed idempotency and recovery remain future work.
 
 # 3. Catalog
 
@@ -1173,7 +1173,7 @@ The phase is also complete when:
 * [x] concurrency behavior is tested for inventory
 * [x] customer frontend implements the required routes
 * [x] authentication works
-* [ ] checkout works end-to-end
+* [ ] checkout works end-to-end across real service boundaries
 * [x] failure scenarios emit structured application and telemetry signals
 * [x] Phase 2 can introduce asynchronous messaging without redesigning the basic commerce model
 
@@ -1304,10 +1304,10 @@ The test must use the real service persistence boundaries rather than directly m
 - [x] SPEC-SHIP-002 - Quote ownership
 - [x] SPEC-SHIP-003 - Shipping snapshot
 - [x] SPEC-SHIP-004 - Shipment
-- [ ] SPEC-SHIP-005 - Create shipment from preparing order
-- [ ] SPEC-SHIP-006 - Shipment created state
-- [ ] SPEC-SHIP-007 - Mark shipment in transit
-- [ ] SPEC-SHIP-008 - Mark shipment delivered
+- [x] SPEC-SHIP-005 - Create shipment from preparing order
+- [x] SPEC-SHIP-006 - Shipment created state
+- [x] SPEC-SHIP-007 - Mark shipment in transit
+- [x] SPEC-SHIP-008 - Mark shipment delivered
 
 ## Payments
 
@@ -1320,17 +1320,17 @@ The test must use the real service persistence boundaries rather than directly m
 
 - [x] SPEC-FUL-001 - Fulfillment remains inside Orders
 - [x] SPEC-FUL-002 - Prepare order
-- [ ] SPEC-FUL-003 - Operations fulfillment queue
-- [ ] SPEC-FUL-004 - Start preparing order
+- [x] SPEC-FUL-003 - Operations fulfillment queue
+- [x] SPEC-FUL-004 - Start preparing order
 
 ## Frontend
 
 - [x] SPEC-FE-001 - Customer routes
 - [x] SPEC-FE-002 - Public catalog behavior
 - [x] SPEC-FE-003 - Interactive behavior
-- [ ] SPEC-FE-004 - Error behavior
-- [ ] SPEC-FE-005 - Operations fulfillment UI
-- [ ] SPEC-FE-006 - Operations shipment UI
+- [x] SPEC-FE-004 - Error behavior
+- [x] SPEC-FE-005 - Operations fulfillment UI
+- [x] SPEC-FE-006 - Operations shipment UI
 - [ ] SPEC-FE-007 - Customer shipment tracking
 
 ## Database
@@ -1343,7 +1343,7 @@ The test must use the real service persistence boundaries rather than directly m
 
 - [x] SPEC-TEST-001 - Business behavior
 - [x] SPEC-TEST-002 - Catalog reads
-- [ ] SPEC-TEST-003 - Cross-service behavior
+- [ ] SPEC-TEST-003 - Cross-service behavior across real service boundaries
 - [x] SPEC-TEST-004 - Coverage collection and quality-gate reporting
 - [ ] SPEC-TEST-005 - Fulfillment lifecycle integration test
 - [ ] SPEC-TEST-006 - Shipment lifecycle integration test

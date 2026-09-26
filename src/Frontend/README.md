@@ -1,10 +1,10 @@
 # Luna Frontend
 
-The Luna frontend is the customer-facing web application for the commerce and logistics simulation. It is intentionally small during Phase 0: the project establishes the UI foundation, frontend tooling, service configuration, and unified API documentation before commerce workflows are implemented.
+The Luna frontend is the Next.js customer storefront and Operations gateway for the commerce and logistics simulation. It provides the Phase 1 synchronous commerce experience and the initial admin-only Luna Ops fulfillment and shipment workflows.
 
 ## Responsibilities
 
-The frontend will eventually provide:
+The frontend provides:
 
 - Product browsing, searching, and filtering
 - Cart management
@@ -12,11 +12,14 @@ The frontend will eventually provide:
 - Order history and order details
 - Order progress and delivery tracking
 - Customer authentication
-- Access to the operations experience in later phases
+- Admin-only fulfillment and shipment operations
 
-The current scaffold provides:
+The current implementation provides:
 
-- A blank application entry point reserved for the product design
+- Server-rendered catalog browsing, search, filtering, pagination, and product details
+- Authenticated cart, checkout, order history, order details, account, login, and registration flows
+- Customer-friendly checkout validation and downstream error states
+- Admin-only fulfillment and shipment queues, detail views, and lifecycle commands
 - A unified Swagger API explorer at `/swagger`
 - Proxy rewrites for the six backend OpenAPI documents
 - A thin same-origin gateway for service API calls
@@ -29,8 +32,8 @@ The current scaffold provides:
 | Framework | Next.js 16 | React framework and application runtime |
 | UI | React 18 | Component-based user interface |
 | Language | TypeScript | Static typing and safer frontend contracts |
-| Server state | TanStack Query | Planned API fetching, caching, mutations, and synchronization |
-| HTTP client | Axios | Planned centralized HTTP transport |
+| Server state | TanStack Query | API fetching, caching, mutations, and synchronization |
+| HTTP client | Axios | Centralized browser-side service transport |
 | API documentation | Swagger UI React | Unified browsing of service OpenAPI documents |
 | Runtime | Node.js 22 | Local and container runtime |
 | Container | Docker, `node:22-alpine` | Reproducible production image |
@@ -40,9 +43,12 @@ The current scaffold provides:
 ```text
 src/Frontend/
 ├── app/
-│   ├── globals.css                 Swagger page styles and global reset
+│   ├── (store)/                    Customer storefront routes
+│   ├── operations/                 Admin fulfillment and shipment routes
+│   ├── api/                        Auth, health, and gateway routes
+│   ├── globals.css                 Shared design tokens and global styles
 │   ├── layout.tsx                  Root layout and metadata
-│   ├── page.tsx                    Blank application entry point
+│   ├── page.tsx                    Storefront entry point
 │   └── swagger/
 │       ├── page.tsx                API explorer route
 │       └── SwaggerExplorer.tsx     Client-side service selector and Swagger UI
@@ -196,17 +202,12 @@ Server-side OpenTelemetry uses the standard `OTEL_EXPORTER_OTLP_ENDPOINT` and `O
 | `npm run start` | Run the previously built production application |
 | `npm run lint` | Run the configured lint command |
 
-## Phase 0 Boundaries
+## Current boundaries and remaining work
 
-This frontend does not yet implement:
+The frontend does not yet implement:
 
-- Product or order API clients
-- Typed service clients through the thin gateway
-- Authentication screens or token handling
-- Cart state and checkout
-- TanStack Query providers
-- Operations dashboards
-- E2E tests with Playwright
+- Customer shipment data in the order detail response and tracking view
+- A real browser-level Playwright workflow
 - Production analytics or monitoring
 
-Those pieces belong to later implementation phases. The current gateway deliberately forwards backend contracts without DTO aggregation or mapping. A real BFF should be introduced only if a demonstrated frontend or operations-console problem justifies it.
+The current gateway deliberately forwards backend contracts without DTO aggregation or mapping. A real BFF should be introduced only if a demonstrated frontend or operations-console problem justifies it.

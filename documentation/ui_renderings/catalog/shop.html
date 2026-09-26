@@ -186,14 +186,14 @@
 <!-- TopNavBar -->
 <header class="bg-[#fbf9fa] fixed top-0 w-full z-50 border-b border-[#e5e7eb] h-4xl flex justify-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
 <div class="w-full flex justify-between items-center px-lg md:px-xl h-full max-w-[1280px] mx-auto relative">
-<a class="font-display text-display font-bold text-primary" href="1-front-page.html">Luna</a>
+<a class="font-display text-display font-bold text-primary" href="../catalog/shop.html">Luna</a>
 <nav class="hidden md:flex gap-2xl h-full items-center absolute left-1/2 -translate-x-1/2">
-<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="1-front-page.html">Shop</a>
-<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="6-my-order-page.html">Orders</a>
-<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="8-account-page.html">Account</a>
+<a class="text-on-background font-bold border-b-2 border-on-background h-full flex items-center pt-xs" href="../catalog/shop.html">Shop</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="../orders/order-list.html">Orders</a>
+<a class="text-[#6b7280] hover:text-[#253347] transition-colors duration-200 h-full flex items-center" href="../account/account.html">Account</a>
 </nav>
 <div class="flex items-center">
-<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='3-cart-page.html'">
+<button class="p-xs rounded-button hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center text-primary cursor-pointer active:opacity-80 relative" onclick="window.location.href='../cart/cart.html'">
 <span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
 <span class="absolute -top-xs -right-xs bg-[#253347] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
 </button>
@@ -247,7 +247,7 @@ Available
 <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-lg" data-alt="A sleek, minimalist wireless mechanical keyboard resting on a pristine white desk surface. The lighting is soft and diffused, emphasizing the matte finish of the keycaps and the subtle metallic edge of the chassis. High-end professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFGN799KVPKCnL1dAPhO45InPAFHAk3DHkvytGGtcgxWhI0qKED0ChyRprEryrbf-iUr8o1YIWRaY3BedJDBGDVD7QEOXKdeiV_Kf_P9yHpSZ0TJ3tcg4ZYFYB7JCkcQbcDASb1z1l3AmB9UfI8aJCZqQPWTKrbPNKzGs4vpW8BrlHtJ_ZRFUvz6NmLsZgQ83W3Iaz6jIUSLhkV1dbgJd1kPmvOEAeeYLir7I1qIIuIpFnUoCNsIYc">
 </div>
 <div class="p-lg flex flex-col flex-grow">
-<a class="font-product-title text-product-title text-on-surface hover:text-primary mb-xs" href="2-details-page.html">Wireless Mechanical Keyboard</a>
+<a class="font-product-title text-product-title text-on-surface hover:text-primary mb-xs" href="../catalog/product-details.html">Wireless Mechanical Keyboard</a>
 <p class="font-body-md text-body-md text-on-surface-variant mb-lg">$129.00</p>
 <button class="mt-auto w-full h-control py-sm rounded-button bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors active:scale-[0.98] uppercase">Add to Cart</button>
 </div>
@@ -371,7 +371,7 @@ Available
 <script>
         document.querySelectorAll('button').forEach((button) => {
                 if (button.textContent.trim() === 'Add to Cart') {
-                        button.onclick = () => { window.location.href = '3-cart-page.html'; };
+                        button.onclick = () => { window.location.href = '../cart/cart.html'; };
                 }
         });
 </script>

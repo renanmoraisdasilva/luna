@@ -244,9 +244,9 @@ RabbitMQ is intentionally not part of Phase 0; it is introduced in Phase 2.
 
 The architecture and development foundation are established, including service boundaries, databases, containerization, configuration, API conventions, health checks, logging, testing foundations, and the frontend foundation.
 
-**Phase 1 — Next**
+**Phase 1 — In closure**
 
-The focus is the first complete customer commerce experience: catalog, anonymous cart, authentication where required, checkout, orders, payments, inventory, fulfillment, shipping, and the customer-facing order lifecycle.
+The synchronous commerce path and the initial Luna Ops fulfillment/shipment workflow are implemented. Closure now focuses on customer-facing shipment tracking, real cross-service lifecycle tests, and the final Docker-dependent quality gates before Phase 2 messaging work begins.
 
 ---
 
@@ -255,7 +255,7 @@ The focus is the first complete customer commerce experience: catalog, anonymous
 The repository separates **what Luna is**, **where it is going**, and **how each phase is designed**.
 
 - [Roadmap](documentation/roadmap.md) — Project vision and progression
-- [Phase 0 Design](documentation/phase-0-design.md) — Foundation and architectural decisions
+- [Phase 0 Design](documentation/dev_phases/phase-0-design.md) — Foundation and architectural decisions
 - [Phase 1 Specification](documentation/dev_phases/phase-1-spec.md) — Basic commerce flow requirements and decisions
 - [Phase 1 Architecture](documentation/dev_phases/phase-1-architecture.md) — Technical design, boundaries, and architectural decisions
 - [Observability](documentation/observability.md) — OpenTelemetry, OTLP, SigNoz, and checkout trace verification

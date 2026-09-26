@@ -1,6 +1,6 @@
 # Luna Ops - Fulfillment and Shipment Workflow Architecture
 
-**Status:** Proposed  
+**Status:** Implemented; lifecycle integration verification pending
 **Scope:** Phase 1 - Luna Ops  
 **Applies to:** Orders, Shipping, Operations UI, and customer order tracking  
 **Primary concern:** Service boundaries and workflow orchestration
@@ -592,10 +592,10 @@ In compact form:
 
 # 18. Initial Implementation Checklist
 
-- [ ] Orders fulfillment queue read model and endpoint
-- [ ] Orders fulfillment order detail read model and endpoint
-- [ ] `Confirmed -> Preparing` application command
-- [ ] Orders-coordinated shipment creation command
+- [x] Orders fulfillment queue read model and endpoint
+- [x] Orders fulfillment order detail read model and endpoint
+- [x] `Confirmed -> Preparing` application command
+- [x] Orders-coordinated shipment creation command
 - [x] Shipping shipment lifecycle commands
 - [x] `Shipped -> Delivered` coordination
 - [x] Operations authorization policy

@@ -7,16 +7,17 @@
 - Phase specifications describe what the system must do: business behavior, API capabilities, failure scenarios, and acceptance criteria.
 - Phase architecture documents describe how the system is built: service boundaries, database ownership, backend layering, frontend architecture, authentication, persistence, testing, and architectural decisions.
 - `documentation/ui_renderings/` contains the HTML UI references for the planned customer experience. Use these when implementing or reviewing frontend screens:
-  - `1-front-page.html` - storefront
-  - `2-details-page.html` - product details
-  - `3-cart-page.html` - cart
-  - `4-checkout-page.html` - checkout
-  - `5-order-successful.html` - order confirmation
-  - `6-my-order-page.html` - order history
-  - `7-order-details-page.html` - order details
-  - `8-account-page.html` - account
-  - `9-log-in-page.html` - login
-  - `10-register-page.html` - registration
+  - `catalog/shop.html` - storefront and catalog browsing
+  - `catalog/product-details.html` - product details
+  - `cart/cart.html` - cart
+  - `checkout/checkout.html` - checkout
+  - `checkout/order-confirmation.html` - order confirmation
+  - `orders/order-list.html` - order history
+  - `orders/order-details.html` - order details and customer tracking
+  - `account/account.html` - account
+  - `account/login.html` and `account/register.html` - authentication
+  - `luna_ops/fullfilment.html` and `luna_ops/fullfilment_details.html` - fulfillment operations
+  - `luna_ops/shipments.html` and `luna_ops/shipment_details.html` - shipment operations
 
 ## Repository areas
 

@@ -431,7 +431,7 @@ Scenarios include:
 
 ## Project Status
 
-**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; observability foundation delivered ahead of sequence.**
+**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; the initial Luna Ops workflow and observability foundation are delivered ahead of the original sequence.**
 
 Luna is being built incrementally. Architecture and implementation decisions may change as new requirements and failure scenarios are introduced. The repository is intentionally a work in progress.
 
@@ -441,9 +441,11 @@ Phase 0 is complete: the six services, independent persistence, EF Core migratio
 
 Phase 1 is substantially implemented through the synchronous customer commerce path. The catalog storefront supports server-rendered active products, search, category filtering, URL-based pagination, product details, and image galleries. Authenticated customers can use the cart, checkout, order history, order details, account pages, and the Identity/OpenIddict session boundary. Orders coordinates Catalog, Shipping, Inventory, and Payments through authenticated service clients; Inventory provides concurrency-safe reservations and release; Payments provides deterministic authorization with concurrency protection; and Orders persists price/shipping snapshots, fulfillment state, and checkout idempotency.
 
+The initial Luna Ops workflow is also implemented: operators can review and filter the fulfillment queue, prepare orders, create or retry shipments through an Orders-coordinated command, list and inspect shipments, and advance shipments from Created to InTransit to Delivered. The browser uses backend-derived available actions and does not own lifecycle state transitions.
+
 The project also has a delivered observability foundation ahead of the original phase sequence: OpenTelemetry instrumentation, OTLP collection, SigNoz local infrastructure, host metrics, a tracked service-health dashboard, checkout stage logging, health checks, and a frontend SigNoz link. This is not yet the Phase 9 Operations Console or Phase 11 failure-injection tooling.
 
-Phase 1 closure is still pending because the repository does not yet prove the complete checkout and compensation flows through a cross-service integration or end-to-end test. Frontend checkout error-state coverage and a current full quality-gate run should be completed as part of that closure. The existing order history and order detail routes are implemented and are no longer outstanding work.
+Phase 1 closure is still pending because the repository does not yet prove the complete checkout, compensation, and fulfillment/shipment flows across real service boundaries. The customer order detail route is implemented, but it still needs shipment identifiers/status from Shipping rather than only the current order-status timeline. Docker-dependent integration, Compose smoke, and full build/coverage gates also need a current run. Frontend checkout error-state coverage is present and is no longer a closure blocker.
 
 ### Phase position
 
@@ -457,9 +459,9 @@ Phase 1 closure is still pending because the repository does not yet prove the c
 
 ### Next steps
 
-1. Add cross-service integration or end-to-end tests for successful checkout, insufficient inventory, payment failure with reservation release, shipment failure, and repeated idempotent checkout requests.
-2. Complete frontend verification for checkout loading, duplicate submission prevention, unauthorized access, downstream failures, and customer-friendly error messages.
-3. Run and record the current full quality gates, including backend unit/integration tests, frontend tests/lint/build, Compose smoke checks, and coverage.
-4. Close Phase 1 with a short implementation review, then begin Phase 2 by introducing RabbitMQ around one bounded workflow while preserving synchronous HTTP where an immediate response is required.
+1. Add real cross-service integration or end-to-end coverage for successful checkout, insufficient inventory, payment failure with reservation release, shipment failure, and repeated idempotent checkout requests.
+2. Add the customer shipment read path and update the order detail UI to show tracking number/status and the rendering's lifecycle timeline without exposing Operations controls.
+3. Add real Orders/Shipping fulfillment and shipment lifecycle tests, then run the Docker-dependent integration suite, frontend build, Compose smoke checks, and coverage as one recorded quality gate.
+4. Close Phase 1 with an implementation review, then begin Phase 2 by introducing RabbitMQ around one bounded workflow while preserving synchronous HTTP where an immediate response is required.
 
 RabbitMQ, asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.
