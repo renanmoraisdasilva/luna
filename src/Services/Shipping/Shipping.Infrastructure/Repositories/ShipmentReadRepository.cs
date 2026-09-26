@@ -73,7 +73,7 @@ public sealed class ShipmentReadRepository(ShippingDbContext db) : IShipmentRead
 
     private static ShipmentSummaryResponse MapSummary(Shipment shipment)
     {
-        var events = shipment.TrackingEvents.OrderBy(trackingEvent => trackingEvent.OccurredAt).ToArray();
+        var events = OrderTrackingEvents(shipment).ToArray();
         return new ShipmentSummaryResponse(
             shipment.Id,
             shipment.OrderId,
@@ -90,7 +90,7 @@ public sealed class ShipmentReadRepository(ShippingDbContext db) : IShipmentRead
 
     private static ShipmentDetailResponse MapDetail(Shipment shipment)
     {
-        var events = shipment.TrackingEvents.OrderBy(trackingEvent => trackingEvent.OccurredAt).ToArray();
+        var events = OrderTrackingEvents(shipment).ToArray();
         return new ShipmentDetailResponse(
             shipment.Id,
             shipment.OrderId,
@@ -118,7 +118,7 @@ public sealed class ShipmentReadRepository(ShippingDbContext db) : IShipmentRead
 
     private static ShipmentTrackingResponse MapTracking(Shipment shipment)
     {
-        var events = shipment.TrackingEvents.OrderBy(trackingEvent => trackingEvent.OccurredAt).ToArray();
+        var events = OrderTrackingEvents(shipment).ToArray();
         return new ShipmentTrackingResponse(
             shipment.Id,
             shipment.OrderId,
@@ -132,6 +132,17 @@ public sealed class ShipmentReadRepository(ShippingDbContext db) : IShipmentRead
                 trackingEvent.Status,
                 trackingEvent.OccurredAt)).ToArray());
     }
+
+    private static IEnumerable<TrackingEvent> OrderTrackingEvents(Shipment shipment) =>
+        shipment.TrackingEvents
+            .OrderBy(trackingEvent => trackingEvent.OccurredAt)
+            .ThenBy(trackingEvent => trackingEvent.Status switch
+            {
+                nameof(ShipmentStatus.Created) => 0,
+                nameof(ShipmentStatus.InTransit) => 1,
+                nameof(ShipmentStatus.Delivered) => 2,
+                _ => 3,
+            });
 
     private static IReadOnlyCollection<ShipmentStatus> ParseStatuses(string? status)
     {

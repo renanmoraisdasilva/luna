@@ -89,6 +89,12 @@ public sealed class ShippingFulfillmentClient(HttpClient httpClient) : IShipping
     private async Task<ShipmentSnapshot> MarkShipmentAsync(string endpoint, CancellationToken cancellationToken)
     {
         var response = await httpClient.PostAsync(endpoint, null, cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await response.Content.ReadFromJsonAsync<ShippingError>(cancellationToken: cancellationToken);
+            throw new InvalidOperationException(error?.Message ?? "Shipping rejected the shipment transition.");
+        }
+
         response.EnsureSuccessStatusCode();
         var shipment = await response.Content.ReadFromJsonAsync<ShipmentResponse>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Shipping returned an empty shipment response.");
@@ -99,6 +105,8 @@ public sealed class ShippingFulfillmentClient(HttpClient httpClient) : IShipping
             shipment.Status,
             shipment.TrackingNumber);
     }
+
+    private sealed record ShippingError(string Code, string Message);
 }
 
 public sealed class InventoryCheckoutClient(HttpClient httpClient) : IInventoryCheckoutClient

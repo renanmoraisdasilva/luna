@@ -33,9 +33,6 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Shop' })).toHaveAttribute('href', '/shop');
     expect(screen.getByRole('link', { name: 'Orders' })).toHaveAttribute('href', '/orders');
     expect(screen.getByRole('link', { name: 'Operations' })).toHaveAttribute('href', '/operations/fulfillment');
-    expect(screen.getByRole('link', { name: 'Swagger' })).toHaveAttribute('href', '/swagger');
-    expect(screen.getByRole('link', { name: 'SigNoz' })).toHaveAttribute('href', 'http://localhost:8080');
-    expect(screen.getByRole('link', { name: 'SigNoz' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: 'Account' })).toHaveAttribute('href', '/account');
     expect(screen.getByRole('link', { name: 'Cart' })).toHaveAttribute('href', '/cart');
   });
@@ -45,7 +42,7 @@ describe('Header', () => {
     renderHeader();
 
     expect(screen.queryByRole('link', { name: 'Operations' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Swagger' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'SigNoz' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Swagger' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'SigNoz' })).not.toBeInTheDocument();
   });
 });

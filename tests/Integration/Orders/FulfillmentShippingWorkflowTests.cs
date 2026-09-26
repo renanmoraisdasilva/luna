@@ -78,7 +78,15 @@ public sealed class FulfillmentShippingWorkflowTests(
                 .Include(item => item.TrackingEvents)
                 .SingleAsync(item => item.Id == shipmentId);
             shipment.Status.Should().Be(ShipmentStatus.Delivered);
-            shipment.TrackingEvents.Select(item => item.Status)
+            shipment.TrackingEvents
+                .OrderBy(item => item.Status switch
+                {
+                    nameof(ShipmentStatus.Created) => 0,
+                    nameof(ShipmentStatus.InTransit) => 1,
+                    nameof(ShipmentStatus.Delivered) => 2,
+                    _ => 3,
+                })
+                .Select(item => item.Status)
                 .Should().Equal(nameof(ShipmentStatus.Created), nameof(ShipmentStatus.InTransit), nameof(ShipmentStatus.Delivered));
         }
 

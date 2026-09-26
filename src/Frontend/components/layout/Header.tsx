@@ -2,15 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Icon from './Icon';
 import { getCart } from '../../lib/api/orders';
 import { useCurrentUser } from '../../lib/queries/auth';
-
-const configuredSignozUrl = process.env.NEXT_PUBLIC_SIGNOZ_URL;
-const noopSubscribe = () => () => {};
-const getSignozUrl = () => `${window.location.protocol}//${window.location.hostname}:8080`;
 
 const utilityLinks = [
   { label: 'Account', icon: 'account' as const, href: '/account' },
@@ -19,8 +14,6 @@ const utilityLinks = [
 
 export default function Header() {
   const pathname = usePathname();
-  const browserSignozUrl = useSyncExternalStore(noopSubscribe, getSignozUrl, () => 'http://localhost:8080');
-  const signozUrl = configuredSignozUrl || browserSignozUrl;
   const userQuery = useCurrentUser();
   const isAdmin = userQuery.data?.roles?.some((role) => role.toLowerCase() === 'admin') ?? false;
   const cartQuery = useQuery({
@@ -38,8 +31,6 @@ export default function Header() {
   const navigationLinks = [
     { label: 'Shop', href: '/shop' },
     { label: 'Orders', href: '/orders' },
-    { label: 'Swagger', href: '/swagger' },
-    { label: 'SigNoz', href: signozUrl, external: true },
     { label: 'Operations', href: '/operations/fulfillment', adminOnly: true },
   ];
 
@@ -57,8 +48,6 @@ export default function Header() {
                 : 'flex h-full items-center text-[#6b7280] transition-colors duration-200 hover:text-[#253347]'}
               href={link.href}
               key={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noreferrer' : undefined}
             >
               {link.label}
             </Link>

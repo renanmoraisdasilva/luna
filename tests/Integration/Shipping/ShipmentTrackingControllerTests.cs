@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -62,13 +63,13 @@ public sealed class ShipmentTrackingControllerTests(ShippingSqlServerFixture fix
         await fixture.ResetAsync();
         var customerId = Guid.NewGuid();
         var shipment = await SeedShipmentAsync(customerId);
-        shipment.MarkInTransit();
-        shipment.MarkDelivered(DateTimeOffset.UtcNow);
-        await using (var db = fixture.CreateDbContext())
-        {
-            db.Shipments.Update(shipment);
-            await db.SaveChangesAsync();
-        }
+        await using var db = fixture.CreateDbContext();
+        var persistedShipment = await db.Shipments
+            .Include(value => value.TrackingEvents)
+            .SingleAsync(value => value.Id == shipment.Id);
+        persistedShipment.MarkInTransit();
+        persistedShipment.MarkDelivered(DateTimeOffset.UtcNow);
+        await db.SaveChangesAsync();
 
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
