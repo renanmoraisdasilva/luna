@@ -119,7 +119,7 @@ The image uses a three-stage build:
 
 1. `dependencies` installs the locked npm dependencies with `npm ci`.
 2. `build` compiles the Next.js application and creates the standalone output.
-3. `runtime` runs only the standalone Next.js server on port `3000`.
+3. `runtime` runs only the standalone Next.js server on port `3000`. It copies `.next/static` and `public/` next to the standalone output, because Next.js does not include them in `.next/standalone`.
 
 The root `.dockerignore` excludes `node_modules`, `.next`, .NET build output, and other non-runtime files from the Docker build context.
 
