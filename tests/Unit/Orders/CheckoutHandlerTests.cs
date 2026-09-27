@@ -156,6 +156,42 @@ public sealed class CheckoutHandlerTests
             .WithMessage("Payment failed and the inventory reservation could not be released.");
     }
 
+    [Fact]
+    public async Task Rejects_blank_or_oversized_idempotency_keys()
+    {
+        var customerId = Guid.NewGuid();
+        var handler = CreateHandler(customerId);
+
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), "   "), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("An Idempotency-Key header is required.");
+
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), new string('k', 201)), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("The Idempotency-Key header is too long.");
+    }
+
+    [Fact]
+    public async Task Rejects_a_replayed_checkout_that_has_not_completed()
+    {
+        var customerId = Guid.NewGuid();
+        var idempotencyKey = "checkout-in-progress";
+        var inProgressOrder = Order.Create(
+            customerId,
+            [new OrderItemSnapshot(Guid.NewGuid(), "SKU-1", "Keyboard", 20m, 1)],
+            ShippingAddress.Create("Jane Doe", "123 Luna Street", null, "Austin", "Texas", "78701", "US"),
+            "STANDARD",
+            0m,
+            idempotencyKey,
+            Guid.NewGuid());
+        var repository = new FakeOrderRepository { ExistingOrder = inProgressOrder };
+        var handler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), new FakeInventoryClient(), new FakePaymentsClient(true), repository);
+
+        await handler.Invoking(value => value.HandleAsync(new CheckoutCommand(customerId, ValidRequest(), idempotencyKey), CancellationToken.None))
+            .Should().ThrowAsync<CheckoutRejectedException>()
+            .WithMessage("This checkout attempt is already being processed.");
+    }
+
     private static CheckoutHandler CreateHandler(
         Guid customerId,
         FakeCatalogClient catalog,

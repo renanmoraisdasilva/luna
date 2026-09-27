@@ -115,6 +115,8 @@ internal sealed class TestAuthenticationHandler(
     public const string CustomerHeader = "X-Test-Customer";
     public const string AdminHeader = "X-Test-Admin";
     public const string ServiceHeader = "X-Test-Service";
+    public const string ServiceScopeHeader = "X-Test-Service-Scope";
+    public const string RoleHeader = "X-Test-Role";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -125,12 +127,24 @@ internal sealed class TestAuthenticationHandler(
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(adminIdentity), Scheme.Name)));
         }
 
+        if (Request.Headers.TryGetValue(RoleHeader, out var roleValue)
+            && !string.IsNullOrWhiteSpace(roleValue.ToString()))
+        {
+            var roleIdentity = new ClaimsIdentity(Scheme.Name);
+            roleIdentity.AddClaim(new Claim(System.Security.Claims.ClaimTypes.Role, roleValue.ToString()));
+            return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(roleIdentity), Scheme.Name)));
+        }
+
         if (Request.Headers.TryGetValue(ServiceHeader, out var serviceValue)
             && serviceValue.ToString().Equals(Luna.Contracts.Authentication.LunaServiceClients.Orders, StringComparison.Ordinal))
         {
+            var scope = Request.Headers.TryGetValue(ServiceScopeHeader, out var scopeValue)
+                && !string.IsNullOrWhiteSpace(scopeValue.ToString())
+                ? scopeValue.ToString()
+                : Luna.Contracts.Authentication.LunaServiceScopes.ShippingShipmentsWrite;
             var serviceIdentity = new ClaimsIdentity(Scheme.Name);
             serviceIdentity.AddClaim(new Claim(OpenIddictConstants.Claims.ClientId, Luna.Contracts.Authentication.LunaServiceClients.Orders));
-            serviceIdentity.AddClaim(new Claim(OpenIddictConstants.Claims.Scope, Luna.Contracts.Authentication.LunaServiceScopes.ShippingShipmentsWrite));
+            serviceIdentity.AddClaim(new Claim(OpenIddictConstants.Claims.Scope, scope));
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(serviceIdentity), Scheme.Name)));
         }
 

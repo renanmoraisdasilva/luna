@@ -63,6 +63,40 @@ public sealed class ShipmentHandlerTests
             .Should().Equal("Created", "InTransit", "Delivered");
     }
 
+    [Fact]
+    public async Task Create_shipment_rejects_an_order_that_already_has_a_shipment()
+    {
+        var orderId = Guid.NewGuid();
+        var quoteId = Guid.NewGuid();
+        var repository = new FakeShipmentRepository();
+        var handler = new CreateShipmentHandler(new FakeQuoteRepository(orderId, quoteId), repository);
+
+        var first = await handler.HandleAsync(
+            new CreateShipmentCommand(orderId, quoteId, Recipient()), CancellationToken.None);
+        first.Should().NotBeNull();
+
+        var act = () => handler.HandleAsync(
+            new CreateShipmentCommand(orderId, quoteId, Recipient()), CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("A shipment already exists for this order.");
+    }
+
+    [Fact]
+    public async Task Lifecycle_handlers_return_null_for_an_unknown_shipment()
+    {
+        var repository = new FakeShipmentRepository();
+
+        var inTransit = await new MarkShipmentInTransitHandler(repository)
+            .HandleAsync(new MarkShipmentInTransitCommand(Guid.NewGuid()), CancellationToken.None);
+        var delivered = await new MarkShipmentDeliveredHandler(repository)
+            .HandleAsync(new MarkShipmentDeliveredCommand(Guid.NewGuid()), CancellationToken.None);
+
+        inTransit.Should().BeNull();
+        delivered.Should().BeNull();
+        repository.Shipment.Should().BeNull();
+    }
+
     private static ShipmentRecipientCommand Recipient() => new(
         Guid.NewGuid(),
         "Jane Doe",

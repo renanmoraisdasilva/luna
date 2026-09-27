@@ -10,10 +10,13 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Api/Catalog.Api.csproj" Aliases="CatalogApi" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Api/Orders.Api.csproj" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Infrastructure/Orders.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Domain/Orders.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Inventory/Inventory.Api/Inventory.Api.csproj" Aliases="InventoryApi" />
+    <ProjectReference Include="../../src/Services/Payments/Payments.Api/Payments.Api.csproj" Aliases="PaymentsApi" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Api/Shipping.Api.csproj" Aliases="ShippingApi" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Infrastructure/Shipping.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Domain/Shipping.Domain.csproj" />

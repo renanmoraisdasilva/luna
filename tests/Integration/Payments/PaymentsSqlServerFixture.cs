@@ -1,16 +1,16 @@
-using Luna.Catalog.Infrastructure.Database;
+using Luna.Payments.Infrastructure;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Respawn;
 using Testcontainers.MsSql;
 using Xunit;
 
-namespace Luna.IntegrationTests.Catalog;
+namespace Luna.IntegrationTests.Payments;
 
-public sealed class CatalogSqlServerFixture : IAsyncLifetime
+public sealed class PaymentsSqlServerFixture : IAsyncLifetime
 {
     private const string Password = "Your_password123";
-    private const string DatabaseName = "CatalogTests";
+    private const string DatabaseName = "PaymentsTests";
     private readonly MsSqlContainer container = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
         .WithPassword(Password)
@@ -20,7 +20,6 @@ public sealed class CatalogSqlServerFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await container.StartAsync();
-
         await using var db = CreateDbContext();
         await db.Database.MigrateAsync();
         respawner = await Respawner.CreateAsync(ConnectionString, new RespawnerOptions
@@ -32,19 +31,12 @@ public sealed class CatalogSqlServerFixture : IAsyncLifetime
 
     public Task ResetAsync() => respawner.ResetAsync(ConnectionString);
 
-    public async Task<CatalogDbContext> CreateDbContextAsync()
+    public PaymentDbContext CreateDbContext()
     {
-        await respawner.ResetAsync(ConnectionString);
-        var db = CreateDbContext();
-        return db;
-    }
-
-    public CatalogDbContext CreateDbContext()
-    {
-        var options = new DbContextOptionsBuilder<CatalogDbContext>()
+        var options = new DbContextOptionsBuilder<PaymentDbContext>()
             .UseSqlServer(ConnectionString)
             .Options;
-        return new CatalogDbContext(options);
+        return new PaymentDbContext(options);
     }
 
     public string ConnectionString => new SqlConnectionStringBuilder(container.GetConnectionString())
@@ -52,14 +44,11 @@ public sealed class CatalogSqlServerFixture : IAsyncLifetime
         InitialCatalog = DatabaseName
     }.ConnectionString;
 
-    public async Task DisposeAsync()
-    {
-        await container.DisposeAsync();
-    }
+    public Task DisposeAsync() => container.DisposeAsync().AsTask();
 }
 
 [CollectionDefinition(Name, DisableParallelization = true)]
-public sealed class CatalogDatabaseCollection : ICollectionFixture<CatalogSqlServerFixture>
+public sealed class PaymentsDatabaseCollection : ICollectionFixture<PaymentsSqlServerFixture>
 {
-    public const string Name = "Catalog database";
+    public const string Name = "Payments database";
 }
