@@ -47,10 +47,17 @@ public sealed class CheckoutHandler(
         var cart = await LoadCartAsync(command.CustomerId, cancellationToken);
         logger.LogInformation("Cart loaded for customer {CustomerId} with {ItemCount} items", command.CustomerId, cart.Items.Count);
         var address = CreateShippingAddress(command.Request);
-        var products = await LoadProductsAsync(cart, cancellationToken);
-        logger.LogInformation("Products loaded for checkout with {ProductCount} distinct products", products.Count);
         var orderId = Guid.NewGuid();
-        var quote = await shippingClient.QuoteAsync(orderId, command.Request.ShippingMethodCode, address, cancellationToken);
+
+        // The shipping quote and the product snapshot fetches do not depend on each other,
+        // so both requests are started together and joined once instead of running serially.
+        var quoteTask = shippingClient.QuoteAsync(orderId, command.Request.ShippingMethodCode, address, cancellationToken);
+        var productsTask = LoadProductsAsync(cart, cancellationToken);
+        await Task.WhenAll(quoteTask, productsTask);
+
+        var products = await productsTask;
+        logger.LogInformation("Products loaded for checkout with {ProductCount} distinct products", products.Count);
+        var quote = await quoteTask;
         logger.LogInformation("Shipping quote obtained for order {OrderId} using method {ShippingMethodCode}", orderId, quote.ShippingMethodCode);
         var order = CreateOrder(command, cart, products, address, quote, idempotencyKey, orderId);
         logger.LogInformation("Order created for checkout {OrderId} with total {OrderTotal}", order.Id, order.Total);
@@ -138,21 +145,35 @@ public sealed class CheckoutHandler(
         CartResponse cart,
         CancellationToken cancellationToken)
     {
-        var products = new Dictionary<Guid, CatalogProductSnapshot>();
+        // Preserve cart order while fetching distinct products concurrently instead of one-by-one.
+        var orderedProductIds = new List<Guid>();
+        var seenProductIds = new HashSet<Guid>();
         foreach (var item in cart.Items)
         {
-            if (products.ContainsKey(item.ProductId))
+            if (seenProductIds.Add(item.ProductId))
             {
-                continue;
+                orderedProductIds.Add(item.ProductId);
             }
+        }
 
-            var product = await catalogClient.GetProductAsync(item.ProductId, cancellationToken);
+        var fetchTasks = new Task<CatalogProductSnapshot?>[orderedProductIds.Count];
+        for (var index = 0; index < orderedProductIds.Count; index++)
+        {
+            fetchTasks[index] = catalogClient.GetProductAsync(orderedProductIds[index], cancellationToken);
+        }
+
+        var fetchedProducts = await Task.WhenAll(fetchTasks);
+
+        var products = new Dictionary<Guid, CatalogProductSnapshot>();
+        for (var index = 0; index < orderedProductIds.Count; index++)
+        {
+            var product = fetchedProducts[index];
             if (product is null)
             {
-                throw new CheckoutRejectedException("PRODUCT_UNAVAILABLE", $"Product {item.ProductId} is no longer available.");
+                throw new CheckoutRejectedException("PRODUCT_UNAVAILABLE", $"Product {orderedProductIds[index]} is no longer available.");
             }
 
-            products.Add(item.ProductId, product);
+            products.Add(orderedProductIds[index], product);
         }
 
         return products;
