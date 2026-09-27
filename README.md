@@ -255,9 +255,11 @@ The synchronous commerce path, customer shipment tracking, and the initial Luna 
 The repository separates **what Luna is**, **where it is going**, and **how each phase is designed**.
 
 - [Roadmap](documentation/roadmap.md) — Project vision and progression
-- [Phase 0 Design](documentation/dev_phases/phase-0-design.md) — Foundation and architectural decisions
-- [Phase 1 Specification](documentation/dev_phases/phase-1-spec.md) — Basic commerce flow requirements and decisions
-- [Phase 1 Architecture](documentation/dev_phases/phase-1-architecture.md) — Technical design, boundaries, and architectural decisions
+- [Phase 0 Design](documentation/dev_phases/phase-0/design.md) — Foundation and architectural decisions
+- [Phase 1 Specification](documentation/dev_phases/phase-1/spec.md) — Basic commerce flow requirements and decisions
+- [Phase 1 Architecture](documentation/dev_phases/phase-1/architecture.md) — Technical design, boundaries, and architectural decisions
+- [Phase 2 Specification](documentation/dev_phases/phase-2/spec.md) — Messaging and async workflow behavior and acceptance criteria
+- [Phase 2 Architecture](documentation/dev_phases/phase-2/architecture.md) — LocalStack messaging design, AWS mapping, and service structure
 - [Observability](documentation/observability.md) — OpenTelemetry, OTLP, SigNoz, and checkout trace verification
 
 For frontend-specific implementation details, see the frontend documentation under `src/Frontend/`.

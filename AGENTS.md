@@ -3,7 +3,7 @@
 ## Documentation
 
 - `documentation/roadmap.md` is the high-level project roadmap, phase status, and next priorities.
-- `documentation/dev_phases/` contains design documents, specifications, architecture notes, and acceptance criteria for each development phase.
+- `documentation/dev_phases/` contains one folder per development phase (`phase-0/`, `phase-1/`, `phase-2/`, ...) holding that phase's design, specification, architecture, and acceptance-criteria documents, such as `phase-1/spec.md`, `phase-1/architecture.md`, and `phase-2/architecture.md`.
 - Phase specifications describe what the system must do: business behavior, API capabilities, failure scenarios, and acceptance criteria.
 - Phase architecture documents describe how the system is built: service boundaries, database ownership, backend layering, frontend architecture, authentication, persistence, testing, and architectural decisions.
 - `documentation/ui_renderings/` contains the HTML UI references for the planned customer experience. Use these when implementing or reviewing frontend screens:
