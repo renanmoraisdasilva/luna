@@ -135,4 +135,66 @@ describe('CheckoutForm', () => {
     expect(await screen.findByText('We could not place your order.')).toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalled();
   });
+
+  it('validates the required checkout fields before placing an order', async () => {
+    renderForm();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
+
+    expect(await screen.findByText('Enter your full name.')).toBeInTheDocument();
+    expect(screen.getByText('Enter your address.')).toBeInTheDocument();
+    expect(screen.getByText('Enter your city.')).toBeInTheDocument();
+    expect(screen.getByText('Enter your state or province.')).toBeInTheDocument();
+    expect(screen.getByText('Enter your postal code.')).toBeInTheDocument();
+    expect(screen.getByText('Enter a payment method.')).toBeInTheDocument();
+    expect(submitCheckout).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('blocks checkout while shipping methods or products are unavailable', async () => {
+    const { container } = render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
+        <CheckoutForm cart={cart} products={{}} shippingMethods={[]} email="jane@example.com" />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText('Shipping methods are temporarily unavailable.')).toBeInTheDocument();
+    expect(screen.getByText('Product unavailable')).toBeInTheDocument();
+    expect(screen.getAllByText('Unavailable')).toHaveLength(1);
+    expect(screen.getByText('Remove unavailable products before checkout.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Place order' })).toBeDisabled();
+
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+
+    expect(await screen.findByText('Choose a shipping method.')).toBeInTheDocument();
+    expect(submitCheckout).not.toHaveBeenCalled();
+  });
+
+  it('shows a fallback message when checkout fails unexpectedly', async () => {
+    vi.mocked(submitCheckout).mockRejectedValue(new Error('Payment service unreachable.'));
+
+    renderForm();
+    await fillRequiredFields();
+    fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
+
+    expect(await screen.findByText('We could not place your order.')).toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('renders product thumbnails from the order summary', async () => {
+    const productsWithImages = {
+      'product-1': {
+        ...products['product-1'],
+        images: [{ imageUrl: 'keyboard.jpg', altText: '', displayOrder: 0 }],
+      },
+    };
+
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
+        <CheckoutForm cart={cart} products={productsWithImages} shippingMethods={shippingMethods} email="jane@example.com" />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByRole('img', { name: 'Luna Keyboard' })).toHaveAttribute('src', 'keyboard.jpg');
+  });
 });

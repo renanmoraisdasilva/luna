@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ getAccessToken: vi.fn() }));
 
 vi.mock('../../../lib/auth-server', () => ({ getAccessToken: mocks.getAccessToken }));
 
-import { getOrderById, getOrderProducts, getOrderSummaries, getShipmentTracking } from '../../../lib/server/orders';
+import { getFulfillmentOrderById, getOrderById, getOrderProducts, getOrderSummaries, getShipmentTracking } from '../../../lib/server/orders';
 
 function response(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -91,5 +91,28 @@ describe('server order helpers', () => {
     mocks.getAccessToken.mockResolvedValue('access-token');
     vi.stubEnv('CATALOG_API_INTERNAL_URL', '');
     await expect(getOrderProducts(order)).resolves.toEqual({});
+  });
+
+  it('loads the fulfillment read model and handles missing or failed orders', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(response(200, { orderId: 'order-1' }))
+      .mockResolvedValueOnce(response(404, {}))
+      .mockResolvedValueOnce(response(500, {}));
+
+    await expect(getFulfillmentOrderById('order-1')).resolves.toEqual({ orderId: 'order-1' });
+    await expect(getFulfillmentOrderById('missing')).resolves.toBeNull();
+    await expect(getFulfillmentOrderById('broken')).rejects.toThrow('Unable to load the fulfillment order.');
+    expect(fetch).toHaveBeenNthCalledWith(1, 'http://orders/api/v1/orders/fulfillment/order-1', expect.objectContaining({
+      headers: { Authorization: 'Bearer access-token', Accept: 'application/json' },
+      cache: 'no-store',
+    }));
+  });
+
+  it('requires an Orders service URL before reading order detail', async () => {
+    vi.stubEnv('ORDERS_API_INTERNAL_URL', '');
+
+    await expect(getFulfillmentOrderById('order-1')).rejects.toThrow('Orders service is not configured.');
+    await expect(getOrderById('order-1')).rejects.toThrow('Orders service is not configured.');
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

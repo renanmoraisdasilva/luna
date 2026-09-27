@@ -80,4 +80,55 @@ describe('AccountView', () => {
     await waitFor(() => expect(changePassword).toHaveBeenCalledWith('old-password', 'new-password'));
     expect(screen.queryByLabelText('Current password')).not.toBeInTheDocument();
   });
+
+  it('surfaces profile validation errors next to the offending fields', async () => {
+    const user = { id: 'customer-1', email: 'jane@example.com', firstName: 'Jane', lastName: 'Doe' };
+
+    render(<QueryClientProvider client={new QueryClient()}><AccountView initialUser={user} /></QueryClientProvider>);
+    const firstName = screen.getByLabelText('First name');
+    const lastName = screen.getByLabelText('Last name');
+
+    fireEvent.change(firstName, { target: { value: '' } });
+    fireEvent.change(lastName, { target: { value: ' ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(await screen.findByText('First name is required.')).toBeInTheDocument();
+    expect(screen.getByText('Last name is required.')).toBeInTheDocument();
+    expect(firstName).toHaveAttribute('aria-invalid', 'true');
+    expect(firstName).toHaveAttribute('aria-describedby', 'firstName-error');
+    expect(lastName).toHaveAttribute('aria-invalid', 'true');
+    expect(lastName).toHaveAttribute('aria-describedby', 'lastName-error');
+    expect(updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('surfaces password validation errors next to the offending fields', async () => {
+    const user = { id: 'customer-1', email: 'jane@example.com', firstName: 'Jane', lastName: 'Doe' };
+
+    render(<QueryClientProvider client={new QueryClient()}><AccountView initialUser={user} /></QueryClientProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Change password' }));
+    const currentPassword = screen.getByLabelText('Current password');
+    const newPassword = screen.getByLabelText('New password');
+
+    fireEvent.change(newPassword, { target: { value: 'short' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
+
+    expect(await screen.findByText('Current password is required.')).toBeInTheDocument();
+    expect(screen.getByText('New password must be at least 6 characters.')).toBeInTheDocument();
+    expect(currentPassword).toHaveAttribute('aria-invalid', 'true');
+    expect(currentPassword).toHaveAttribute('aria-describedby', 'currentPassword-error');
+    expect(newPassword).toHaveAttribute('aria-invalid', 'true');
+    expect(newPassword).toHaveAttribute('aria-describedby', 'newPassword-error');
+    expect(changePassword).not.toHaveBeenCalled();
+  });
+
+  it('shows the signing-out state while logout is running', async () => {
+    vi.mocked(logout).mockReturnValue(new Promise<void>(() => undefined));
+    const user = { id: 'customer-1', email: 'jane@example.com', firstName: 'Jane', lastName: 'Doe' };
+
+    render(<QueryClientProvider client={new QueryClient()}><AccountView initialUser={user} /></QueryClientProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Logout' }));
+
+    expect(await screen.findByRole('button', { name: 'Signing out...' })).toBeDisabled();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
 });
