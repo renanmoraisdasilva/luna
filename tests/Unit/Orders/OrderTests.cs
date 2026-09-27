@@ -100,18 +100,6 @@ public sealed class OrderTests
         order.ShipmentId.Should().Be(shipmentId);
     }
 
-    [Fact]
-    public void Preparing_order_can_be_marked_for_shipping_retry()
-    {
-        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "shipping-retry");
-
-        order.Confirm();
-        order.Prepare();
-        order.MarkShippingPendingRetry();
-
-        order.Status.Should().Be(OrderStatus.ShippingPendingRetry);
-    }
-
     [Theory]
     [InlineData("payment-failed")]
     [InlineData("cancelled")]
@@ -136,10 +124,88 @@ public sealed class OrderTests
         {
             order.Prepare,
             order.MarkShipped,
-            order.MarkShippingPendingRetry,
         };
 
         actions.Should().OnlyContain(action => ThrowsInvalidOperation(action));
+    }
+
+    [Fact]
+    public void Create_rejects_a_blank_idempotency_key()
+    {
+        var act = () => Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "   ");
+
+        act.Should().Throw<ArgumentException>()
+            .WithParameterName("idempotencyKey");
+    }
+
+    [Fact]
+    public void Create_rejects_an_empty_shipping_quote_id_and_keeps_a_valid_one()
+    {
+        var act = () => Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "empty-quote", shippingQuoteId: Guid.Empty);
+
+        act.Should().Throw<ArgumentException>().WithParameterName("shippingQuoteId");
+
+        var quoteId = Guid.NewGuid();
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "valid-quote", shippingQuoteId: quoteId);
+
+        order.ShippingQuoteId.Should().Be(quoteId);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Record_checkout_result_requires_both_ids(bool emptyReservation)
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "checkout-result");
+        var reservationId = emptyReservation ? Guid.Empty : Guid.NewGuid();
+        var paymentId = emptyReservation ? Guid.NewGuid() : Guid.Empty;
+
+        var act = () => order.RecordCheckoutResult(reservationId, paymentId);
+
+        act.Should().Throw<ArgumentException>().WithMessage("Checkout result IDs are required.");
+        order.InventoryReservationId.Should().BeNull();
+        order.PaymentId.Should().BeNull();
+    }
+
+    [Fact]
+    public void Record_checkout_result_persists_both_references()
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "checkout-result-valid");
+        var reservationId = Guid.NewGuid();
+        var paymentId = Guid.NewGuid();
+
+        order.RecordCheckoutResult(reservationId, paymentId);
+
+        order.InventoryReservationId.Should().Be(reservationId);
+        order.PaymentId.Should().Be(paymentId);
+    }
+
+    [Fact]
+    public void Record_shipment_rejects_an_empty_shipment_id()
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "empty-shipment");
+
+        var act = () => order.RecordShipment(Guid.Empty);
+
+        act.Should().Throw<ArgumentException>().WithParameterName("shipmentId");
+        order.ShipmentId.Should().BeNull();
+    }
+
+    [Fact]
+    public void Record_shipment_accepts_a_repeated_reference_but_rejects_a_conflicting_one()
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "conflicting-shipment");
+        var shipmentId = Guid.NewGuid();
+        order.RecordShipment(shipmentId);
+
+        var repeat = () => order.RecordShipment(shipmentId);
+        repeat.Should().NotThrow();
+        order.ShipmentId.Should().Be(shipmentId);
+
+        var conflict = () => order.RecordShipment(Guid.NewGuid());
+        conflict.Should().Throw<InvalidOperationException>()
+            .WithMessage("The order already has a different shipment.");
+        order.ShipmentId.Should().Be(shipmentId);
     }
 
     [Theory]

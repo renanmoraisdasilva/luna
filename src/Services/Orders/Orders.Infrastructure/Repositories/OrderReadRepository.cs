@@ -174,7 +174,7 @@ public sealed class OrderReadRepository(OrdersDbContext dbContext) : IOrderReadR
             {
                 if (string.IsNullOrWhiteSpace(status))
                 {
-                    return [OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ShippingPendingRetry];
+                    return [OrderStatus.Confirmed, OrderStatus.Preparing];
                 }
 
                 var parsedStatuses = status
@@ -185,9 +185,9 @@ public sealed class OrderReadRepository(OrdersDbContext dbContext) : IOrderReadR
                     .Distinct()
                     .ToArray();
 
-                if (parsedStatuses.Any(statusValue => statusValue is not (OrderStatus.Confirmed or OrderStatus.Preparing or OrderStatus.ShippingPendingRetry)))
+                if (parsedStatuses.Any(statusValue => statusValue is not (OrderStatus.Confirmed or OrderStatus.Preparing)))
                 {
-                    throw new ArgumentException("Fulfillment status must be Confirmed, Preparing, or ShippingPendingRetry.", nameof(status));
+                    throw new ArgumentException("Fulfillment status must be Confirmed or Preparing.", nameof(status));
                 }
 
                 return parsedStatuses;
@@ -210,7 +210,6 @@ public sealed class OrderReadRepository(OrdersDbContext dbContext) : IOrderReadR
             {
                 OrderStatus.Confirmed => "StartPreparing",
                 OrderStatus.Preparing => "CreateShipment",
-                OrderStatus.ShippingPendingRetry => "RetryShipment",
                 _ => "None",
             };
 }

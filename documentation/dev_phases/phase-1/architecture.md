@@ -18,7 +18,7 @@
 - [14. Deferred Architecture](#14-deferred-architecture)
 - [15. Architecture Implementation Checklist](#15-architecture-implementation-checklist)
 
-The detailed Phase 1 Luna Ops fulfillment and shipment boundary is documented separately in [phase-1-ops-architecture.md](phase-1-ops-architecture.md).
+The detailed Phase 1 Luna Ops fulfillment and shipment boundary is documented separately in [phase 1 operations architecture](ops-architecture.md).
 
 # 1. Architectural Goals
 
@@ -552,7 +552,7 @@ The repository also separates unit, integration, and smoke tests under the centr
 17. Payments supports authorization only.
 18. The fake payment provider is deterministic.
 19. Phase 1 has exactly one shipment per order.
-20. Shipment failure results in `ShippingPendingRetry`.
+20. Shipment failure leaves the order in `Preparing` and returns an error.
 21. Automatic retry is deferred.
 22. Customers cannot cancel orders.
 23. Next.js remains the public frontend boundary.
@@ -577,7 +577,7 @@ The repository also separates unit, integration, and smoke tests under the centr
 42. Backend services validate JWTs locally using discovered and cached signing keys.
 43. Authorization policies remain service-owned even when validation setup is shared.
 44. Cart access is authorized per customer using the token subject claim.
-45. Phase 1 Luna Ops uses the ownership and orchestration rules in [phase-1-ops-architecture.md](phase-1-ops-architecture.md); the broader Operations Console remains deferred.
+45. Phase 1 Luna Ops uses the ownership and orchestration rules in [phase 1 operations architecture](ops-architecture.md); the broader Operations Console remains deferred.
 
 # 14. Deferred Architecture
 

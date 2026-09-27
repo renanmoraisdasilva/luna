@@ -11,14 +11,9 @@ import { formatCurrency } from '../../lib/formatters/currency';
 
 type QueueFilter = 'All' | FulfillmentStatus;
 
-const filters: QueueFilter[] = ['All', 'Confirmed', 'Preparing', 'ShippingPendingRetry'];
-
-function statusLabel(status: FulfillmentStatus) {
-  return status === 'ShippingPendingRetry' ? 'Shipping Pending Retry' : status;
-}
+const filters: QueueFilter[] = ['All', 'Confirmed', 'Preparing'];
 
 function statusClass(status: FulfillmentStatus) {
-  if (status === 'ShippingPendingRetry') return 'bg-error-container text-status-error';
   if (status === 'Preparing') return 'bg-status-warning/15 text-status-warning';
   return 'bg-primary/10 text-primary';
 }
@@ -26,7 +21,6 @@ function statusClass(status: FulfillmentStatus) {
 function actionLabel(action: FulfillmentOrderSummary['availableAction']) {
   if (action === 'StartPreparing') return 'Start Preparing';
   if (action === 'CreateShipment') return 'Create Shipment';
-  if (action === 'RetryShipment') return 'Retry Shipment';
   return 'Unavailable';
 }
 
@@ -136,11 +130,10 @@ export default function FulfillmentQueue() {
         </div>
       </div>
 
-      <section className="grid grid-cols-1 gap-xl sm:grid-cols-2 lg:grid-cols-4" aria-label="Fulfillment summary">
+      <section className="grid grid-cols-1 gap-xl sm:grid-cols-2 lg:grid-cols-3" aria-label="Fulfillment summary">
         <Metric label="Total Orders" value={countFor('All')} detail="Total active orders" icon="inventory" />
         <Metric label="Confirmed" value={countFor('Confirmed')} detail="Awaiting preparation" icon="assignment" />
         <Metric label="Preparing" value={countFor('Preparing')} detail="In preparation" icon="precision" tone="warning" />
-        <Metric label="Pending Retry" value={countFor('ShippingPendingRetry')} detail="Requires retry" icon="sync-problem" tone="error" />
       </section>
 
       <section className="overflow-hidden rounded-lg border border-border-standard bg-surface-card shadow-sm" aria-labelledby="fulfillment-orders-heading">
@@ -149,8 +142,7 @@ export default function FulfillmentQueue() {
           <div className="flex max-w-full gap-xs overflow-x-auto rounded-button bg-surface-container-low p-xs">
             {filters.map((filter) => (
               <button key={filter} className={`flex shrink-0 items-center gap-xs rounded-button px-md py-sm font-label-caps text-label-caps transition-colors ${activeFilter === filter ? 'bg-primary text-on-primary shadow-sm' : 'text-secondary hover:bg-surface-container hover:text-on-surface'}`} type="button" onClick={() => changeFilter(filter)} aria-pressed={activeFilter === filter}>
-                {filter === 'ShippingPendingRetry' ? <span className="h-1.5 w-1.5 rounded-full bg-status-warning" aria-hidden="true" /> : null}
-                <span>{filter === 'All' ? 'All' : statusLabel(filter)}</span>
+                <span>{filter === 'All' ? 'All' : filter}</span>
                 <span className={`rounded-lg px-xs py-[1px] text-[10px] ${activeFilter === filter ? 'bg-primary-container text-on-primary' : 'bg-surface-container text-secondary'}`}>{countFor(filter)}</span>
               </button>
             ))}
@@ -194,9 +186,9 @@ export default function FulfillmentQueue() {
                   <td className="px-xl py-lg align-top"><span className="block font-status-pill text-status-pill font-semibold">{order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}</span></td>
                   <td className="px-xl py-lg align-top font-product-title text-[14px] font-semibold">{formatCurrency(order.total)}</td>
                   <td className="overflow-hidden px-xl py-lg align-top"><span className={`inline-flex max-w-full items-center gap-xs rounded-full px-sm py-xs font-label-caps text-label-caps ${order.paymentStatus === 'Authorized' ? 'bg-status-success/10 text-status-success' : 'bg-surface-container text-secondary'}`}><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${order.paymentStatus === 'Authorized' ? 'bg-status-success' : 'bg-secondary'}`} aria-hidden="true" /><span className="truncate">{order.paymentStatus}</span></span></td>
-                  <td className="overflow-hidden px-xl py-lg align-top"><span className={`inline-flex max-w-full rounded-full px-sm py-xs font-label-caps text-label-caps font-semibold ${statusClass(order.orderStatus)}`}><span className="truncate">{statusLabel(order.orderStatus)}</span></span></td>
+                  <td className="overflow-hidden px-xl py-lg align-top"><span className={`inline-flex max-w-full rounded-full px-sm py-xs font-label-caps text-label-caps font-semibold ${statusClass(order.orderStatus)}`}><span className="truncate">{order.orderStatus}</span></span></td>
                   <td className="whitespace-normal px-xl py-lg align-top font-label-caps text-[12px] text-on-surface">{formatCreatedAt(order.createdAt)}</td>
-                  <td className="px-xl py-lg text-right align-top"><button className={`inline-flex min-w-[150px] items-center justify-center gap-xs whitespace-nowrap rounded-button px-md py-sm text-center font-label-caps text-label-caps uppercase tracking-wider shadow-sm disabled:cursor-not-allowed ${order.orderStatus === 'ShippingPendingRetry' ? 'bg-status-error text-on-primary' : order.orderStatus === 'Preparing' ? 'bg-surface-container-high text-on-surface' : 'bg-primary text-on-primary'}`} type="button" disabled={order.availableAction === 'StartPreparing' ? prepareMutation.isPending : (order.availableAction !== 'CreateShipment' && order.availableAction !== 'RetryShipment') || shipmentMutation.isPending} onClick={() => { if (order.availableAction === 'StartPreparing') prepareMutation.mutate(order.orderId); else if (order.availableAction === 'CreateShipment' || order.availableAction === 'RetryShipment') shipmentMutation.mutate(order.orderId); }}><Icon name={actionIcon(order.availableAction)} className="h-4 w-4 shrink-0" /><span>{prepareMutation.isPending && prepareMutation.variables === order.orderId ? 'Starting...' : shipmentMutation.isPending && shipmentMutation.variables === order.orderId ? 'Creating...' : actionLabel(order.availableAction)}</span></button></td>
+                  <td className="px-xl py-lg text-right align-top"><button className={`inline-flex min-w-[150px] items-center justify-center gap-xs whitespace-nowrap rounded-button px-md py-sm text-center font-label-caps text-label-caps uppercase tracking-wider shadow-sm disabled:cursor-not-allowed ${order.orderStatus === 'Preparing' ? 'bg-surface-container-high text-on-surface' : 'bg-primary text-on-primary'}`} type="button" disabled={order.availableAction === 'StartPreparing' ? prepareMutation.isPending : order.availableAction !== 'CreateShipment' || shipmentMutation.isPending} onClick={() => { if (order.availableAction === 'StartPreparing') prepareMutation.mutate(order.orderId); else if (order.availableAction === 'CreateShipment') shipmentMutation.mutate(order.orderId); }}><Icon name={actionIcon(order.availableAction)} className="h-4 w-4 shrink-0" /><span>{prepareMutation.isPending && prepareMutation.variables === order.orderId ? 'Starting...' : shipmentMutation.isPending && shipmentMutation.variables === order.orderId ? 'Creating...' : actionLabel(order.availableAction)}</span></button></td>
                 </tr>
               ))}
             </tbody>
@@ -215,7 +207,7 @@ export default function FulfillmentQueue() {
   );
 }
 
-function Metric({ label, value, detail, icon, tone = 'default' }: { label: string; value: number; detail: string; icon: 'inventory' | 'assignment' | 'precision' | 'sync-problem'; tone?: 'default' | 'warning' | 'error' }) {
-  const toneClass = tone === 'error' ? 'text-status-error' : tone === 'warning' ? 'text-status-warning' : 'text-primary';
-  return <article className="flex min-h-[147px] flex-col justify-between rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm"><div className="flex items-start justify-between"><div className="flex flex-col gap-xs"><span className="font-label-caps text-label-caps uppercase text-secondary">{label}</span><span className={`font-headline-lg text-headline-lg-mobile ${tone === 'error' ? toneClass : 'text-on-surface'}`}>{value}</span></div><span className={`rounded-button bg-surface-container-low p-sm ${toneClass}`}><Icon name={icon} className="h-[22px] w-[22px]" /></span></div><span className="mt-lg border-t border-border-standard pt-md font-label-caps text-label-caps text-secondary">{detail}</span></article>;
+function Metric({ label, value, detail, icon, tone = 'default' }: { label: string; value: number; detail: string; icon: 'inventory' | 'assignment' | 'precision'; tone?: 'default' | 'warning' }) {
+  const toneClass = tone === 'warning' ? 'text-status-warning' : 'text-primary';
+  return <article className="flex min-h-[147px] flex-col justify-between rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm"><div className="flex items-start justify-between"><div className="flex flex-col gap-xs"><span className="font-label-caps text-label-caps uppercase text-secondary">{label}</span><span className="font-headline-lg text-headline-lg-mobile text-on-surface">{value}</span></div><span className={`rounded-button bg-surface-container-low p-sm ${toneClass}`}><Icon name={icon} className="h-[22px] w-[22px]" /></span></div><span className="mt-lg border-t border-border-standard pt-md font-label-caps text-label-caps text-secondary">{detail}</span></article>;
 }

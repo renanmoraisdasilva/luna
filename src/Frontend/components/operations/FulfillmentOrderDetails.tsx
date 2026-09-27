@@ -18,7 +18,7 @@ const pipeline = [
 
 function pipelineIndex(status: FulfillmentOrder['orderStatus']) {
   if (status === 'Confirmed') return 0;
-  if (status === 'Preparing' || status === 'ShippingPendingRetry') return 1;
+  if (status === 'Preparing') return 1;
   if (status === 'Shipped') return 2;
   return 4;
 }
@@ -26,12 +26,7 @@ function pipelineIndex(status: FulfillmentOrder['orderStatus']) {
 function actionLabel(action: FulfillmentOrder['availableAction']) {
   if (action === 'StartPreparing') return 'Start Order Preparation';
   if (action === 'CreateShipment') return 'Create Shipment';
-  if (action === 'RetryShipment') return 'Retry Shipment';
   return 'No action available';
-}
-
-function statusLabel(status: FulfillmentOrder['orderStatus']) {
-  return status === 'ShippingPendingRetry' ? 'Shipping Pending Retry' : status;
 }
 
 function actionIcon(action: FulfillmentOrder['availableAction']) {
@@ -71,7 +66,7 @@ export default function FulfillmentOrderDetails({ order }: { order: FulfillmentO
   const createdAt = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(order.createdAt));
   const addressLines = formatAddress(order);
   const canPrepare = order.availableAction === 'StartPreparing';
-  const canCreateShipment = order.availableAction === 'CreateShipment' || order.availableAction === 'RetryShipment';
+  const canCreateShipment = order.availableAction === 'CreateShipment';
   const commandPending = prepareMutation.isPending || shipmentMutation.isPending;
   const commandError = prepareMutation.error ?? shipmentMutation.error;
 
@@ -86,7 +81,7 @@ export default function FulfillmentOrderDetails({ order }: { order: FulfillmentO
           </div>
           <div className="flex flex-wrap items-center gap-md">
             <h1 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg">Order #{order.orderId}</h1>
-            <span className="rounded-full bg-primary/10 px-md py-xs font-label-caps text-label-caps uppercase text-primary">{statusLabel(order.orderStatus)}</span>
+            <span className="rounded-full bg-primary/10 px-md py-xs font-label-caps text-label-caps uppercase text-primary">{order.orderStatus}</span>
           </div>
           <p className="mt-xs font-status-pill text-status-pill text-secondary">Created {createdAt}</p>
         </div>
@@ -99,7 +94,7 @@ export default function FulfillmentOrderDetails({ order }: { order: FulfillmentO
         <div className="flex flex-col justify-between gap-md sm:flex-row sm:items-center">
           <div>
             <span id="fulfillment-pipeline-heading" className="font-label-caps text-label-caps uppercase text-secondary">Fulfillment Pipeline</span>
-            <p className="mt-xs flex items-center gap-xs font-body-md text-body-md text-on-surface-variant"><Icon name="info" className="h-5 w-5" />Current step: {statusLabel(order.orderStatus)}.</p>
+            <p className="mt-xs flex items-center gap-xs font-body-md text-body-md text-on-surface-variant"><Icon name="info" className="h-5 w-5" />Current step: {order.orderStatus}.</p>
           </div>
           <span className="rounded-full bg-surface-container-low px-md py-xs font-status-pill text-status-pill text-secondary">Step {activePipelineIndex + 1} of {pipeline.length}</span>
         </div>

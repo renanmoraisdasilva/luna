@@ -77,7 +77,7 @@ export type Order = {
   items: OrderItem[];
 };
 
-export type FulfillmentStatus = 'Confirmed' | 'Preparing' | 'ShippingPendingRetry' | 'Shipped' | 'Delivered';
+export type FulfillmentStatus = 'Confirmed' | 'Preparing' | 'Shipped' | 'Delivered';
 
 export type FulfillmentOrderSummary = {
   orderId: string;
@@ -88,7 +88,7 @@ export type FulfillmentOrderSummary = {
   paymentStatus: string;
   orderStatus: FulfillmentStatus;
   createdAt: string;
-  availableAction: 'StartPreparing' | 'CreateShipment' | 'RetryShipment' | 'None';
+  availableAction: 'StartPreparing' | 'CreateShipment' | 'None';
 };
 
 export type FulfillmentOrder = {

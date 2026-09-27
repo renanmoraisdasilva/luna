@@ -68,4 +68,57 @@ describe('FulfillmentOrderDetails', () => {
     await waitFor(() => expect(createShipment).toHaveBeenCalledWith('order-1'));
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
   });
+
+  it('renders a shipped order with no workflow command available', async () => {
+    renderDetails({ ...confirmedOrder, orderStatus: 'Shipped', availableAction: 'None' });
+
+    expect(screen.getByRole('heading', { name: 'No action available' })).toBeInTheDocument();
+    expect(screen.getByText('Step 3 of 5')).toBeInTheDocument();
+    expect(screen.getByText('The next workflow command will be available from this order state.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'No action available' })).toBeDisabled();
+    expect(createShipment).not.toHaveBeenCalled();
+  });
+
+  it('renders a delivered order with no workflow command available', async () => {
+    renderDetails({ ...confirmedOrder, orderStatus: 'Delivered', availableAction: 'None' });
+
+    expect(screen.getByRole('heading', { name: 'No action available' })).toBeInTheDocument();
+    expect(screen.getByText('Step 5 of 5')).toBeInTheDocument();
+    expect(screen.getByText('The next workflow command will be available from this order state.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'No action available' })).toBeDisabled();
+    expect(prepareFulfillmentOrder).not.toHaveBeenCalled();
+    expect(createShipment).not.toHaveBeenCalled();
+  });
+
+  it('shows the pending label while the workflow command is running', async () => {
+    vi.mocked(prepareFulfillmentOrder).mockReturnValue(new Promise(() => undefined));
+
+    renderDetails();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start Order Preparation' }));
+
+    expect(await screen.findByRole('button', { name: 'Processing...' })).toBeDisabled();
+  });
+
+  it('shows the message returned by a failed workflow command', async () => {
+    vi.mocked(prepareFulfillmentOrder).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 409, data: { message: 'The order changed state before the command ran.' } },
+    });
+
+    renderDetails();
+    fireEvent.click(screen.getByRole('button', { name: 'Start Order Preparation' }));
+
+    expect(await screen.findByText('The order changed state before the command ran.')).toBeInTheDocument();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('falls back when the workflow command fails without a response message', async () => {
+    vi.mocked(prepareFulfillmentOrder).mockRejectedValue({ isAxiosError: true, response: { status: 500, data: {} } });
+
+    renderDetails();
+    fireEvent.click(screen.getByRole('button', { name: 'Start Order Preparation' }));
+
+    expect(await screen.findByText('The fulfillment command could not be completed.')).toBeInTheDocument();
+  });
 });

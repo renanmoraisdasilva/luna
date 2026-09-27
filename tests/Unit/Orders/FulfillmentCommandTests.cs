@@ -30,7 +30,7 @@ public sealed class FulfillmentCommandTests
     }
 
     [Fact]
-    public async Task Create_shipment_marks_a_failed_attempt_for_retry()
+    public async Task Create_shipment_failure_leaves_the_order_preparing()
     {
         var order = CreateOrder(OrderStatus.Preparing, Guid.NewGuid());
         var repository = new FakeOrderRepository(order);
@@ -39,18 +39,23 @@ public sealed class FulfillmentCommandTests
         var act = () => handler.HandleAsync(new CreateShipmentCommand(order.Id), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Shipping unavailable.");
-        order.Status.Should().Be(OrderStatus.ShippingPendingRetry);
-        repository.SaveCount.Should().Be(1);
+        order.Status.Should().Be(OrderStatus.Preparing);
+        order.ShipmentId.Should().BeNull();
+        repository.SaveCount.Should().Be(0);
     }
 
     [Fact]
-    public async Task Create_shipment_can_retry_a_pending_order()
+    public async Task Create_shipment_can_be_attempted_again_after_a_failure()
     {
-        var order = CreateOrder(OrderStatus.ShippingPendingRetry, Guid.NewGuid());
+        var order = CreateOrder(OrderStatus.Preparing, Guid.NewGuid());
         var repository = new FakeOrderRepository(order);
-        var handler = new CreateShipmentHandler(repository, new FakeShippingFulfillmentClient());
+        var handler = new CreateShipmentHandler(repository, new FakeShippingFulfillmentClient { Failure = true });
 
-        var response = await handler.HandleAsync(new CreateShipmentCommand(order.Id), CancellationToken.None);
+        var failingAct = () => handler.HandleAsync(new CreateShipmentCommand(order.Id), CancellationToken.None);
+        await failingAct.Should().ThrowAsync<InvalidOperationException>();
+
+        var retryHandler = new CreateShipmentHandler(repository, new FakeShippingFulfillmentClient());
+        var response = await retryHandler.HandleAsync(new CreateShipmentCommand(order.Id), CancellationToken.None);
 
         response!.OrderStatus.Should().Be(nameof(OrderStatus.Shipped));
         order.Status.Should().Be(OrderStatus.Shipped);
@@ -69,6 +74,51 @@ public sealed class FulfillmentCommandTests
         shipping.OrderId.Should().BeNull();
     }
 
+    [Fact]
+    public async Task Fulfillment_handlers_return_null_for_unknown_orders_and_shipments()
+    {
+        var repository = new FakeOrderRepository(CreateOrder(OrderStatus.Confirmed, Guid.NewGuid()));
+        var shipping = new FakeShippingFulfillmentClient();
+
+        var prepare = await new PrepareFulfillmentOrderHandler(repository)
+            .HandleAsync(new PrepareFulfillmentOrderCommand(Guid.NewGuid()), CancellationToken.None);
+        var createShipment = await new CreateShipmentHandler(repository, shipping)
+            .HandleAsync(new CreateShipmentCommand(Guid.NewGuid()), CancellationToken.None);
+        var markInTransit = await new MarkShipmentInTransitHandler(repository, shipping)
+            .HandleAsync(new MarkShipmentInTransitCommand(Guid.NewGuid()), CancellationToken.None);
+        var markDelivered = await new MarkShipmentDeliveredHandler(repository, shipping)
+            .HandleAsync(new MarkShipmentDeliveredCommand(Guid.NewGuid()), CancellationToken.None);
+
+        prepare.Should().BeNull();
+        createShipment.Should().BeNull();
+        markInTransit.Should().BeNull();
+        markDelivered.Should().BeNull();
+        shipping.OrderId.Should().BeNull();
+        repository.SaveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Create_shipment_rejects_a_preparing_order_without_a_shipping_quote()
+    {
+        var order = Order.Create(
+            Guid.NewGuid(),
+            [new OrderItemSnapshot(Guid.NewGuid(), "SKU-001", "Test product", 25, 1)],
+            ShippingAddress.Create("Jane Operator", "1 Test Street", null, "Austin", "Texas", "78701", "US"),
+            "STANDARD",
+            5,
+            "missing-quote");
+        order.Confirm();
+        order.Prepare();
+        var shipping = new FakeShippingFulfillmentClient();
+        var handler = new CreateShipmentHandler(new FakeOrderRepository(order), shipping);
+
+        var act = () => handler.HandleAsync(new CreateShipmentCommand(order.Id), CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("The order does not have a shipping quote.");
+        shipping.OrderId.Should().BeNull();
+    }
+
     private static Order CreateOrder(OrderStatus status, Guid quoteId)
     {
         var order = Order.Create(
@@ -79,19 +129,14 @@ public sealed class FulfillmentCommandTests
             5,
             "fulfillment-test",
             shippingQuoteId: quoteId);
-        if (status is OrderStatus.Confirmed or OrderStatus.Preparing or OrderStatus.ShippingPendingRetry)
+        if (status is OrderStatus.Confirmed or OrderStatus.Preparing)
         {
             order.Confirm();
         }
 
-        if (status is OrderStatus.Preparing or OrderStatus.ShippingPendingRetry)
+        if (status is OrderStatus.Preparing)
         {
             order.Prepare();
-        }
-
-        if (status == OrderStatus.ShippingPendingRetry)
-        {
-            order.MarkShippingPendingRetry();
         }
 
         return order;

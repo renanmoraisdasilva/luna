@@ -45,31 +45,22 @@ public sealed class CreateShipmentHandler(
             throw new InvalidOperationException("The order does not have a shipping quote.");
         }
 
-        try
-        {
-            var shipment = await shippingClient.CreateShipmentAsync(
-                order.Id,
-                shippingQuoteId,
-                new ShipmentRecipientSnapshot(
-                    order.CustomerId,
-                    order.ShippingAddress.FullName,
-                    order.ShippingAddress.AddressLine1,
-                    order.ShippingAddress.AddressLine2,
-                    order.ShippingAddress.City,
-                    order.ShippingAddress.StateOrProvince,
-                    order.ShippingAddress.PostalCode,
-                    order.ShippingAddress.Country),
-                cancellationToken);
-            order.RecordShipment(shipment.ShipmentId);
-            order.MarkShipped();
-            await repository.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            order.MarkShippingPendingRetry();
-            await repository.SaveChangesAsync(cancellationToken);
-            throw;
-        }
+        var shipment = await shippingClient.CreateShipmentAsync(
+            order.Id,
+            shippingQuoteId,
+            new ShipmentRecipientSnapshot(
+                order.CustomerId,
+                order.ShippingAddress.FullName,
+                order.ShippingAddress.AddressLine1,
+                order.ShippingAddress.AddressLine2,
+                order.ShippingAddress.City,
+                order.ShippingAddress.StateOrProvince,
+                order.ShippingAddress.PostalCode,
+                order.ShippingAddress.Country),
+            cancellationToken);
+        order.RecordShipment(shipment.ShipmentId);
+        order.MarkShipped();
+        await repository.SaveChangesAsync(cancellationToken);
 
         return new FulfillmentCommandResponse(order.Id, order.Status.ToString());
     }

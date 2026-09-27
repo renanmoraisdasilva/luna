@@ -3,7 +3,7 @@
 @orderId = 00000000-0000-0000-0000-000000000000
 
 ### Get the fulfillment queue
-GET {{baseUrl}}/api/v1/orders/fulfillment?status=Confirmed,Preparing,ShippingPendingRetry&search=&page=1&pageSize=25
+GET {{baseUrl}}/api/v1/orders/fulfillment?status=Confirmed,Preparing&search=&page=1&pageSize=25
 Authorization: Bearer {{accessToken}}
 
 ### Get a fulfillment order by ID

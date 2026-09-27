@@ -131,7 +131,7 @@ public sealed class Order
 
     public void MarkShipped()
     {
-        EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);
+        EnsureStatus(OrderStatus.Preparing);
         Status = OrderStatus.Shipped;
     }
 
@@ -160,13 +160,7 @@ public sealed class Order
         Status = OrderStatus.Delivered;
     }
 
-    public void EnsureShipmentCreationAllowed() => EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);
-
-    public void MarkShippingPendingRetry()
-    {
-        EnsureStatus(OrderStatus.Preparing, OrderStatus.ShippingPendingRetry);
-        Status = OrderStatus.ShippingPendingRetry;
-    }
+    public void EnsureShipmentCreationAllowed() => EnsureStatus(OrderStatus.Preparing);
 
     private void EnsureStatus(params OrderStatus[] expectedStatuses)
     {
@@ -283,5 +277,4 @@ public enum OrderStatus
     Preparing,
     Shipped,
     Delivered,
-    ShippingPendingRetry,
 }

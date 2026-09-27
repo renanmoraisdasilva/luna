@@ -5,7 +5,7 @@
 **Applies to:** Orders, Shipping, Operations UI, and customer order tracking  
 **Primary concern:** Service boundaries and workflow orchestration
 
-This document defines how the Phase 1 Operations workflow is allowed to collaborate across the Operations UI, Orders, and Shipping. The functional requirements remain in [phase-1-spec.md](phase-1-spec.md); this document defines the architectural shape that implementation must follow.
+This document defines how the Phase 1 Operations workflow is allowed to collaborate across the Operations UI, Orders, and Shipping. The functional requirements remain in [phase 1 specification](spec.md); this document defines the architectural shape that implementation must follow.
 
 ## Contents
 
@@ -42,10 +42,12 @@ The associated shipment moves through:
 no shipment -> Created -> InTransit -> Delivered
 ```
 
-Shipment creation may fail without creating a shipment:
+Shipment creation may fail without creating a shipment. The command returns an
+error and the order stays where it is; there is no dedicated retry state:
 
 ```text
-Preparing -> ShippingPendingRetry -> retry -> Shipped
+Preparing --success--> Shipped
+Preparing --failure--> Preparing (error, no shipment)
 ```
 
 Phase 1 uses synchronous HTTP. It does not introduce asynchronous recovery, outbox processing, distributed transactions, or automatic retry workers.
@@ -67,7 +69,6 @@ Only Orders may transition the Order aggregate:
 ```text
 Confirmed -> Preparing
 Preparing -> Shipped
-Preparing -> ShippingPendingRetry
 Shipped -> Delivered
 ```
 
@@ -187,7 +188,7 @@ GET /api/v1/orders/fulfillment
 Supported query parameters:
 
 ```text
-status=Confirmed,Preparing,ShippingPendingRetry
+status=Confirmed,Preparing
 search=
 page=1
 pageSize=25
@@ -230,20 +231,19 @@ Confirmed -> Preparing
 
 Invalid transitions, such as `Shipped -> Preparing`, return `409 Conflict` and must not be silently normalized.
 
-## 5.4 Create or retry shipment
+## 5.4 Create shipment
 
 ```http
 POST /api/v1/orders/fulfillment/{orderId}/shipment
 ```
 
-The same command handles initial creation and operator retry. It is valid for:
+The command is valid for:
 
 ```text
 Preparing
-ShippingPendingRetry
 ```
 
-Orders validates the state, requests shipment creation from Shipping, marks the Order `Shipped` after success, and marks it `ShippingPendingRetry` when shipment creation fails. The browser does not need a separate retry endpoint.
+Orders validates the state, requests shipment creation from Shipping, and marks the Order `Shipped` after success. When shipment creation fails, no shipment is established, the Order stays `Preparing`, and the command returns an error. The browser does not need a separate retry endpoint or a retry state; the same command can be sent again later.
 
 # 6. Fulfillment Workflows
 
@@ -262,21 +262,13 @@ The domain enforces `Confirmed -> Preparing`. Pricing, payment state, inventory 
 ## 6.2 Create shipment
 
 ```text
-Preparing
-    |
-    | Create Shipment
-    +----------------------+
-    |                      |
-  success                failure
-    |                      |
-    v                      v
-Shipped          ShippingPendingRetry
-    |                      |
-    |                      | Retry same command
-    |                      +----------+
-    |                                 |
-    +---------------------------------+
+Preparing --success--> Shipped
+Preparing --failure--> Preparing (error, no shipment)
 ```
+
+A failed attempt leaves the order `Preparing`, so a later `Create Shipment`
+command from the operator repeats the same attempt. There is no separate retry
+command and no retry-specific order state.
 
 The successful cross-service result is:
 
@@ -429,7 +421,7 @@ The frontend is not responsible for:
 - generating tracking numbers
 - deciding when an order becomes `Shipped` or `Delivered`
 
-The current fulfillment rendering is [fullfilment.html](../ui_renderings/luna_ops/fullfilment.html). The related Operations renderings are [fullfilment_details.html](../ui_renderings/luna_ops/fullfilment_details.html), [create_shipment.html](../ui_renderings/luna_ops/create_shipment.html), [shipments.html](../ui_renderings/luna_ops/shipments.html), and [shipment_details.html](../ui_renderings/luna_ops/shipment_details.html).
+The current fulfillment rendering is [fullfilment.html](../../ui_renderings/luna_ops/fullfilment.html). The related Operations renderings are [fullfilment_details.html](../../ui_renderings/luna_ops/fullfilment_details.html), [create_shipment.html](../../ui_renderings/luna_ops/create_shipment.html), [shipments.html](../../ui_renderings/luna_ops/shipments.html), and [shipment_details.html](../../ui_renderings/luna_ops/shipment_details.html).
 
 # 11. Operations Authorization
 
@@ -442,7 +434,7 @@ Customer
 Operations/Admin
     -> fulfillment queue and details
     -> start preparation
-    -> create or retry shipment
+    -> create shipment
     -> shipment list and details
     -> mark in transit
     -> mark delivered
@@ -459,7 +451,6 @@ Authorization policy remains service-owned and should use the existing Luna auth
 | --- | --- | --- |
 | Order `Confirmed` | Orders | Orders application/domain |
 | Order `Preparing` | Orders | Orders application/domain |
-| Order `ShippingPendingRetry` | Orders | Orders application/domain |
 | Order `Shipped` | Orders | Orders application/domain |
 | Order `Delivered` | Orders | Orders application/domain |
 | Shipment `Created` | Shipping | Shipping application/domain |
@@ -474,7 +465,6 @@ The Operations UI requests transitions but owns none of this state.
 | --- | --- | --- | --- |
 | Start preparation | `POST /orders/fulfillment/{id}/prepare` | Orders | Orders |
 | Create shipment | `POST /orders/fulfillment/{id}/shipment` | Orders | Orders + Shipping |
-| Retry shipment | Same shipment command | Orders | Orders + Shipping |
 | Mark in transit | `POST /orders/fulfillment/shipments/{id}/in-transit` | Orders | Shipping |
 | Mark delivered | `POST /orders/fulfillment/shipments/{id}/delivered` | Orders | Shipping + Orders |
 
@@ -499,9 +489,10 @@ Workflow ownership and state ownership are related but not identical. Orders coo
              success                  failure
                 |                       |
                 v                       v
-        Shipment: Created       ShippingPendingRetry
+        Shipment: Created      Order stays Preparing
+                |               (error, no shipment)
                 |                       |
-                |                       | Retry same command
+                |                       | operator sends the same command again
                 |                       +----------+
                 v                                  |
           Order: Shipped <-------------------------+
@@ -558,7 +549,7 @@ This architecture deliberately does not introduce:
 The Phase 1 recovery model is:
 
 ```text
-shipment failure -> ShippingPendingRetry -> operator retry
+shipment failure -> error response, order stays Preparing -> operator sends the same command again
 ```
 
 # 17. Implementation Rule
@@ -605,6 +596,6 @@ In compact form:
 
 Related documents:
 
-- [Phase 1 functional specification](phase-1-spec.md)
-- [Phase 1 architecture](phase-1-architecture.md)
-- [Luna Ops fulfillment rendering](../ui_renderings/luna_ops/fullfilment.html)
+- [Phase 1 functional specification](spec.md)
+- [Phase 1 architecture](architecture.md)
+- [Luna Ops fulfillment rendering](../../ui_renderings/luna_ops/fullfilment.html)

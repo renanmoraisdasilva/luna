@@ -46,7 +46,7 @@ Phase 1 does **not** attempt to solve distributed reliability.
 
 ## Implementation status
 
-**Substantially implemented; closure pending cross-service proof as of 2026-09-26.** The repository contains the required catalog, cart, authentication, checkout, order history/detail, inventory, payment authorization, fulfillment, shipping, Luna Ops, and customer frontend surfaces. Checkout also has customer-scoped idempotency for repeated requests using the same `Idempotency-Key`, and frontend checkout error-state coverage is present. Customer shipment tracking and real Orders/Shipping fulfillment-to-delivery HTTP integration tests are implemented, including invalid and duplicate shipment transitions. The remaining gaps are the complete real-boundary checkout failure matrix and Docker-backed quality-gate execution.
+**Substantially implemented; closure pending the recorded quality gate as of 2026-09-26.** The repository contains the required catalog, cart, authentication, checkout, order history/detail, inventory, payment authorization, fulfillment, shipping, Luna Ops, and customer frontend surfaces. Checkout also has customer-scoped idempotency for repeated requests using the same `Idempotency-Key`, and frontend checkout error-state coverage is present. Customer shipment tracking and real Orders/Shipping fulfillment-to-delivery HTTP integration tests are implemented, including invalid and duplicate shipment transitions. The checkout failure matrix is now proven across real service boundaries through in-process multi-host tests covering successful checkout, insufficient inventory, payment failure with reservation release, shipment creation failure that leaves the order `Preparing` with a later successful attempt, and repeated idempotent checkout requests (SPEC-TEST-003). The remaining gap is the recorded Docker-backed quality-gate execution: frontend build, Compose smoke checks, and coverage run together as one gate.
 
 ---
 
@@ -377,19 +377,11 @@ Pending
                               v
                           Preparing
                               |
-                     ----------------
-                     |                 |
-                     v                 v
-                  Shipped       ShippingPendingRetry
-                     |                 |
-                     |                 |
-                     v                 |
-                 Delivered             |
-                                       |
-                              future recovery
-                                       |
-                                       v
-                                    Shipped
+                              v
+                           Shipped
+                              |
+                              v
+                          Delivered
 ```
 
 ## SPEC-ORD-001 - Valid transitions
@@ -429,15 +421,17 @@ An order must not skip directly from Pending to Delivered.
 
 **When** the shipment creation workflow fails before a shipment is successfully established
 
-**Then** the order becomes:
+**Then** the order remains:
 
 ```text
-ShippingPendingRetry
+Preparing
 ```
 
-Orders owns this order transition; Shipping reports the shipment operation result and does not arbitrarily change the Order state.
+No shipment is established, and the command returns an error.
 
-No automatic retry is required in Phase 1.
+Orders owns this order state; Shipping reports the shipment operation result and does not arbitrarily change the Order state.
+
+No automatic retry and no dedicated retry state are required in Phase 1. The same create-shipment command may be sent again later.
 
 ---
 
@@ -630,7 +624,7 @@ The tracking identifier must be generated as part of successful shipment creatio
 
 Creating a shipment and associating it with an order is one logical operation from the Operations user's perspective. The frontend must initiate one shipment workflow; it must not coordinate separate requests to create a shipment and mark the order as shipped.
 
-The workflow is rendered by [create_shipment.html](../ui_renderings/luna_ops/create_shipment.html).
+The workflow is rendered by [create_shipment.html](../../ui_renderings/luna_ops/create_shipment.html).
 
 ---
 
@@ -687,7 +681,7 @@ The operation must reject attempts to deliver a shipment that is not currently `
 
 After successful delivery, the Operations UI must no longer expose an action to advance the shipment. The customer order must display the order as delivered.
 
-The shipment list and detail workflows are rendered by [shipments.html](../ui_renderings/luna_ops/shipments.html) and [shipment_details.html](../ui_renderings/luna_ops/shipment_details.html).
+The shipment list and detail workflows are rendered by [shipments.html](../../ui_renderings/luna_ops/shipments.html) and [shipment_details.html](../../ui_renderings/luna_ops/shipment_details.html).
 
 ---
 # 11. Payments
@@ -779,7 +773,6 @@ The queue must display orders whose lifecycle requires an operations action, inc
 
 - `Confirmed`
 - `Preparing`
-- `ShippingPendingRetry`
 
 Each order entry must provide enough information for an operator to identify the order and its current state.
 
@@ -802,14 +795,11 @@ Confirmed
 
 Preparing
    -> Create Shipment
-
-ShippingPendingRetry
-   -> Retry Shipment
 ```
 
 The Operations UI must not expose invalid lifecycle actions. The queue does not change order state directly; actions must be processed by the Orders and Shipping APIs.
 
-The queue is rendered by [fullfilment.html](../ui_renderings/luna_ops/fullfilment.html).
+The queue is rendered by [fullfilment.html](../../ui_renderings/luna_ops/fullfilment.html).
 
 ---
 
@@ -834,7 +824,7 @@ The operation must not modify:
 
 After a successful transition, the order must appear as `Preparing` in the Operations fulfillment queue.
 
-The order-level workflow is rendered by [fullfilment_details.html](../ui_renderings/luna_ops/fullfilment_details.html).
+The order-level workflow is rendered by [fullfilment_details.html](../../ui_renderings/luna_ops/fullfilment_details.html).
 
 ---
 # 13. Frontend Behavior
@@ -895,7 +885,6 @@ The fulfillment interface must allow an authorized operations user to:
 3. Open an order.
 4. Start preparation for a `Confirmed` order.
 5. Create a shipment for a `Preparing` order.
-6. Retry shipment creation for an order in `ShippingPendingRetry`, where supported.
 
 The UI must only display actions valid for the current backend state. The frontend must not implement order state transitions locally.
 
@@ -909,7 +898,7 @@ If an operation fails:
 
 The Operations interface must not expose customer-only functionality as Operations functionality.
 
-The queue and order workflow are represented by [fullfilment.html](../ui_renderings/luna_ops/fullfilment.html) and [fullfilment_details.html](../ui_renderings/luna_ops/fullfilment_details.html).
+The queue and order workflow are represented by [fullfilment.html](../../ui_renderings/luna_ops/fullfilment.html) and [fullfilment_details.html](../../ui_renderings/luna_ops/fullfilment_details.html).
 
 ---
 
@@ -949,7 +938,7 @@ Delivered
 
 The frontend must not directly modify shipment or order state.
 
-The shipment list and detail workflows are represented by [shipments.html](../ui_renderings/luna_ops/shipments.html) and [shipment_details.html](../ui_renderings/luna_ops/shipment_details.html). Shipment creation is represented by [create_shipment.html](../ui_renderings/luna_ops/create_shipment.html).
+The shipment list and detail workflows are represented by [shipments.html](../../ui_renderings/luna_ops/shipments.html) and [shipment_details.html](../../ui_renderings/luna_ops/shipment_details.html). Shipment creation is represented by [create_shipment.html](../../ui_renderings/luna_ops/create_shipment.html).
 
 ---
 
@@ -1058,7 +1047,7 @@ Phase 1 intentionally supports only a small failure model.
 | Product unavailable        | Checkout fails                           |
 | Insufficient inventory     | Reservation fails; payment not attempted |
 | Payment rejected           | `PaymentFailed`; inventory released      |
-| Shipment creation fails    | `ShippingPendingRetry`                   |
+| Shipment creation fails    | Order stays `Preparing`; command errors   |
 | Unexpected service failure | Structured `500` response                |
 
 The following are intentionally unresolved:
@@ -1159,7 +1148,8 @@ Payment failure
     -> inventory is released
 
 Shipment failure
-    -> order becomes ShippingPendingRetry
+    -> order stays Preparing
+    -> the shipment command returns an error
 ```
 
 The phase is also complete when:
@@ -1174,7 +1164,7 @@ The phase is also complete when:
 * [x] concurrency behavior is tested for inventory
 * [x] customer frontend implements the required routes
 * [x] authentication works
-* [ ] checkout works end-to-end across real service boundaries
+* [x] checkout works end-to-end across real service boundaries
 * [x] failure scenarios emit structured application and telemetry signals
 * [x] Phase 2 can introduce asynchronous messaging without redesigning the basic commerce model
 
@@ -1243,6 +1233,20 @@ The test must verify that:
 
 The test must use the real service persistence boundaries rather than directly manipulating domain state to simulate the lifecycle.
 
+## SPEC-TEST-003 - Cross-service checkout failure matrix
+
+Integration tests must prove checkout across real service boundaries, with each downstream service running as its own host with its own database.
+
+The tests must verify:
+
+1. Successful checkout across Catalog, Shipping, Inventory, and Payments: the order becomes `Confirmed` with price and shipping snapshots, inventory is reserved, payment is authorized, and the shipping quote is owned by Shipping.
+2. Insufficient inventory: checkout fails, payment is not attempted, no reservation is persisted, and available stock is unchanged.
+3. Payment failure: the order becomes `PaymentFailed`, the reservation is released, available stock is restored, and the payment attempt is recorded as failed.
+4. Shipment creation failure: a prepared order stays `Preparing` with no shipment established and the command returns an error, and a later attempt succeeds once Shipping accepts the request.
+5. Repeated checkout with the same customer and `Idempotency-Key`: the replayed response matches the original checkout response and no duplicate order, reservation, payment, or quote exists.
+
+The tests must exercise the real HTTP and persistence boundaries rather than stubbing downstream service clients.
+
 ---
 
 # 23. Implementation Checklist
@@ -1283,7 +1287,7 @@ The test must use the real service persistence boundaries rather than directly m
 - [x] SPEC-ORD-001 - Valid transitions
 - [x] SPEC-ORD-002 - Payment failure
 - [x] SPEC-ORD-003 - Shipment failure
-- [ ] SPEC-ORD-004 - Customer cancellation
+- [x] SPEC-ORD-004 - Customer cancellation
 
 ## Inventory
 
@@ -1344,7 +1348,7 @@ The test must use the real service persistence boundaries rather than directly m
 
 - [x] SPEC-TEST-001 - Business behavior
 - [x] SPEC-TEST-002 - Catalog reads
-- [ ] SPEC-TEST-003 - Cross-service behavior across real service boundaries
+- [x] SPEC-TEST-003 - Cross-service behavior across real service boundaries
 - [x] SPEC-TEST-004 - Coverage collection and quality-gate reporting
 - [x] SPEC-TEST-005 - Fulfillment lifecycle integration test
 - [x] SPEC-TEST-006 - Shipment lifecycle integration test
