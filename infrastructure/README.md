@@ -9,6 +9,15 @@ This directory contains Luna's container definitions, local Compose stacks, and 
 - `docker-compose.prod.yml` is the production Compose definition. Dokploy reads it directly from this repository; server-only values are supplied through the Dokploy application environment.
 - `docker-compose.observability.yml` is a local-development compatibility file. Production SigNoz is owned by the separate `server-infra` repository.
 
+## Local AWS Emulator
+
+Phase 2 messaging runs on [Floci](https://github.com/floci-io/floci), a free MIT-licensed local AWS emulator. It serves EventBridge, SQS, and SES on port `4566`, needs no account or auth token, and is a drop-in replacement for other LocalStack-compatible emulators.
+
+- `floci` in `docker-compose.yml` uses the pinned `-compat` image, because the deploy-time seed script runs the AWS CLI inside it. It needs no service selection, has no secret, and is probed on `/_floci/health`.
+- `floci-ui` in `docker-compose.dev.yml` only, on port `4500`. It is a local browser for SQS queues, EventBridge rules, and captured SES mail. It is never deployed to the server.
+
+Open [http://localhost:4500](http://localhost:4500) to browse queues and rules, or [http://localhost:4566/_aws/ses](http://localhost:4566/_aws/ses) to read captured emails directly. Emulator state is in-memory, so a recreated container starts empty and the seed script reprovisions the bus, queues, rules, and SES identity.
+
 Important: `docker-compose.prod.yml` uses `${...}` substitutions and required-value checks (`${VAR:?...}`). Compose rejects the deployment when a required value is missing or malformed, so every required variable must be present in the Dokploy application environment before the stack starts.
 
 A sample file is provided at `.env.example` for reference. Use it as the checklist of required values when configuring the application environment in Dokploy, replacing the example values with the real database connection strings.
@@ -23,6 +32,15 @@ docker compose \
   -f infrastructure/docker-compose.dev.yml \
    -f infrastructure/docker-compose.observability.yml \
   up --build
+```
+
+The local stack also starts the AWS emulator and its UI. Start or stop just the emulator when you want it without Luna's services:
+
+```bash
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.dev.yml \
+  up -d floci floci-ui
 ```
 
 To start only the backend plus observability services during host-side frontend development:

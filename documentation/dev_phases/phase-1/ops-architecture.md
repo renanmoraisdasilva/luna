@@ -536,7 +536,7 @@ Also prohibited:
 
 This architecture deliberately does not introduce:
 
-- LocalStack messaging (EventBridge, SQS, SES)
+- Emulated messaging (EventBridge, SQS, SES)
 - outbox or inbox processing
 - distributed transactions
 - distributed locks

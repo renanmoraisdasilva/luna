@@ -48,7 +48,7 @@ Luna is primarily a learning and experimentation platform. It explores concepts 
 
 - Microservice boundaries and bounded contexts
 - Asynchronous communication and event-driven architecture
-- EventBridge and SQS through LocalStack, and eventual consistency
+- EventBridge and SQS through a local AWS emulator, and eventual consistency
 - Transactional outbox and idempotency
 - Retries and dead-letter queues
 - Distributed tracing, structured logging, metrics, and health checks
@@ -78,7 +78,7 @@ Catalog ------> Orders
                  +----------> Shipping ---> Simulated Carrier
 ```
 
-LocalStack emulates EventBridge, SQS, and SES locally and on the self-hosted server, so Luna calls the AWS APIs it will use in Phase 15 instead of running a different broker locally and translating it later.
+A free local AWS emulator (Floci) emulates EventBridge, SQS, and SES locally and on the self-hosted server, so Luna calls the AWS APIs it will use in Phase 15 instead of running a different broker locally and translating it later.
 
 ## Customer Experience
 
@@ -110,7 +110,7 @@ Payments      HEALTHY
 Inventory     HEALTHY
 Fulfillment   HEALTHY
 Shipping      HEALTHY
-LocalStack    HEALTHY
+Floci         HEALTHY
 ```
 
 ### Business health
@@ -227,13 +227,14 @@ Shipping owns the rate calculation. Orders snapshots the resulting shipping cost
 | Frontend server state | TanStack Query |
 | Frontend HTTP | Axios through centralized typed API clients |
 | Frontend testing | Vitest, Testing Library, Playwright |
-| Messaging | EventBridge, SQS, SES through the AWS SDK, emulated by LocalStack |
+| Messaging | EventBridge, SQS, SES through the AWS SDK, emulated locally by Floci |
+| Local emulator | Floci (MIT, no account or token) plus Floci UI on port 4500 for inspection |
 | Infrastructure | Docker, Docker Compose |
 | Observability | OpenTelemetry, SigNoz, structured logging |
 | Testing | xUnit, FluentAssertions, Moq, Testcontainers, Playwright |
 | Cloud | AWS equivalents explored in later phases |
 
-The initial implementation runs in the local Docker Compose stack. From Phase 2 the same stack also runs on the self-hosted server through Dokploy, with LocalStack supplying the AWS services it emulates. Phase 15 changes the endpoints to real AWS.
+The initial implementation runs in the local Docker Compose stack. From Phase 2 the same stack also runs on the self-hosted server through Dokploy, with the emulator supplying the AWS services it emulates. Phase 15 changes the endpoints to real AWS.
 
 ## Development Philosophy
 
@@ -291,7 +292,7 @@ Frontend rendering and data-fetching boundaries:
 
 ### Phase 2: Messaging and Async Workflows
 
-**Decision:** Phase 2 runs on **LocalStack** emulating EventBridge, SQS, and SES instead of RabbitMQ, and is deployed rather than local-only: the same stack runs locally and on the self-hosted server through Dokploy. The rationale, the accepted caveats (Hobby-plan limits, the v1 SES API, lost RabbitMQ-specific literacy), and the one-to-one AWS mapping contract are recorded in the [phase 2 decision record](dev_phases/phase-2/architecture.md#decision-record-localstack-eventbridge--sqs--ses-instead-of-rabbitmq). RabbitMQ is not used anywhere in Luna.
+**Decision:** Phase 2 runs on **Floci**, a free MIT-licensed local AWS emulator serving EventBridge, SQS, and SES on port `4566`, instead of RabbitMQ. It needs no account, auth token, or paid tier, and it is deployed rather than local-only: the same stack runs locally and on the self-hosted server through Dokploy. A separate **Floci UI** container on port `4500` gives a local browser for queues, EventBridge rules, and captured SES mail; it is a development tool and is never deployed. The rationale, the accepted caveats, the rejected alternatives (RabbitMQ and LocalStack), and the one-to-one AWS mapping contract are recorded in the [phase 2 decision record](dev_phases/phase-2/architecture.md#decision-record-floci-eventbridge--sqs--ses-instead-of-rabbitmq). RabbitMQ is not used anywhere in Luna.
 
 **Goal:** Introduce asynchronous messaging through the AWS SDK: an EventBridge bus, SQS queues with DLQs and redrive policies, routing rules, long-polling consumers, at-least-once delivery, competing consumers, and eventual consistency. Domain events go to the bus, work items go directly to a queue. A new Notification bounded context consumes its own queues and emails customers through SES. Publishing happens directly after the database commit, leaving the known dual-write window to be observed here and fixed by the Phase 5 outbox; duplicates are likewise surfaced here and fixed by Phase 4 idempotency. The Ops shipment-creation command queue is deferred to Phase 3.
 
@@ -365,13 +366,13 @@ Roles include Customer, Warehouse Operator, Support, and Administrator.
 
 **Goal:** Expand unit, integration, contract, end-to-end, and failure testing.
 
-Use real databases and LocalStack through Testcontainers. Cover duplicate events, service outages, database failures, consumer crashes, carrier timeouts, and other unhappy paths.
+Use real databases and the pinned emulator image through Testcontainers. Cover duplicate events, service outages, database failures, consumer crashes, carrier timeouts, and other unhappy paths.
 
 ### Phase 14: Production-like Local Infrastructure
 
 **Goal:** Run Luna in a production-like local environment and learn how infrastructure is provisioned and configured.
 
-This phase includes Docker and Docker Compose, a reverse proxy or gateway, multiple service instances, databases, the LocalStack messaging emulator, observability, CI/CD, backups, production-like configuration, and self-hosted infrastructure automation with Terraform and Ansible.
+This phase includes Docker and Docker Compose, a reverse proxy or gateway, multiple service instances, databases, the local AWS emulator, observability, CI/CD, backups, production-like configuration, and self-hosted infrastructure automation with Terraform and Ansible.
 
 The learning progression is:
 
@@ -415,9 +416,9 @@ The local-to-cloud translation is:
 | --- | --- |
 | Docker Compose | ECS/Fargate |
 | SQL Server container | RDS |
-| LocalStack EventBridge | EventBridge |
-| LocalStack SQS queues and DLQs | SQS |
-| LocalStack SES | SES |
+| Emulated EventBridge | EventBridge |
+| Emulated SQS queues and DLQs | SQS |
+| Emulated SES | SES |
 | S3-like storage | S3 |
 | Reverse proxy | ALB/API Gateway |
 | Local configuration and secrets | Secrets Manager |
@@ -442,13 +443,13 @@ Scenarios include:
 - Delayed fulfillment and carrier failures
 - Carrier and internal tracking discrepancies
 - Multiple warehouses and multiple shipments per order
-- LocalStack, database, and service instance outages
+- Emulator, database, and service instance outages
 - Slow dependencies and message backlog recovery
 - Event and schema version changes
 
 ## Project Status
 
-**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; Phase 2 specified with the LocalStack messaging direction accepted but not yet implemented; the initial Luna Ops workflow and observability foundation are delivered ahead of the original sequence.**
+**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; Phase 2 specified with the Floci messaging direction accepted and the emulator verified locally, but no Phase 2 service code yet; the initial Luna Ops workflow and observability foundation are delivered ahead of the original sequence.**
 
 Luna is being built incrementally. Architecture and implementation decisions may change as new requirements and failure scenarios are introduced. The repository is intentionally a work in progress.
 
@@ -470,7 +471,7 @@ Phase 1 closure is still pending only on a recorded quality-gate run and the imp
 | --- | --- | --- |
 | 0 | Complete | Foundation, service boundaries, infrastructure, CI, and baseline security are implemented. |
 | 1 | In closure | Synchronous commerce path, customer tracking, the Orders/Shipping lifecycle proof, and the real-boundary checkout failure matrix are implemented; the recorded quality gate and closure review remain. |
-| 2 | Specified, not started | The Phase 2 specification and architecture are written and accepted. The LocalStack (EventBridge + SQS + SES) direction replaces the earlier RabbitMQ plan, and the Ops command queue is deferred to Phase 3. No Phase 2 code exists yet. |
+| 2 | Specified, infrastructure started | The Phase 2 specification and architecture are accepted. Floci (EventBridge + SQS + SES) replaces the earlier RabbitMQ plan and the earlier LocalStack choice, and the Ops command queue is deferred to Phase 3. The emulator and its UI are wired into the local Compose stack and verified by hand; the seed script and the Notification service do not exist yet. |
 | 3-7 | Not started | Simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
 | 8 | Foundation delivered | Telemetry and local SigNoz are implemented; operational dashboards and workflows remain later work. |
 | 9-16 | Not started | Operations Console, redundancy, chaos, advanced security, production infrastructure, AWS, and scenario exercises remain future work. |
@@ -478,6 +479,6 @@ Phase 1 closure is still pending only on a recorded quality-gate run and the imp
 ### Next steps
 
 1. Run the Docker-dependent integration suite, frontend build, Compose smoke checks, and coverage as one recorded quality gate. (The integration suite has passed locally; the frontend build, Compose smoke, and coverage still need to run together as one recorded pass.)
-2. Close Phase 1 with an implementation review, then begin Phase 2 by adding LocalStack, the event bus, the SQS queues, and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required.
+2. Close Phase 1 with an implementation review, then continue Phase 2 by adding the idempotent seed script, the producers, and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required. The emulator is already running locally.
 
 Asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.

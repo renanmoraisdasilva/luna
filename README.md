@@ -232,7 +232,7 @@ Backend services are kept private to the Compose network and are reached through
 
 SQL Server runs locally with a separate database for each service.
 
-Asynchronous messaging is intentionally not part of Phase 0; it is introduced in Phase 2 on LocalStack (EventBridge, SQS, SES) rather than RabbitMQ.
+Asynchronous messaging is intentionally not part of Phase 0; it is introduced in Phase 2 on a local AWS emulator (EventBridge, SQS, SES) rather than RabbitMQ.
 
 ---
 
@@ -259,7 +259,7 @@ The repository separates **what Luna is**, **where it is going**, and **how each
 - [Phase 1 Specification](documentation/dev_phases/phase-1/spec.md) — Basic commerce flow requirements and decisions
 - [Phase 1 Architecture](documentation/dev_phases/phase-1/architecture.md) — Technical design, boundaries, and architectural decisions
 - [Phase 2 Specification](documentation/dev_phases/phase-2/spec.md) — Messaging and async workflow behavior and acceptance criteria
-- [Phase 2 Architecture](documentation/dev_phases/phase-2/architecture.md) — LocalStack messaging design, AWS mapping, and service structure
+- [Phase 2 Architecture](documentation/dev_phases/phase-2/architecture.md) — emulator choice, AWS mapping, and service structure
 - [Observability](documentation/observability.md) — OpenTelemetry, OTLP, SigNoz, and checkout trace verification
 
 For frontend-specific implementation details, see the frontend documentation under `src/Frontend/`.

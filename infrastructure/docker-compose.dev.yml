@@ -11,3 +11,16 @@ services:
     ports: ["5005:8080"]
   shipping:
     ports: ["5006:8080"]
+  floci:
+    ports: ["4566:4566"]
+  floci-ui:
+    image: floci/floci-ui:0.5.0
+    ports: ["4500:4500"]
+    environment:
+      FLOCI_ENDPOINT: http://floci:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    depends_on:
+      floci:
+        condition: service_healthy

@@ -9,7 +9,7 @@
 ## Contents
 
 - [Purpose and relationship to the specification](#purpose-and-relationship-to-the-specification)
-- [Decision Record: LocalStack (EventBridge + SQS + SES) instead of RabbitMQ](#decision-record-localstack-eventbridge--sqs--ses-instead-of-rabbitmq)
+- [Decision Record: Floci (EventBridge + SQS + SES) instead of RabbitMQ](#decision-record-floci-eventbridge--sqs--ses-instead-of-rabbitmq)
 - [The AWS Mapping Contract](#the-aws-mapping-contract)
 - [1. Messaging Principles](#1-messaging-principles)
 - [2. Infrastructure](#2-infrastructure)
@@ -38,14 +38,17 @@ pipeline (event bus, queues, competing consumers, email delivery) runs in the
 deployed stack exactly as it does locally; AWS remains the third target in
 Phase 15.
 
-## Decision Record: LocalStack (EventBridge + SQS + SES) instead of RabbitMQ
+## Decision Record: Floci (EventBridge + SQS + SES) instead of RabbitMQ
 
 **Status:** Accepted (supersedes the RabbitMQ direction recorded in `roadmap.md`
-and the Phase 0/1 architecture documents).
+and the Phase 0/1 architecture documents, and replaces the earlier LocalStack
+choice recorded here).
 
-**Decision:** Phase 2 runs on **LocalStack** emulating three AWS services locally:
+**Decision:** Phase 2 runs on **[Floci](https://github.com/floci-io/floci)**, a
+free MIT-licensed local AWS emulator, serving the three AWS services this phase
+needs on the LocalStack-compatible port `4566`:
 
-| Role | Local (LocalStack) | AWS |
+| Role | Local (Floci) | AWS |
 | --- | --- | --- |
 | Event bus / routing | EventBridge | EventBridge |
 | Durable work queues | SQS (standard + DLQ) | SQS |
@@ -55,42 +58,70 @@ and the Phase 0/1 architecture documents).
 
 - The project's primary learning goal is AWS. A RabbitMQ architecture
   (exchanges, bindings, routing keys) must later be re-learned as
-  EventBridge rules and SNS/SQS fan-out. LocalStack removes that translation.
+  EventBridge rules and SNS/SQS fan-out. An AWS emulator removes that
+  translation.
 - The AWS SDK for .NET is itself a skill worth learning; Luna services talk to
-  LocalStack with `AWSSDK.EventBridge`, `AWSSDK.SQS`, and `AWSSDK.SES` exactly as
-  they would in AWS.
+  the emulator with `AWSSDK.EventBridge`, `AWSSDK.SQS`, and `AWSSDK.SES` exactly
+  as they would in AWS.
 - Phase 15 becomes "same code, real endpoints, add Terraform" instead of a
   messaging rewrite.
-- LocalStack is usable in CI and under the free **Hobby** plan for every service
-  this phase needs (verified against the LocalStack licensing table:
-  SQS, SNS, EventBridge, SES v1, Step Functions, S3, Lambda, CloudWatch, Secrets
-  Manager are all included in Hobby).
+- Floci is MIT-licensed, requires **no account, no auth token, and has no
+  feature gates**, so local development, CI, and the deployed server need no
+  third-party credential. Verified locally on 2026-09-28: EventBridge custom bus
+  plus an SQS-target rule, `PutEvents` fan-out, receive-count increments, DLQ
+  redrive after `maxReceiveCount`, SES v1 `SendEmail`, and the
+  `GET /_aws/ses` mailbox all work, and the emulator is a drop-in on port 4566.
 
 **Consequences and caveats (accepted deliberately):**
 
 - Luna loses RabbitMQ-specific literacy (exchanges, consumer acknowledgements).
   The transferable concepts (durable queue, competing consumers, at-least-once
   delivery, visibility timeout vs. acknowledgement, DLQ) are all still learned.
-- LocalStack requires a free Hobby auth token (`LOCALSTACK_AUTH_TOKEN`) supplied
-  through environment configuration — `.env` locally, the Dokploy application
-  environment on the server. Tokens are never committed.
-- LocalStack is a **Luna-owned deployment component**, not a `server-infra`
+- **No emulator secret to manage.** There is no auth token in `.env` or the
+  Dokploy application environment. The AWS values used locally are the
+  conventional dummy credentials (`test` / `test`) plus a region, identical in
+  every environment.
+- The emulator image is pinned to `floci/floci:<version>-compat`. The `-compat`
+  variant ships the AWS CLI and boto3, which the [seed
+  script](#spec-infra-002---idempotent-infrastructure-seed) needs. The base
+  image has neither, and its health endpoint is `/_floci/health` (not a
+  LocalStack path).
+- **[Floci UI](https://github.com/floci-io/floci-ui)** (also MIT) is a separate
+  local-only container on port `4500` for browsing SQS queues, EventBridge
+  rules, and the captured SES mailbox. It is a development tool: it is never
+  deployed to the server and no Luna service depends on it.
+- Floci is a **Luna-owned deployment component**, not a `server-infra`
   platform service. It ships inside Luna's own Compose files (local and
   production) and is deployed by Dokploy like every other Luna container, so
   the `server-infra` repository needs no changes for Phase 2.
-- Hobby does **not** emulate ECS, RDS, or ELB. This does not affect Phase 2:
-  Luna itself still runs in Docker Compose; only messaging and email are
-  emulated. Those services become real (not emulated) in Phases 14-15.
-- SES on the Hobby plan covers the **v1** API (`SendEmail`). LocalStack SMTP
-  forwarding (to a Mailpit-style inbox) is a paid-tier feature; local email
-  inspection therefore uses the `/_aws/ses` endpoint and Luna's own sent-email
-  records, not an SMTP preview tool.
+- Luna does not need the emulator's real-Docker features (RDS, ElastiCache,
+  MSK, Lambda containers). Luna's databases stay in Luna's own SQL Server
+  containers, and the workers stay Luna containers. Those services become real
+  in Phases 14-15, not emulated.
+- Floci's SES implements the **v1 Query API** (`SendEmail`), not the v2 API.
+  Sent mail is captured locally and readable at the LocalStack-compatible
+  `GET /_aws/ses` endpoint. There is no SMTP inbox preview, so Luna verifies
+  email content through its own sent-email records and that endpoint.
+- The emulator is young (first release March 2026) and its .NET Testcontainers
+  module is lightly used. Phase 2 therefore treats the Compose stack as the
+  source of truth for integration behavior and keeps the Testcontainers path
+  simple ([testing](spec.md#9-testing)).
 
-**Rejected alternative:** RabbitMQ as a "messaging laboratory" with translation
-to AWS later. Rejected because it optimizes for generic messaging literacy at
-the cost of the stated primary goal, and because the roadmap's own Phase 15
-mapping (`RabbitMQ -> SQS`) already understates what AWS actually requires
-(`EventBridge + SQS`, not a bare queue).
+**Rejected alternatives:**
+
+- RabbitMQ as a "messaging laboratory" with translation to AWS later. Rejected
+  because it optimizes for generic messaging literacy at the cost of the stated
+  primary goal, and because the roadmap's own Phase 15 mapping
+  (`RabbitMQ -> SQS`) already understates what AWS actually requires
+  (`EventBridge + SQS`, not a bare queue).
+- **LocalStack** (the previous choice in this decision record, and the default
+  answer for a local AWS emulator). Rejected for Luna because its community
+  edition requires an account and an auth token from March 2026, freezes
+  security updates, and restricts the free tier, which would have added a
+  third-party secret to `.env` and the Dokploy application environment and put
+  a paid dependency in the middle of a learning project. Floci is MIT,
+  credential-free, feature-complete for this phase, and a drop-in replacement on
+  the same port, so the cost of switching is documentation only.
 
 ## The AWS Mapping Contract
 
@@ -106,12 +137,13 @@ so one mapping covers them; AWS is the third environment in Phase 15.
 
 | Luna (local) | AWS | Notes |
 | --- | --- | --- |
-| LocalStack EventBridge bus (`luna-bus`) | EventBridge custom event bus | Same `PutEvents` API |
+| Floci EventBridge bus (`luna-bus`) | EventBridge custom event bus | Same `PutEvents` API |
 | EventBridge rules | EventBridge rules | Same rule pattern syntax |
-| LocalStack SQS queues + DLQs | SQS queues + DLQs | Same queue attributes |
+| Floci SQS queues + DLQs | SQS queues + DLQs | Same queue attributes |
 | Notification worker container | ECS Fargate task (or Lambda) | Long-polling loop is portable |
-| LocalStack SES `SendEmail` | SES `SendEmail` | Same API, same request shape |
+| Floci SES `SendEmail` | SES `SendEmail` | Same API, same request shape |
 | Sent-email inspection `GET /_aws/ses` | SES console / `ListReceiptFilters`-era tooling | Local-only inspection aid |
+| Floci UI on `4500` (queues, rules, mailbox) | AWS console | Development-only; never deployed |
 | SQL Server container (`NotificationDb`) | RDS (SQL Server) | Same EF Core migrations |
 | Docker Compose service definition | ECS task definition | Phase 14/15 concern |
 | `.env` / compose environment | Secrets Manager | Phase 14/15 concern |
@@ -148,55 +180,64 @@ so one mapping covers them; AWS is the third environment in Phase 15.
 
 ## 2. Infrastructure
 
-### SPEC-INFRA-001 - LocalStack service
+### SPEC-INFRA-001 - Floci emulator service
 
-The `localstack` service is added to **both** deployment definitions:
+The `floci` service is added to **both** deployment definitions:
 `infrastructure/docker-compose.yml` (base local stack, with
 `docker-compose.dev.yml`) and `infrastructure/docker-compose.prod.yml` (the
 production definition Dokploy reads directly from this repository):
 
-- Image pinned to a specific LocalStack version tag.
-- Services enabled: `sqs,sns,events,ses`.
+- Image pinned to `floci/floci:<version>-compat`. The `-compat` variant is
+  required because the seed script runs the AWS CLI inside the emulator image.
+- No service selection is needed: every emulated service starts on demand, so
+  there is no `SERVICES` list to keep in sync.
+- `FLOCI_HOSTNAME: floci` so URLs returned to clients (for example SQS queue
+  URLs) resolve on the Compose network, not `localhost`.
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (`test`), and
+  `AWS_DEFAULT_REGION` (`us-east-1`) as environment values. There is no auth
+  token and no third-party credential.
 - Port `4566` exposed on the host locally for inspection and tooling; in the
   production definition it stays internal to the Compose network and is not
   published on the server.
-- `LOCALSTACK_AUTH_TOKEN` supplied via the existing environment-file pattern
-  locally and through the Dokploy application environment on the server;
-  never committed to source control.
-- Health check wired into Compose health status so dependent services start
-  after LocalStack is ready, in both environments.
+- Health check on `/_floci/health`, wired into Compose health status so
+  dependent services start after the emulator is ready, in both environments.
+  The base image has no `curl`, so the probe uses the AWS CLI already present in
+  the `-compat` image rather than an HTTP client.
+- **Local only:** the `floci-ui` container (port `4500`) lives in
+  `docker-compose.dev.yml` only. It is a developer browser for queues, rules,
+  and the SES mailbox, is never deployed, and no Luna service depends on it.
 
 ### SPEC-INFRA-002 - Idempotent infrastructure seed
 
 A script under `scripts/` runs as a **one-shot init service** in both Compose
-stacks (starting after LocalStack is healthy), and is also invoked manually
+stacks (starting after the emulator is healthy), and is also invoked manually
 and by CI. It uses the AWS CLI
-(`--endpoint-url localhost:4566`) to create, and re-create without error:
+(`--endpoint-url http://floci:4566`) to create, and re-create without error:
 
 - The custom event bus `luna-bus`.
 - The queues defined in [Section 3](#3-messaging-model), each with a matching
   DLQ and redrive policy.
 - The EventBridge rules routing bus events to queues.
-- The verified SES identity used as the sender (LocalStack verifies
+- The verified SES identity used as the sender (the emulator verifies
   identities immediately).
 
 Idempotency is required: running the seed twice must not fail or duplicate
 resources. Because the script runs as the startup/deploy step in both
 environments, every fresh deployment arrives with the bus, queues, rules, and
-sender identity already provisioned, and a wiped LocalStack state repairs
+sender identity already provisioned, and a wiped emulator state repairs
 itself on the next start.
 
 ### SPEC-INFRA-003 - Service configuration
 
 Services configured for AWS SDK access use the standard AWS configuration
-surface so the same code works against LocalStack and AWS:
+surface so the same code works against the emulator and AWS:
 
-- `ServiceURL` (e.g. `http://localstack:4566` locally, unset in AWS),
+- `ServiceURL` (e.g. `http://floci:4566` locally, unset in AWS),
   `Region`, and dummy static credentials locally.
 - On the server these values come from the Dokploy application environment;
   container DNS, region, and credentials are identical in both environments,
   so there is no configuration fork between local and deployed.
-- No LocalStack-specific branching in application code outside the
+- No emulator-specific branching in application code outside the
   Infrastructure layer's external-client wiring.
 
 ## 3. Messaging Model
@@ -234,7 +275,7 @@ Events use the EventBridge envelope so the local and AWS payloads are identical:
 
 ```json
 {
-  "version": "1.0",
+  "version": "0",
   "id": "uuid",
   "source": "luna.orders",
   "detail-type": "OrderConfirmed",
@@ -252,6 +293,14 @@ Events use the EventBridge envelope so the local and AWS payloads are identical:
   }
 }
 ```
+
+Luna sets only `source`, `detail-type`, and `detail` in `PutEvents`; the bus
+supplies `version`, `id`, `account`, `time`, `region`, and `resources`. The
+envelope `version` is always the string `"0"` on AWS (verified against the
+emulator on 2026-09-28); Luna's own schema version lives in `detail`, not in the
+envelope. The emulator additionally delivers an `event-bus-name` field that real
+AWS omits, so consumers must read `source`, `detail-type`, and `detail` and must
+not assert on the full envelope shape.
 
 Rules:
 
@@ -361,7 +410,8 @@ endpoints.
 An `IEmailSender` abstraction in the Application layer with an Infrastructure
 implementation using `AWSSDK.SES` `SendEmail`:
 
-- Locally targets LocalStack SES; in AWS it targets SES unchanged.
+- Locally targets the emulated SES; in AWS it targets SES unchanged. The
+  emulator implements the v1 Query API, which is the API `AWSSDK.SES` uses.
 - The sender identity is configured by environment (`From` address).
 - SES rejections (throttling, invalid identity) surface as consumer failures so
   they follow the retry path rather than being swallowed.
@@ -389,7 +439,9 @@ phase has actually demonstrated, not as a precaution that hides it.
 
 | Decision | Where |
 | --- | --- |
-| LocalStack (EventBridge + SQS + SES) instead of RabbitMQ | [Decision Record](#decision-record-localstack-eventbridge--sqs--ses-instead-of-rabbitmq) |
+| Floci (EventBridge + SQS + SES) instead of RabbitMQ, and instead of LocalStack | [Decision Record](#decision-record-floci-eventbridge--sqs--ses-instead-of-rabbitmq) |
+| Floci UI is local-only and never deployed | [SPEC-INFRA-001](#spec-infra-001---floci-emulator-service) |
+| Envelope `version` is `"0"`; consumers read only `source`, `detail-type`, `detail` | [SPEC-MSG-003](#spec-msg-003---event-envelope) |
 | Standard queues only; FIFO rejected | [SPEC-MSG-002](#spec-msg-002---queue-inventory) |
 | Events to the bus, commands to queues | [SPEC-MSG-001](#spec-msg-001---events-use-the-bus-commands-use-queues) |
 | One queue per consumer; fan-out via rules | [SPEC-MSG-004](#spec-msg-004---routing-rules) |

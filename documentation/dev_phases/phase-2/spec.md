@@ -1,7 +1,7 @@
 # Phase 2 - Messaging and Async Workflows Specification
 
 > Companion document: [phase 2 architecture](architecture.md) records
-> **how** this phase is built: the LocalStack decision, the AWS mapping
+> **how** this phase is built: the Floci decision, the AWS mapping
 > contract, messaging mechanics, infrastructure, and service structure. This
 > specification records **what** the system must do and how that behavior is
 > accepted, following the spec/architecture split defined in `AGENTS.md`.
@@ -56,12 +56,13 @@ behavior and live here.
 
 In scope for Phase 2:
 
-- LocalStack added to the local stack, CI, and the deployed production stack
-  (`docker-compose.prod.yml`, which Dokploy reads directly from this repository).
+- The Floci emulator added to the local stack, CI, and the deployed production
+  stack (`docker-compose.prod.yml`, which Dokploy reads directly from this
+  repository). No account, auth token, or paid tier is involved.
 - An event bus, queues, DLQs, and routing rules provisioned as code (seed
   script), run automatically at stack startup and at every deployment.
-- LocalStack configuration and auth token delivered through `.env` locally and
-  the Dokploy application environment on the server; never committed.
+- Emulator configuration (hostname, region, dummy credentials) delivered
+  through `.env` locally and the Dokploy application environment on the server.
 - `Orders` publishes `OrderConfirmed` after a successful checkout.
 - `Shipping` publishes `ShipmentCreated`, `ShipmentInTransit`, and
   `ShipmentDelivered` on lifecycle transitions.
@@ -148,8 +149,9 @@ Templates are plain text and simple HTML owned by Notification (not shared).
 Notification exposes an internal (private-network only, authenticated service
 or operator call) read API listing sent emails for the Luna Ops surface. Luna
 Ops gains an **Emails** view showing recent emails with status. Local content
-verification during development may additionally use LocalStack's
-`GET /_aws/ses` endpoint.
+verification during development may additionally use the emulated SES mailbox at
+`GET /_aws/ses`, and the emulator's web UI on port `4500` lists captured mail
+alongside queues and rules.
 
 ### SPEC-NTF-006 - No user-facing blocking calls
 
@@ -198,7 +200,7 @@ and observable:
 | Publish fails after DB commit | Event lost silently; log error | Phase 5 (outbox) |
 | Duplicate delivery (redelivery after visibility timeout) | Possible duplicate email; `ApproximateReceiveCount` logged | Phase 4 (idempotency) |
 | Consumer keeps failing | Message moves to DLQ after `maxReceiveCount`; DLQ depth visible | Phase 4 (triage/repair) |
-| LocalStack down at startup | Service health reflects broker dependency; graceful reconnect | Phase 10 (connection recovery hardening) |
+| Emulator down at startup | Service health reflects broker dependency; graceful reconnect | Phase 10 (connection recovery hardening) |
 | SES rejects a send | Record marked failed; message redelivered per visibility timeout | Phase 4 (backoff classification) |
 | Process killed mid-message | Message redelivered after visibility timeout | Handled from Phase 2 by design |
 
@@ -222,16 +224,19 @@ No Phase 2 acceptance criterion depends on fixing these; all of them must be
 - FIFO queues.
 - Asynchronous checkout or moving payment authorization off the request path.
 - RabbitMQ in any form.
+- The emulator web UI in any deployed environment. It is a local development
+  tool only.
 
 ## 8. Acceptance Criteria
 
-1. `docker compose up` (dev profile) starts LocalStack healthy, the seed script
-   runs without error, and running it a second time is a no-op.
+1. `docker compose up` (dev profile) starts the emulator healthy, the seed
+   script runs without error, and running it a second time is a no-op.
 2. Placing an order returns synchronously with the same contract as Phase 1,
-   and `OrderConfirmed` appears on `luna-bus` (verifiable via LocalStack).
+   and `OrderConfirmed` appears on `luna-bus` (verifiable through the AWS CLI or
+   the emulator UI).
 3. The Notification service receives the order confirmation message from its
    queue and persists a sent-email record; the email content is verifiable via
-   LocalStack `GET /_aws/ses` and the Luna Ops Emails view.
+   `GET /_aws/ses`, the emulator UI mailbox, and the Luna Ops Emails view.
 4. Advancing a shipment through `Created` -> `InTransit` -> `Delivered`
    produces the corresponding emails without any additional manual trigger.
 5. Two Notification instances run concurrently; a burst of messages is split
@@ -255,23 +260,26 @@ No Phase 2 acceptance criterion depends on fixing these; all of them must be
 12. The [AWS mapping contract](architecture.md#the-aws-mapping-contract)
     covers every new component introduced by this phase.
 13. The deployed server stack runs the same pipeline end to end: Dokploy
-    deploys LocalStack as part of Luna's production compose, the seed runs
+    deploys the emulator as part of Luna's production compose, the seed runs
     during deployment, and an order placed against the deployed application
     produces a confirmation email through the deployed Notification workers.
+    The emulator UI is **not** deployed; only the emulator is.
 
 ## 9. Testing
 
 - **Unit:** template rendering per event type; consumer handler success/failure
   paths; event envelope construction; sent-email record creation.
-- **Integration (Testcontainers LocalStack):** publish an event to the bus and
+- **Integration (Testcontainers, Floci image):** publish an event to the bus and
   assert the consumer produced a sent-email record; assert rule routing
   delivers only matching events to each queue; assert DLQ behavior for a
   failing consumer; assert that redelivering the same message produces two
-  sent-email rows for one event id (the documented Phase 2 pitfall). (Testcontainers
-  provides a LocalStack module; confirm the
-  exact package name during implementation.)
+  sent-email rows for one event id (the documented Phase 2 pitfall). A
+  `testcontainers-floci-dotnet` module exists but is lightly used; a plain
+  `GenericContainer` on the pinned `floci/floci:<version>-compat` image waiting
+  for `/_floci/health` is the lower-risk option and needs no extra dependency.
+  Re-evaluate the module once it matures.
 - **Integration (existing):** full Phase 1 suites remain green.
-- **Compose smoke:** LocalStack healthy, seed idempotent, one end-to-end
+- **Compose smoke:** emulator healthy, seed idempotent, one end-to-end
   order -> confirmation email pass — verified against the local stack and,
   for [criterion 13](#8-acceptance-criteria), against the deployed production
   compose.
@@ -288,7 +296,7 @@ requires updating the existing RabbitMQ direction recorded in:
   Communication and Reliability Patterns diagrams; Technology table
   (`Messaging | RabbitMQ`); Phase 2 goal/milestone; Phase 13 (Testcontainers
   RabbitMQ); Phase 14 infrastructure list; Phase 15 mapping table
-  (`RabbitMQ -> SQS` becomes `LocalStack EventBridge/SQS -> EventBridge/SQS`);
+  (`RabbitMQ -> SQS` becomes `Floci EventBridge/SQS -> EventBridge/SQS`);
   Phase 16 outage scenarios; Project Status next steps.
 - `documentation/dev_phases/phase-0/design.md`: lines referring to RabbitMQ
   arriving in Phase 2 (including the numbered decision list).
@@ -300,19 +308,24 @@ requires updating the existing RabbitMQ direction recorded in:
 - `README.md`: the "RabbitMQ is intentionally not part of Phase 0" note.
 - `documentation/observability.md`: if it references RabbitMQ metrics, add
   queue-depth/DLQ metrics for SQS instead.
-- `infrastructure/README.md` and `.env.example`: document the LocalStack
-  service, the deploy-time seed step, and the new required Dokploy
-  application environment value.
+- `infrastructure/README.md` and `.env.example`: document the `floci`
+  service, the local-only `floci-ui` service, the deploy-time seed step, and
+  the emulator settings the Dokploy application environment must carry. There
+  is no auth token to document.
 
 ## 11. Implementation Checklist
 
 ### Infrastructure
 
-- [ ] LocalStack service in `docker-compose.yml` **and**
-      `docker-compose.prod.yml`, with health check and pinned tag (internal
+- [ ] `floci` service in `docker-compose.yml` **and**
+      `docker-compose.prod.yml`, pinned `-compat` tag, `FLOCI_HOSTNAME`,
+      dummy AWS credentials, and a `/_floci/health` health check (internal
       network only in production)
-- [ ] Auth token via `.env` locally and the Dokploy application environment on
-      the server (never committed); add it to the `.env.example` checklist
+- [ ] `floci-ui` in `docker-compose.dev.yml` only, on port `4500`; not in the
+      production compose
+- [x] Emulator service, health check, and dev UI added to the local stack and
+      verified by hand on 2026-09-28 (bus, rule, SQS fan-out, receive counts,
+      DLQ redrive, SES v1 send, `/_aws/ses` mailbox)
 - [ ] Idempotent seed script (bus, queues, DLQs, rules, SES identity) wired as
       a one-shot init service so it runs at every startup and deployment
 - [ ] Dev stack runs two Notification instances; production compose runs two
@@ -350,7 +363,7 @@ requires updating the existing RabbitMQ direction recorded in:
 ### Tests and quality gate
 
 - [ ] Unit tests (templates, handlers, envelope)
-- [ ] Testcontainers LocalStack integration tests
+- [ ] Testcontainers integration tests against the pinned Floci image
 - [ ] Compose smoke including seed idempotency
 - [ ] Full recorded quality gate run
 

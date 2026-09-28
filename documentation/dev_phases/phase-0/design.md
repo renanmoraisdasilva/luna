@@ -106,7 +106,7 @@ flowchart TB
 
 Phase 0–1 uses **synchronous HTTP/REST** to establish service interactions.
 
-Event-driven messaging is introduced in Phase 2 on LocalStack, which emulates EventBridge, SQS, and SES. RabbitMQ was evaluated for that phase and rejected; the decision is recorded in the Phase 2 architecture document. Messaging complements HTTP; it does not replace it.
+Event-driven messaging is introduced in Phase 2 on a local AWS emulator, which provides EventBridge, SQS, and SES. RabbitMQ and a hosted local emulator were both evaluated for that phase and rejected; the decision is recorded in the Phase 2 architecture document. Messaging complements HTTP; it does not replace it.
 
 The eventual system uses both:
 
@@ -559,7 +559,7 @@ Phase 0 verifies that the application is running.
 Later phases expand readiness checks to dependencies such as:
 
 - Databases
-- LocalStack (EventBridge, SQS, SES)
+- The local AWS emulator (EventBridge, SQS, SES)
 - Other infrastructure services
 
 ---
@@ -625,7 +625,7 @@ Phase 0 provides a repeatable local environment using:
 
 The environment supports independent service configuration and database migrations.
 
-**Messaging is intentionally not included yet. Phase 2 adds LocalStack (EventBridge, SQS, SES), not RabbitMQ.**
+**Messaging is intentionally not included yet. Phase 2 adds a local AWS emulator (EventBridge, SQS, SES), not RabbitMQ.**
 
 ---
 
@@ -706,7 +706,7 @@ Phase 0 deliberately does not solve distributed reliability or complex commerce 
 Deferred to later phases:
 
 - Complete checkout workflow
-- LocalStack messaging (EventBridge, SQS, SES) and asynchronous consumers
+- Emulated messaging (EventBridge, SQS, SES) and asynchronous consumers
 - Transactional Outbox
 - Retries and timeouts
 - Resilience policies
@@ -763,7 +763,7 @@ The repository satisfies the Phase 0 baseline in both structure and runtime vali
 8. **Backend APIs retain their own DTO/API contracts.**
 9. **BFF-specific DTO mapping/aggregation is introduced only when a concrete need appears.**
 10. **REST/HTTP is the primary communication mechanism in Phase 0–1.**
-11. **Messaging begins in Phase 2 on LocalStack (EventBridge, SQS, SES) rather than RabbitMQ; messaging complements HTTP rather than replacing it.**
+11. **Messaging begins in Phase 2 on a local AWS emulator (EventBridge, SQS, SES) rather than RabbitMQ; messaging complements HTTP rather than replacing it.**
 12. **ASP.NET Core Identity manages users, passwords, roles, and account lifecycle.**
 13. **OpenIddict provides the future OAuth 2.0/OpenID Connect authorization server.**
 14. **Next.js is the target OIDC client and server-side session boundary.**

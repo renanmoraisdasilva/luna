@@ -1069,7 +1069,7 @@ These become important in later phases.
 
 Phase 1 does not implement:
 
-* event bus and message queues (Phase 2 introduces them through LocalStack, not RabbitMQ)
+* event bus and message queues (Phase 2 introduces them through a local AWS emulator, not RabbitMQ)
 * asynchronous consumers
 * transactional outbox
 * retries
