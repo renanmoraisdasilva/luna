@@ -16,6 +16,7 @@
     <ProjectReference Include="../../src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Payments/Payments.Application/Payments.Application.csproj" />
     <ProjectReference Include="../../src/Services/Payments/Payments.Domain/Payments.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Payments/Payments.Infrastructure/Payments.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Application/Shipping.Application.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Domain/Shipping.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Infrastructure/Shipping.Infrastructure.csproj" />

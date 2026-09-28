@@ -82,15 +82,16 @@ public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture)
             await seedDb.SaveChangesAsync();
         }
 
-        await using (var firstDb = fixture.CreateDbContext())
-        {
-            var payment = await firstDb.Payments.SingleAsync(value => value.OrderId == orderId);
-            payment.RecordAuthorizationAttempt(succeeded: true, providerReference: "prov-first");
-            await firstDb.SaveChangesAsync();
-        }
-
+        // Both contexts must read the payment before either commits, otherwise the
+        // second context loads the already-updated RowVersion and is not stale.
+        await using var firstDb = fixture.CreateDbContext();
         await using var staleDb = fixture.CreateDbContext();
+        var firstPayment = await firstDb.Payments.SingleAsync(value => value.OrderId == orderId);
         var stalePayment = await staleDb.Payments.SingleAsync(value => value.OrderId == orderId);
+
+        firstPayment.RecordAuthorizationAttempt(succeeded: true, providerReference: "prov-first");
+        await firstDb.SaveChangesAsync();
+
         stalePayment.RecordAuthorizationAttempt(succeeded: true, providerReference: "prov-second");
         var unitOfWork = new PaymentUnitOfWork(staleDb);
 

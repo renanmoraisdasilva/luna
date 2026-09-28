@@ -63,7 +63,6 @@ namespace Luna.Payments.Infrastructure.Migrations
             modelBuilder.Entity("Luna.Payments.Domain.PaymentAttempt", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
