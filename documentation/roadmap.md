@@ -48,7 +48,7 @@ Luna is primarily a learning and experimentation platform. It explores concepts 
 
 - Microservice boundaries and bounded contexts
 - Asynchronous communication and event-driven architecture
-- RabbitMQ and eventual consistency
+- EventBridge and SQS through LocalStack, and eventual consistency
 - Transactional outbox and idempotency
 - Retries and dead-letter queues
 - Distributed tracing, structured logging, metrics, and health checks
@@ -78,7 +78,7 @@ Catalog ------> Orders
                  +----------> Shipping ---> Simulated Carrier
 ```
 
-RabbitMQ connects the asynchronous workflows.
+LocalStack emulates EventBridge, SQS, and SES locally and on the self-hosted server, so Luna calls the AWS APIs it will use in Phase 15 instead of running a different broker locally and translating it later.
 
 ## Customer Experience
 
@@ -110,7 +110,7 @@ Payments      HEALTHY
 Inventory     HEALTHY
 Fulfillment   HEALTHY
 Shipping      HEALTHY
-RabbitMQ      HEALTHY
+LocalStack    HEALTHY
 ```
 
 ### Business health
@@ -121,7 +121,7 @@ Examples include:
 - Shipment delayed
 - Payment failure rate increasing
 - Payment service unavailable
-- RabbitMQ queue backlog increasing
+- SQS queue backlog increasing
 
 The goal is to show not only whether a service is running, but whether the business is functioning correctly.
 
@@ -143,6 +143,7 @@ Planned contexts include:
 - Inventory
 - Fulfillment
 - Shipping
+- Notification (Phase 2)
 
 Initial databases:
 
@@ -158,31 +159,36 @@ Fulfillment is initially planned as a bounded context that can be extracted into
 
 ### Communication
 
-The system will progressively move from simple synchronous calls to asynchronous events:
+The system will progressively move from simple synchronous calls to asynchronous events. Events are published to the bus; work items are sent straight to the queue owned by the service that performs them:
 
 ```text
 Orders
    |
-   | OrderCreated
+   | OrderConfirmed (PutEvents)
    v
-RabbitMQ
-   +------> Payments
-   +------> Inventory
-   +------> other consumers
+EventBridge (luna-bus)
+   +------> luna-notification-orders ---> Notification
+   +------> other consumer queues
+
+Luna Ops
+   |
+   | SendMessage (command, Phase 3)
+   v
+luna-orders-shipment-commands ------------> Shipping/Orders worker
 ```
 
 Example events:
 
-`OrderCreated`, `PaymentAuthorized`, `PaymentFailed`, `InventoryReserved`, `InventoryReservationFailed`, `FulfillmentStarted`, `OrderPacked`, `ShipmentCreated`, and `ShipmentDelivered`.
+`OrderConfirmed`, `PaymentAuthorized`, `PaymentFailed`, `InventoryReserved`, `InventoryReservationFailed`, `FulfillmentStarted`, `OrderPacked`, `ShipmentCreated`, `ShipmentInTransit`, and `ShipmentDelivered`.
 
 ### Reliability Patterns
 
 The standard event flow will eventually include:
 
 ```text
-Database transaction -> Outbox -> Event publisher -> RabbitMQ -> Consumer
-                                                        |
-                                                 Retry -> Idempotency -> DLQ
+Database transaction -> Outbox -> Event publisher -> EventBridge -> SQS queue -> Consumer
+                                                                        |
+                                                          Retry -> Idempotency -> DLQ
 ```
 
 The system will also use timeouts and graceful shutdown so that failures can be observed and recovered from deliberately.
@@ -221,13 +227,13 @@ Shipping owns the rate calculation. Orders snapshots the resulting shipping cost
 | Frontend server state | TanStack Query |
 | Frontend HTTP | Axios through centralized typed API clients |
 | Frontend testing | Vitest, Testing Library, Playwright |
-| Messaging | RabbitMQ |
+| Messaging | EventBridge, SQS, SES through the AWS SDK, emulated by LocalStack |
 | Infrastructure | Docker, Docker Compose |
 | Observability | OpenTelemetry, SigNoz, structured logging |
 | Testing | xUnit, FluentAssertions, Moq, Testcontainers, Playwright |
 | Cloud | AWS equivalents explored in later phases |
 
-The initial implementation runs entirely locally. Later phases explore cloud deployment patterns.
+The initial implementation runs in the local Docker Compose stack. From Phase 2 the same stack also runs on the self-hosted server through Dokploy, with LocalStack supplying the AWS services it emulates. Phase 15 changes the endpoints to real AWS.
 
 ## Development Philosophy
 
@@ -285,15 +291,19 @@ Frontend rendering and data-fetching boundaries:
 
 ### Phase 2: Messaging and Async Workflows
 
-**Goal:** Introduce RabbitMQ, exchanges, queues, routing, consumers, acknowledgements, competing consumers, and eventual consistency.
+**Decision:** Phase 2 runs on **LocalStack** emulating EventBridge, SQS, and SES instead of RabbitMQ, and is deployed rather than local-only: the same stack runs locally and on the self-hosted server through Dokploy. The rationale, the accepted caveats (Hobby-plan limits, the v1 SES API, lost RabbitMQ-specific literacy), and the one-to-one AWS mapping contract are recorded in the [phase 2 decision record](dev_phases/phase-2/architecture.md#decision-record-localstack-eventbridge--sqs--ses-instead-of-rabbitmq). RabbitMQ is not used anywhere in Luna.
 
-**Milestone:** An order progresses asynchronously through the system.
+**Goal:** Introduce asynchronous messaging through the AWS SDK: an EventBridge bus, SQS queues with DLQs and redrive policies, routing rules, long-polling consumers, at-least-once delivery, competing consumers, and eventual consistency. Domain events go to the bus, work items go directly to a queue. A new Notification bounded context consumes its own queues and emails customers through SES. Publishing happens directly after the database commit, leaving the known dual-write window to be observed here and fixed by the Phase 5 outbox; duplicates are likewise surfaced here and fixed by Phase 4 idempotency. The Ops shipment-creation command queue is deferred to Phase 3.
+
+**Milestone:** A customer places an order, watches it progress asynchronously, and receives emails produced by an independent service consuming its own queue, using the same calls that will run unchanged on AWS.
+
+**Deferred to Phase 3:** the command queue (`luna-orders-shipment-commands`) that moves Ops shipment creation from a synchronous command to a direct `SendMessage`.
 
 ### Phase 3: Realistic Time and Simulation
 
-**Goal:** Add configurable simulation speed, randomized processing times, delays, and failures such as payment errors, carrier failures, inventory shortages, outages, and slow dependencies.
+**Goal:** Add configurable simulation speed, randomized processing times, delays, and failures such as payment errors, carrier failures, inventory shortages, outages, and slow dependencies. Incorporate deferred Phase 2 shipment command queue workflow (direct SQS `SendMessage` from Luna Ops) to complete the async Ops developer experience.
 
-**Milestone:** A batch of orders can progress naturally while failures are observable locally.
+**Milestone:** A batch of orders can progress naturally while failures are observable locally. The shipment command queue, previously deferred from Phase 2, is now implemented: Luna Ops can enqueue shipment-creation commands that compete for processing, with redrive to DLQ after maxReceiveCount, matching the same SQS patterns established in Phase 2.
 
 ### Phase 4: Reliability and Failure Handling
 
@@ -355,13 +365,13 @@ Roles include Customer, Warehouse Operator, Support, and Administrator.
 
 **Goal:** Expand unit, integration, contract, end-to-end, and failure testing.
 
-Use real databases and RabbitMQ through Testcontainers. Cover duplicate events, service outages, database failures, consumer crashes, carrier timeouts, and other unhappy paths.
+Use real databases and LocalStack through Testcontainers. Cover duplicate events, service outages, database failures, consumer crashes, carrier timeouts, and other unhappy paths.
 
 ### Phase 14: Production-like Local Infrastructure
 
 **Goal:** Run Luna in a production-like local environment and learn how infrastructure is provisioned and configured.
 
-This phase includes Docker and Docker Compose, a reverse proxy or gateway, multiple service instances, databases, RabbitMQ, observability, CI/CD, backups, production-like configuration, and self-hosted infrastructure automation with Terraform and Ansible.
+This phase includes Docker and Docker Compose, a reverse proxy or gateway, multiple service instances, databases, the LocalStack messaging emulator, observability, CI/CD, backups, production-like configuration, and self-hosted infrastructure automation with Terraform and Ansible.
 
 The learning progression is:
 
@@ -379,7 +389,7 @@ Luna
 
 ### Phase 15: AWS
 
-**Goal:** Explore how the production-like local architecture maps to AWS and learn infrastructure-as-code and managed container deployment.
+**Goal:** Explore how the production-like local architecture maps to AWS and learn infrastructure-as-code and managed container deployment. Because Phase 2 already speaks to EventBridge, SQS, and SES through the AWS SDK, this phase is a change of endpoint plus Terraform rather than a messaging rewrite.
 
 Terraform provisions and configures the AWS infrastructure:
 
@@ -392,7 +402,9 @@ Terraform
         ├── ECS/Fargate
         ├── RDS
         ├── S3
+        ├── EventBridge
         ├── SQS
+        ├── SES
         ├── API Gateway
         └── CloudWatch
 ```
@@ -403,11 +415,14 @@ The local-to-cloud translation is:
 | --- | --- |
 | Docker Compose | ECS/Fargate |
 | SQL Server container | RDS |
-| RabbitMQ | SQS |
+| LocalStack EventBridge | EventBridge |
+| LocalStack SQS queues and DLQs | SQS |
+| LocalStack SES | SES |
 | S3-like storage | S3 |
 | Reverse proxy | ALB/API Gateway |
 | Local configuration and secrets | Secrets Manager |
 | Logs | CloudWatch |
+| Deploy-time seed script (AWS CLI) | Terraform |
 | Terraform | Terraform |
 
 The point is to understand how cloud infrastructure provides capabilities the local system already demonstrates.
@@ -427,13 +442,13 @@ Scenarios include:
 - Delayed fulfillment and carrier failures
 - Carrier and internal tracking discrepancies
 - Multiple warehouses and multiple shipments per order
-- RabbitMQ, database, and service instance outages
+- LocalStack, database, and service instance outages
 - Slow dependencies and message backlog recovery
 - Event and schema version changes
 
 ## Project Status
 
-**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; the initial Luna Ops workflow and observability foundation are delivered ahead of the original sequence.**
+**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; Phase 2 specified with the LocalStack messaging direction accepted but not yet implemented; the initial Luna Ops workflow and observability foundation are delivered ahead of the original sequence.**
 
 Luna is being built incrementally. Architecture and implementation decisions may change as new requirements and failure scenarios are introduced. The repository is intentionally a work in progress.
 
@@ -455,13 +470,14 @@ Phase 1 closure is still pending only on a recorded quality-gate run and the imp
 | --- | --- | --- |
 | 0 | Complete | Foundation, service boundaries, infrastructure, CI, and baseline security are implemented. |
 | 1 | In closure | Synchronous commerce path, customer tracking, the Orders/Shipping lifecycle proof, and the real-boundary checkout failure matrix are implemented; the recorded quality gate and closure review remain. |
-| 2-7 | Not started | Messaging, simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
+| 2 | Specified, not started | The Phase 2 specification and architecture are written and accepted. The LocalStack (EventBridge + SQS + SES) direction replaces the earlier RabbitMQ plan, and the Ops command queue is deferred to Phase 3. No Phase 2 code exists yet. |
+| 3-7 | Not started | Simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
 | 8 | Foundation delivered | Telemetry and local SigNoz are implemented; operational dashboards and workflows remain later work. |
 | 9-16 | Not started | Operations Console, redundancy, chaos, advanced security, production infrastructure, AWS, and scenario exercises remain future work. |
 
 ### Next steps
 
 1. Run the Docker-dependent integration suite, frontend build, Compose smoke checks, and coverage as one recorded quality gate. (The integration suite has passed locally; the frontend build, Compose smoke, and coverage still need to run together as one recorded pass.)
-2. Close Phase 1 with an implementation review, then begin Phase 2 by introducing RabbitMQ around one bounded workflow while preserving synchronous HTTP where an immediate response is required.
+2. Close Phase 1 with an implementation review, then begin Phase 2 by adding LocalStack, the event bus, the SQS queues, and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required.
 
-RabbitMQ, asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.
+Asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.

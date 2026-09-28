@@ -69,8 +69,6 @@ In scope for Phase 2:
   own queue and sends email through SES.
 - Competing consumers: at least two Notification worker instances process the
   same queue.
-- A command queue demonstrating queue-without-bus messaging (see
-  [SPEC-MSG-009](architecture.md#spec-msg-009---command-queue-queue-without-a-bus)).
 - Customer-visible eventual consistency: order status updates without a page
   reload blocking on downstream work.
 - Observability for queue depth and consumer failures using the existing
@@ -332,8 +330,7 @@ requires updating the existing RabbitMQ direction recorded in:
 
 - [ ] `OrderConfirmed` published after commit
 - [ ] Shipment lifecycle events published after commit
-- [ ] Command-queue path for Ops shipment creation
-      ([SPEC-MSG-009](architecture.md#spec-msg-009---command-queue-queue-without-a-bus))
+
 
 ### Notification service
 

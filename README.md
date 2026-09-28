@@ -232,7 +232,7 @@ Backend services are kept private to the Compose network and are reached through
 
 SQL Server runs locally with a separate database for each service.
 
-RabbitMQ is intentionally not part of Phase 0; it is introduced in Phase 2.
+Asynchronous messaging is intentionally not part of Phase 0; it is introduced in Phase 2 on LocalStack (EventBridge, SQS, SES) rather than RabbitMQ.
 
 ---
 

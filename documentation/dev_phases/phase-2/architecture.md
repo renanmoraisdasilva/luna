@@ -216,8 +216,12 @@ surface so the same code works against LocalStack and AWS:
 | --- | --- | --- |
 | `luna-notification-orders` | Notification (order emails) | Rule on `OrderConfirmed` |
 | `luna-notification-shipments` | Notification (shipment emails) | Rules on `ShipmentCreated`, `ShipmentInTransit`, `ShipmentDelivered` |
-| `luna-orders-shipment-commands` | Orders/Shipping (shipment creation) | Direct `SendMessage` from Luna Ops |
-| `*.DLQ` (one per queue above) | Operators (Phase 4 handles) | Redrive policy |
+| `luna-orders-shipment-commands` (Phase 3, not provisioned here) | Orders/Shipping (shipment creation) | Direct `SendMessage` from Luna Ops |
+| `*.DLQ` (one per Phase 2 queue) | Operators (Phase 4 handles) | Redrive policy |
+
+The Phase 2 seed provisions the two Notification queues and their DLQs only.
+The command queue is created in Phase 3; see
+[SPEC-MSG-009](#spec-msg-009---command-queue-queue-without-a-bus-deferred-to-phase-3).
 
 All queues are **standard** (non-FIFO). FIFO is explicitly rejected: AWS
 guideline practice is to prefer standard queues plus consumer idempotency, and
@@ -315,7 +319,12 @@ The limitation is recorded in the specification's
 [failure model](spec.md#6-failure-model) and must not be
 described anywhere as "reliable publishing."
 
-### SPEC-MSG-009 - Command queue (queue without a bus)
+### SPEC-MSG-009 - Command queue (queue without a bus), deferred to Phase 3
+
+**Status: deferred out of Phase 2.** The design is unchanged; only the timing
+moved. Phase 2 does not provision this queue, does not seed its DLQ, and does
+not require it for acceptance. It is implemented at the start of Phase 3, as
+recorded in the roadmap's Phase 3 goal and milestone.
 
 Luna Ops "create shipment" moves from a synchronous
 Orders-coordinated command to `SendMessage` on `luna-orders-shipment-commands`:
@@ -326,8 +335,7 @@ Orders-coordinated command to `SendMessage` on `luna-orders-shipment-commands`:
   synchronous response.
 
 This exists to teach the SQS-as-work-queue pattern on its own, distinct from
-bus fan-out. If it threatens the Phase 2 milestone date it may be deferred to
-the start of Phase 3, but the queue and rule inventory above stay.
+bus fan-out.
 
 ## 4. Notification Service Structure
 
@@ -389,3 +397,4 @@ phase has actually demonstrated, not as a precaution that hides it.
 | No duplicate suppression in Phase 2 (fixed in Phase 4) | [SPEC-NTF-004](#spec-ntf-004---sent-email-record) |
 | `customerEmail` carried in event details (PII trade-off) | Specification [event catalog](spec.md#2-event-catalog-phase-2) |
 | Checkout remains synchronous | Specification [SPEC-MSG-012](spec.md#spec-msg-012---checkout-stays-synchronous) |
+| Ops shipment command queue deferred to Phase 3 | [SPEC-MSG-009](#spec-msg-009---command-queue-queue-without-a-bus-deferred-to-phase-3) |

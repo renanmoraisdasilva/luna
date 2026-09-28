@@ -100,7 +100,7 @@ Browser -> Next.js -> backend service
 Orders -> Catalog, Shipping, Inventory, Payments
 ```
 
-RabbitMQ is deferred to Phase 2.
+Asynchronous messaging is deferred to Phase 2. Phase 2 uses LocalStack (EventBridge, SQS, SES) rather than RabbitMQ; see the [phase 2 decision record](../phase-2/architecture.md#decision-record-localstack-eventbridge--sqs--ses-instead-of-rabbitmq).
 
 # 4. Database Ownership
 
@@ -535,7 +535,7 @@ The repository also separates unit, integration, and smoke tests under the centr
 
 1. Orders owns checkout orchestration.
 2. Phase 1 communication is synchronous HTTP.
-3. RabbitMQ begins in Phase 2.
+3. Asynchronous messaging begins in Phase 2 on LocalStack (EventBridge, SQS, SES), not RabbitMQ.
 4. Fulfillment remains inside Orders until Phase 7.
 5. Each service owns its database.
 6. No cross-service database access is permitted.
@@ -581,7 +581,7 @@ The repository also separates unit, integration, and smoke tests under the centr
 
 # 14. Deferred Architecture
 
-Phase 2 and later work includes RabbitMQ, asynchronous consumers, transactional outbox, retries, compensation, advanced operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
+Phase 2 and later work includes the LocalStack messaging stack (EventBridge, SQS, SES), asynchronous consumers, transactional outbox, retries, compensation, advanced operations tooling, redundancy, chaos testing, and extraction of Fulfillment into its own service.
 
 Distributed tracing and metrics are no longer deferred at the foundation level: OpenTelemetry, OTLP export, local SigNoz, host metrics, and a service-health dashboard are implemented. The remaining deferred work is the operational use of that telemetry, including queue and failure workflows, operator controls, and the Phase 9 Operations Console.
 

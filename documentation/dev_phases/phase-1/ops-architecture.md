@@ -536,7 +536,7 @@ Also prohibited:
 
 This architecture deliberately does not introduce:
 
-- RabbitMQ
+- LocalStack messaging (EventBridge, SQS, SES)
 - outbox or inbox processing
 - distributed transactions
 - distributed locks
