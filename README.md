@@ -1,308 +1,226 @@
 # Luna
 
-### Distributed Commerce & Logistics Simulation
+**Distributed commerce and logistics, built to see what breaks.**
 
-Luna is a production-inspired commerce and logistics platform built to explore what happens when a simple commerce workflow becomes a distributed system.
+Luna is an order-management system that treats the boring parts of an online
+store as distributed-systems problems. A customer checks out; the order has to
+be paid for, reserved against stock, picked, packed, shipped and tracked — and
+every one of those steps can fail, take time, or arrive twice. Luna exists to
+make those behaviours visible and recoverable rather than assumed away.
 
-The project simulates the journey of an order from browsing and checkout through payment, inventory, fulfillment, shipping, and delivery. As Luna evolves, it deliberately introduces the kinds of complexity that appear in real platforms: asynchronous workflows, delays, failures, retries, recovery, observability, and operational intervention.
+It is a learning platform. Each phase introduces a real problem so the
+architecture has a reason to change.
 
-> **The goal is not to design the perfect distributed system upfront.**
-> Luna is built incrementally so that each new problem gives the architecture a reason to evolve.
+![The storefront, checkout, and the Luna Ops fulfillment and shipments screens](documentation/luna-demo.gif)
 
----
-
-## The Idea
-
-At its simplest, Luna looks like this:
-
-```text
-Customer
-   │
-   ▼
-Catalog
-   │
-   ▼
-Cart → Checkout → Order
-                    │
-             ┌──────┴──────┐
-             ▼             ▼
-          Payment       Inventory
-                            │
-                            ▼
-                       Fulfillment
-                            │
-                            ▼
-                         Shipping
-                            │
-                            ▼
-                         Delivery
-```
-
-Initially, these workflows are intentionally simple. Later phases introduce asynchronous communication, realistic timing, failures, retries, and recovery.
-
-The result is a system where you can observe not only **what happens when everything works**, but also what happens when things don't.
+*The demo is the real application, driven end to end: a customer registers, fills
+a cart, places an order, and an operator prepares and ships it. Regenerate it
+with `npm run demo:build`.*
 
 ---
 
-## Customer Experience
+## What actually happens to an order
 
-Luna will provide a customer-facing storefront where customers can:
+Checkout does not "create an order". It starts a pipeline with a real state
+machine, and every transition is guarded in the domain rather than assumed by
+the caller.
 
-- Browse products
-- Search and filter products
-- Add products to a cart
-- Choose shipping methods
-- Checkout and place orders
-- View order history
-- Follow order progress
-- Track deliveries
-
-An order will eventually progress through a lifecycle such as:
-
-```text
-Order Created
-      │
-      ▼
-   Payment
-      │
-      ▼
-Inventory Reserved
-      │
-      ▼
- Fulfillment
-      │
-      ▼
- Order Packed
-      │
-      ▼
-  Shipping
-      │
-      ▼
- In Transit
-      │
-      ▼
-  Delivered
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Confirmed: payment authorised,<br/>inventory reserved
+    Pending --> PaymentFailed: payment declined
+    Pending --> Cancelled
+    Confirmed --> Preparing: operator starts preparation
+    Preparing --> Shipped: shipment created
+    Shipped --> Delivered
+    Delivered --> [*]
+    PaymentFailed --> [*]
+    Cancelled --> [*]
 ```
+
+The states are `OrderStatus` in `src/Services/Orders/Orders.Domain/Order.cs`,
+and each move is a method on the aggregate that refuses to run from the wrong
+state. `PaymentFailed` and `Cancelled` are terminal branches, not retries.
+
+Fulfilment then interleaves the order with a shipment, and the two are not
+allowed to drift apart:
+
+```mermaid
+flowchart LR
+    O1["Order<br/><b>Confirmed</b>"] --> O2["Order<br/><b>Preparing</b>"]
+    O2 -->|"Create Shipment<br/>(only while Preparing)"| S1["Shipment<br/><b>Created</b>"]
+    S1 -->|"Mark In Transit<br/>(requires order Shipped)"| S2["Shipment<br/><b>InTransit</b>"]
+    S2 --> D["Order + Shipment<br/><b>Delivered</b>"]
+```
+
+That coupling is the point. A shipment cannot be created before the order is
+being prepared, and a shipment cannot move while the order has not shipped. The
+guards live in `Order.cs` as `EnsureShipmentCreationAllowed`,
+`EnsureStatusForShipmentInTransit` and `EnsureDeliveryAllowed`.
 
 ---
 
-## Operations
+## The application
 
-As the system grows, Luna will also include an internal operations console.
-
-The goal is to make the platform observable from a business perspective, not just a technical one.
-
-For example:
-
-```text
-Infrastructure
-
-Orders        ● HEALTHY
-Payments      ● HEALTHY
-Inventory     ● HEALTHY
-Shipping      ● HEALTHY
-
-
-Business
-
-⚠ Payment failures increasing
-⚠ Order stuck in fulfillment
-⚠ Shipment delayed
-⚠ Work building up
-```
-
-Eventually, the operations experience will also allow deliberate failures and simulation controls so that the behavior of the distributed system can be explored interactively.
-
----
-
-## The Journey
-
-Luna is built in stages. Each phase introduces a new capability or a new problem to solve.
-
-```text
-Simple Commerce
-       │
-       ▼
-Async Workflows
-       │
-       ▼
-Realistic Simulation
-       │
-       ▼
-Reliability & Recovery
-       │
-       ▼
-Transactional Consistency
-       │
-       ▼
-Observability
-       │
-       ▼
-Operations
-       │
-       ▼
-Resilience & Chaos
-       │
-       ▼
-Production Scenarios
-```
-
-The current roadmap progresses through:
-
-| Phase | Focus |
+| Storefront | Fulfillment queue |
 | --- | --- |
-| 0 | Architecture & Foundation |
-| 1 | Basic Commerce Flow |
-| 2 | Messaging & Async Workflows |
-| 3 | Realistic Time & Simulation |
-| 4 | Reliability & Failure Handling |
-| 5 | Transactional Outbox |
-| 6 | Payment Abstraction |
-| 7 | Fulfillment Service |
-| 8 | Observability |
-| 9 | Operations Dashboard |
-| 10 | Redundancy & Resilience |
-| 11 | Chaos & Failure Simulation |
-| 12 | Security |
-| 13 | Testing & Quality |
-| 14 | Production-like Local Infrastructure |
-| 15 | AWS |
-| 16 | Production Scenarios & Edge Cases |
+| ![Storefront](documentation/images/storefront.png) | ![Fulfillment queue](documentation/images/fulfillment-queue.png) |
+| Catalogue with search and category filters. Every product is backed by a real database record. | The operator's queue: confirmed orders awaiting preparation, with payment status and a one-click action. |
 
-See the [Roadmap](documentation/roadmap.md) for the complete progression.
+| Fulfillment detail | Shipments |
+| --- | --- |
+| ![Fulfillment detail](documentation/images/fulfillment-detail.png) | ![Shipments](documentation/images/shipments.png) |
+| The five-step pipeline, the order lines with their SKUs, the totals, and the next command available. | Every shipment with a real tracking number, its status, and the action to move it forward. |
+
+The fulfillment detail screen is the clearest single picture of the whole
+system: the pipeline at the top, the goods and money in the middle, and the
+single operation you are allowed to perform right now on the right.
 
 ---
 
-## Run Luna
+## Architecture
 
-### Prerequisites
+```mermaid
+flowchart TB
+    Browser["Browser"] -->|"HTTP only"| GW["Next.js gateway<br/>frontend : 3000"]
 
-- Docker Desktop
+    subgraph Svc["Backend services — .NET 8, each owning its own database"]
+        Identity["Identity<br/>OpenIddict"]
+        Catalog["Catalog"]
+        Orders["Orders"]
+        Payments["Payments"]
+        Inventory["Inventory"]
+        Shipping["Shipping"]
+    end
 
-### Environment files
+    subgraph Data["SQL Server — one database per service"]
+        IdDb[("IdentityDb")]
+        CatDb[("CatalogDb")]
+        OrdDb[("OrdersDb")]
+        PayDb[("PaymentsDb")]
+        InvDb[("InventoryDb")]
+        ShipDb[("ShippingDb")]
+    end
 
-Set up both files before starting Luna:
+    GW --> Identity
+    GW --> Catalog
+    GW --> Orders
+    GW --> Payments
+    GW --> Inventory
+    GW --> Shipping
 
-- `infrastructure/.env`: change `MSSQL_SA_PASSWORD`, `ORDERS_SERVICE_CLIENT_SECRET`, and `LUNA_COOKIE_ENCRYPTION_KEY` (a Base64-encoded 32-byte key).
-- `src/Frontend/.env`: set the local service URLs to `http://localhost:5001` through `http://localhost:5006` and use the same `LUNA_COOKIE_ENCRYPTION_KEY`.
+    Identity --> IdDb
+    Catalog --> CatDb
+    Orders --> OrdDb
+    Payments --> PayDb
+    Inventory --> InvDb
+    Shipping --> ShipDb
+```
 
-Keep the Docker service URLs (`http://identity:8080`, `http://catalog:8080`, etc.) for container-to-container communication; use `localhost` URLs when running Next.js directly.
+Three decisions shape everything else:
 
-Start the Phase 0 environment from the repository root:
+**The browser talks to one service.** The Next.js gateway is the only public
+HTTP boundary. Backend containers are not published; nothing in the frontend
+addresses a Docker service name.
+
+**A service owns its data.** Six databases, and no service reads another's
+tables. Cross-service work goes through an application port and a service token,
+never a shared connection string.
+
+**Five-layer Clean Architecture, repeated.** Five of the six services use the
+same `Api / Application / Contracts / Domain / Infrastructure` split, with
+domain code holding the invariants and controllers staying thin. Identity is a
+single project because its host predates the template; its folders still keep
+the responsibilities apart.
+
+Messaging arrives in Phase 2 on AWS primitives — an EventBridge bus, SQS with
+dead-letter queues, and SES — declared in Terraform so the same files target
+the local emulator, a server, and real AWS. The bus and all four queues carry
+`prevent_destroy`, because Terraform cannot know whether running code still
+needs them.
+
+---
+
+## What is built today
+
+- **6 backend services** on .NET 8, across 29 projects, plus a Next.js frontend.
+- **6 SQL Server databases**, one per service, migrated on startup.
+- **A five-step fulfillment pipeline** with domain-guarded transitions and a
+  live operations console.
+- **OpenIddict authentication** with role-based access; the operations console is
+  gated on `Admin` by a real authorization policy, not just a hidden link.
+- **93 test files** — 57 backend, 36 frontend.
+- **3 CI workflows** covering validation, Docker image publishing, and Terraform
+  plan/apply.
+
+Phase 1 is in closure. Phase 2 — messaging and asynchronous workflows — is the
+next one.
+
+---
+
+## Run it
 
 ```bash
+cp infrastructure/.env.example infrastructure/.env    # then edit it
 docker compose -f infrastructure/docker-compose.yml up --build
 ```
 
-For local frontend development without rebuilding the frontend container on every change, start the backend services with the development Compose override:
+That is the whole stack: SQL Server, the six services, the gateway and the AWS
+emulator. Storefront at <http://localhost:3000>, API explorer at
+<http://localhost:3000/swagger>.
 
-```bash
-docker compose \
--f infrastructure/docker-compose.yml \
--f infrastructure/docker-compose.dev.yml \
--f infrastructure/docker-compose.observability.yml \
-up --build \
-sqlserver identity catalog orders payments inventory shipping \
-signoz signoz-migrator otel-collector
-```
-
-Then run the frontend from `src/Frontend`:
-
-```bash
-npm run dev
-```
-
-The development override publishes the backend services on ports `5001` through `5006`, matching the frontend's local `.env` rewrite destinations. Use `--force-recreate` if the services were previously started with the default Compose file. Restart `npm run dev` after changing `.env` because Next.js reads the rewrite destinations at startup.
-
-This command also starts SigNoz and the OpenTelemetry collector. The SigNoz UI is available at `http://localhost:8080`, and OTLP receivers are available on ports `4317` and `4318`.
-
-The storefront is available at:
-
-```text
-http://localhost:3000
-```
-
-The unified API explorer is available at:
-
-```text
-http://localhost:3000/swagger
-```
-
-Backend services are kept private to the Compose network and are reached through the frontend gateway.
-
-SQL Server runs locally with a separate database for each service.
-
-Asynchronous messaging is intentionally not part of Phase 0; it is introduced in Phase 2 on a local AWS emulator (EventBridge, SQS, SES) rather than RabbitMQ.
+Full instructions, including frontend hot reload, observability, Terraform and
+the demo scripts, are in **[Getting Started](documentation/getting-started.md)**.
 
 ---
 
-## Project Status
+## Roadmap
 
-🚧 **Early Development**
+| Phase | Focus | |
+| --- | --- | --- |
+| 0 | Architecture & Foundation | done |
+| 1 | Basic Commerce Flow | closing |
+| 2 | Messaging & Async Workflows | next |
+| 3 | Realistic Time & Simulation | |
+| 4 | Reliability & Failure Handling | |
+| 5 | Transactional Outbox | |
+| 6 | Payment Abstraction | |
+| 7 | Fulfillment Service | |
+| 8 | Observability | |
+| 9 | Operations Dashboard | |
+| 10 | Redundancy & Resilience | |
+| 11 | Chaos & Failure Simulation | |
+| 12 | Security | |
+| 13 | Testing & Quality | |
+| 14 | Production-like Local Infrastructure | |
+| 15 | AWS | |
+| 16 | Production Scenarios & Edge Cases | |
 
-**Phase 0 — Complete**
-
-The architecture and development foundation are established, including service boundaries, databases, containerization, configuration, API conventions, health checks, logging, testing foundations, and the frontend foundation.
-
-**Phase 1 — In closure**
-
-The synchronous commerce path, customer shipment tracking, and the initial Luna Ops fulfillment/shipment workflow are implemented. Closure now focuses on the remaining real-boundary checkout failure matrix and the final Docker-dependent quality gates before Phase 2 messaging work begins.
+The reasoning behind each phase, and what has actually shipped, is in the
+[roadmap](documentation/roadmap.md).
 
 ---
 
 ## Documentation
 
-The repository separates **what Luna is**, **where it is going**, and **how each phase is designed**.
+The repository separates **what Luna is**, **where it is going**, and **how each
+phase is designed**.
 
-- [Roadmap](documentation/roadmap.md) — Project vision and progression
-- [Phase 0 Design](documentation/dev_phases/phase-0/design.md) — Foundation and architectural decisions
-- [Phase 1 Specification](documentation/dev_phases/phase-1/spec.md) — Basic commerce flow requirements and decisions
-- [Phase 1 Architecture](documentation/dev_phases/phase-1/architecture.md) — Technical design, boundaries, and architectural decisions
-- [Phase 2 Specification](documentation/dev_phases/phase-2/spec.md) — Messaging and async workflow behavior and acceptance criteria
-- [Phase 2 Architecture](documentation/dev_phases/phase-2/architecture.md) — emulator choice, AWS mapping, and service structure
-- [Observability](documentation/observability.md) — OpenTelemetry, OTLP, SigNoz, and checkout trace verification
+- **[Getting Started](documentation/getting-started.md)** — run it locally
+- [Roadmap](documentation/roadmap.md) — project vision and phase progression
+- [Phase 0 Design](documentation/dev_phases/phase-0/design.md) — foundation and architectural decisions
+- [Phase 1 Specification](documentation/dev_phases/phase-1/spec.md) — commerce flow requirements
+- [Phase 1 Architecture](documentation/dev_phases/phase-1/architecture.md) — boundaries and decisions
+- [Phase 1 Operations Architecture](documentation/dev_phases/phase-1/ops-architecture.md) — the fulfillment and shipment workflow
+- [Phase 2 Specification](documentation/dev_phases/phase-2/spec.md) — messaging behaviour and acceptance criteria
+- [Phase 2 Architecture](documentation/dev_phases/phase-2/architecture.md) — emulator choice, AWS mapping, resource ownership
+- [Observability](documentation/observability.md) — OpenTelemetry, SigNoz, tracing a checkout
 
-For frontend-specific implementation details, see the frontend documentation under `src/Frontend/`.
+Frontend implementation detail lives in [`src/Frontend/`](src/Frontend/).
 
 ---
 
-## Why Luna?
+## License
 
-Luna is primarily a learning and experimentation platform.
-
-The interesting part is not simply building an online store. It is progressively turning that store into a distributed platform and learning what changes when:
-
-- services operate independently
-- work happens asynchronously
-- failures occur during workflows
-- operations take time
-- messages can be delayed or duplicated
-- dependencies become unavailable
-- the system needs to recover
-- operators need to understand what is happening
-
-The architecture is therefore expected to evolve.
-
-```text
-Simple
-  │
-  ▼
-Useful
-  │
-  ▼
-Distributed
-  │
-  ▼
-Asynchronous
-  │
-  ▼
-Failure-prone
-  │
-  ▼
-Observable
-  │
-  ▼
-Resilient
-```
-
-Luna is intentionally built one step at a time.
+MIT — see [LICENSE](LICENSE).
