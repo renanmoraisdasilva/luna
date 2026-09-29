@@ -111,8 +111,15 @@ function sql(query) {
  */
 async function capture(name, ms = 1200) {
   if (STILLS) {
-    await page.screenshot({ path: path.join(imageDir, `${name}.png`), fullPage: true });
-    console.log(`[demo] still ${name}.png`);
+    // Playwright only writes PNG and JPEG, so the buffer is re-encoded to WebP
+    // rather than screenshotting straight to it. WebP at q82 roughly halves the
+    // bytes at this width, which matters because these are committed and the
+    // storefront alone was 772 kB as a PNG. Keeping the encode here means
+    // `npm run demo:stills` keeps producing WebP rather than a format the
+    // README no longer references.
+    const png = await page.screenshot({ fullPage: true });
+    await sharp(png).webp({ quality: 82 }).toFile(path.join(imageDir, `${name}.webp`));
+    console.log(`[demo] still ${name}.webp`);
     return;
   }
   const shots = Math.max(1, Math.round((ms / 1000) * FPS));
@@ -195,12 +202,15 @@ IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
     await addToCart.nth(i).click();
     await page.waitForTimeout(1000);
   }
+  // The walkthrough needs the cart filled, because checkout reads it, but the
+  // cart screen is not one of the README stills: checkout shows the same money
+  // plus the address and shipping method, so a cart still would be redundant.
   await page.goto(`${BASE}/cart`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(3000);
   if (/your cart is empty/i.test(await page.locator('body').innerText())) {
     throw new Error('the cart is empty; the demo would show a zero subtotal');
   }
-  await capture('cart', 2000);
+  if (!STILLS) await capture('cart', 2000);
 
   // --- 3. checkout ----------------------------------------------------------
   console.log('[demo] 3/5 checkout');

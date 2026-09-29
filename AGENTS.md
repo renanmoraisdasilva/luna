@@ -4,7 +4,7 @@
 
 - `documentation/roadmap.md` is the high-level project roadmap, phase status, and next priorities.
 - `documentation/getting-started.md` is the local run guide: environment files, Compose, frontend development, observability, Terraform, tests, and regenerating the demo media. The root `README.md` is the front door and links here rather than repeating setup steps.
-- `documentation/luna-demo.gif` and `documentation/images/*.png` are committed documentation artifacts, not build output. They are produced by `src/Frontend/scripts/build-demo-gif.mjs` (`npm run demo:build` and `npm run demo:stills` from `src/Frontend`), which drives the running stack. Regenerate them when a screen or the demo data changes; do not hand-edit them.
+- `documentation/luna-demo.gif` and `documentation/images/*.webp` are committed documentation artifacts, not build output. They are produced by `src/Frontend/scripts/build-demo-gif.mjs` (`npm run demo:build` and `npm run demo:stills` from `src/Frontend`), which drives the running stack and writes the stills as WebP. Regenerate them when a screen or the demo data changes; do not hand-edit them.
 - `documentation/dev_phases/` contains one folder per development phase (`phase-0/`, `phase-1/`, `phase-2/`, ...) holding that phase's design, specification, architecture, and acceptance-criteria documents, such as `phase-1/spec.md`, `phase-1/architecture.md`, and `phase-2/architecture.md`.
 - Phase specifications describe what the system must do: business behavior, API capabilities, failure scenarios, and acceptance criteria.
 - Phase architecture documents describe how the system is built: service boundaries, database ownership, backend layering, frontend architecture, authentication, persistence, testing, and architectural decisions.

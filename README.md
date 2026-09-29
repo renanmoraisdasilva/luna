@@ -63,15 +63,19 @@ guards live in `Order.cs` as `EnsureShipmentCreationAllowed`,
 
 ## The application
 
-| Storefront | Fulfillment queue |
-| --- | --- |
-| ![Storefront](documentation/images/storefront.png) | ![Fulfillment queue](documentation/images/fulfillment-queue.png) |
-| Catalogue with search and category filters. Every product is backed by a real database record. | The operator's queue: confirmed orders awaiting preparation, with payment status and a one-click action. |
+**Customer side**
 
-| Fulfillment detail | Shipments |
+| Storefront | Checkout |
 | --- | --- |
-| ![Fulfillment detail](documentation/images/fulfillment-detail.png) | ![Shipments](documentation/images/shipments.png) |
-| The five-step pipeline, the order lines with their SKUs, the totals, and the next command available. | Every shipment with a real tracking number, its status, and the action to move it forward. |
+| ![Storefront](documentation/images/storefront.webp) | ![Checkout](documentation/images/checkout.webp) |
+| Catalogue with search and category filters. Every product is a real database record. | The transaction: contact, payment method, shipping address and a chosen shipping method, all validated before the order exists. |
+
+**Operations side**
+
+| Fulfillment queue | Fulfillment detail | Shipments |
+| --- | --- | --- |
+| ![Fulfillment queue](documentation/images/fulfillment-queue.webp) | ![Fulfillment detail](documentation/images/fulfillment-detail.webp) | ![Shipments](documentation/images/shipments.webp) |
+| The operator's queue: confirmed orders awaiting preparation, with payment status and a one-click action. | The five-step pipeline, the order lines with their SKUs, the totals, and the next command available. | Every shipment with a real tracking number, its status, and the action to move it forward. |
 
 The fulfillment detail screen is the clearest single picture of the whole
 system: the pipeline at the top, the goods and money in the middle, and the
