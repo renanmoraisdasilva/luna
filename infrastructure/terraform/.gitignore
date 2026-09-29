@@ -1,0 +1,12 @@
+# Terraform state records the real resources that exist. It is local-only
+# (see SPEC-INFRA-002 on state drift) and must never be committed.
+*.tfstate
+*.tfstate.*
+
+# Plan files are machine-specific output.
+*.tfplan
+tfplan
+
+# Provider plugins and the working directory. The lock file is intentionally NOT
+# ignored: pinning the exact provider version is what makes `plan` reproducible.
+.terraform/

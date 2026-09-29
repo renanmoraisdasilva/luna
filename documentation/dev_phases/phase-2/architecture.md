@@ -148,7 +148,7 @@ so one mapping covers them; AWS is the third environment in Phase 15.
 | Docker Compose service definition | ECS task definition | Phase 14/15 concern |
 | `.env` / compose environment | Secrets Manager | Phase 14/15 concern |
 | OpenTelemetry -> SigNoz (existing) | OTel -> CloudWatch (ADOT) + X-Ray | Existing Luna telemetry |
-| Seed script (`scripts/`, AWS CLI) | Terraform | Phase 14 replaces script with IaC |
+| Terraform (`infrastructure/terraform/`) | Terraform | Same files, different endpoint |
 
 **Messaging pattern mapping (conceptual):**
 
@@ -187,8 +187,9 @@ The `floci` service is added to **both** deployment definitions:
 `docker-compose.dev.yml`) and `infrastructure/docker-compose.prod.yml` (the
 production definition Dokploy reads directly from this repository):
 
-- Image pinned to `floci/floci:<version>-compat`. The `-compat` variant is
-  required because the seed script runs the AWS CLI inside the emulator image.
+- Image pinned to `floci/floci:<version>-compat`. The `-compat` variant ships the
+  AWS CLI and boto3, which makes the emulator image usable as a self-contained
+  AWS CLI client for debugging and smoke checks.
 - No service selection is needed: every emulated service starts on demand, so
   there is no `SERVICES` list to keep in sync.
 - `FLOCI_HOSTNAME: floci` so URLs returned to clients (for example SQS queue
@@ -207,25 +208,48 @@ production definition Dokploy reads directly from this repository):
   `docker-compose.dev.yml` only. It is a developer browser for queues, rules,
   and the SES mailbox, is never deployed, and no Luna service depends on it.
 
-### SPEC-INFRA-002 - Idempotent infrastructure seed
+### SPEC-INFRA-002 - Terraform-managed messaging resources
 
-A script under `scripts/` runs as a **one-shot init service** in both Compose
-stacks (starting after the emulator is healthy), and is also invoked manually
-and by CI. It uses the AWS CLI
-(`--endpoint-url http://floci:4566`) to create, and re-create without error:
+The bus, queues, DLQs, rules, and sender identity are declared in **Terraform**
+under `infrastructure/terraform/`, using the standard `hashicorp/aws` provider
+pointed at the emulator endpoint:
 
-- The custom event bus `luna-bus`.
-- The queues defined in [Section 3](#3-messaging-model), each with a matching
-  DLQ and redrive policy.
-- The EventBridge rules routing bus events to queues.
-- The verified SES identity used as the sender (the emulator verifies
-  identities immediately).
+- `versions.tf` pins the provider version.
+- `provider.tf` sets region, dummy credentials, and one `endpoints` entry per
+  emulated service in use (`sqs`, `events`, `ses`). Terraform requires an
+  explicit endpoint for every service a configuration touches.
+- `variables.tf` declares the region, the endpoint, the bus and queue names, the
+  DLQ `maxReceiveCount`, and the sender address, so names are not duplicated as
+  literals across files.
+- `messaging.tf` declares the custom event bus `luna-bus`, the two Notification
+  queues and their DLQs with redrive policies, and the rules that route bus
+  events to those queues.
+- `ses.tf` declares the sender identity through the SES v1 API, matching the API
+  Luna's Notification service uses. The emulator's SES v2 REST surface rejects
+  the dummy local credentials, so v2 resources are not usable here.
 
-Idempotency is required: running the seed twice must not fail or duplicate
-resources. Because the script runs as the startup/deploy step in both
-environments, every fresh deployment arrives with the bus, queues, rules, and
-sender identity already provisioned, and a wiped emulator state repairs
-itself on the next start.
+Terraform is the provisioning tool. It is run by a person, by CI, and during a
+deployment; it is not a long-running service and is not part of the Compose
+health model. Its local state file is committed-adjacent but never committed;
+`.gitignore` excludes state, plan files, and `.terraform/`.
+
+Three properties this replaces:
+
+- **Declarative and reviewable.** The resources are described in files that
+  diff and version like code, and `terraform plan` shows the exact change set
+  before anything is applied.
+- **Self-correcting.** Re-running converges to what the files declare, so a
+  resource hand-edited in the console is reverted rather than left as invisible
+  drift. `terraform destroy` removes everything in one command.
+- **Identical in every environment.** The same files apply against the local
+  emulator, the deployed server stack, and real AWS in Phase 15; only the
+  endpoint and credentials differ.
+
+**State drift:** emulator state is in-memory while the Terraform state file is
+on disk, so a recreated emulator container empties the resources without
+updating state. `terraform apply` after a recreate repairs it. If the emulator
+gains a persistent volume later, the volume and the state file must be reset
+together; the simplest repair remains recreating the container and re-applying.
 
 ### SPEC-INFRA-003 - Service configuration
 
@@ -260,8 +284,8 @@ surface so the same code works against the emulator and AWS:
 | `luna-orders-shipment-commands` (Phase 3, not provisioned here) | Orders/Shipping (shipment creation) | Direct `SendMessage` from Luna Ops |
 | `*.DLQ` (one per Phase 2 queue) | Operators (Phase 4 handles) | Redrive policy |
 
-The Phase 2 seed provisions the two Notification queues and their DLQs only.
-The command queue is created in Phase 3; see
+Phase 2 declares the two Notification queues and their DLQs only. The command
+queue is added in Phase 3; see
 [SPEC-MSG-009](#spec-msg-009---command-queue-queue-without-a-bus-deferred-to-phase-3).
 
 All queues are **standard** (non-FIFO). FIFO is explicitly rejected: AWS
@@ -441,6 +465,7 @@ phase has actually demonstrated, not as a precaution that hides it.
 | --- | --- |
 | Floci (EventBridge + SQS + SES) instead of RabbitMQ, and instead of LocalStack | [Decision Record](#decision-record-floci-eventbridge--sqs--ses-instead-of-rabbitmq) |
 | Floci UI is local-only and never deployed | [SPEC-INFRA-001](#spec-infra-001---floci-emulator-service) |
+| Terraform provisions messaging resources, not a seed script | [SPEC-INFRA-002](#spec-infra-002---terraform-managed-messaging-resources) |
 | Envelope `version` is `"0"`; consumers read only `source`, `detail-type`, `detail` | [SPEC-MSG-003](#spec-msg-003---event-envelope) |
 | Standard queues only; FIFO rejected | [SPEC-MSG-002](#spec-msg-002---queue-inventory) |
 | Events to the bus, commands to queues | [SPEC-MSG-001](#spec-msg-001---events-use-the-bus-commands-use-queues) |

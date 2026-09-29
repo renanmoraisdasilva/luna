@@ -1,0 +1,123 @@
+name: Terraform
+
+# Two separate jobs, and the split is the lesson:
+#
+#   plan  - runs automatically on every change, touches nothing, proves the
+#           configuration is valid and shows what would change
+#   apply - never runs automatically, requires a human to press the button,
+#           because it changes infrastructure
+#
+# In a real AWS setup the apply job would target real AWS with real credentials
+# and be protected by an environment approval rule. Here it still targets the
+# emulator, so nothing is at risk, but the gate stays in place.
+
+on:
+  pull_request:
+    paths:
+      - 'infrastructure/terraform/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/terraform/**'
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Operation to run'
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Validate and plan against a throwaway emulator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
+          terraform_version: 1.16.4
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+        working-directory: infrastructure/terraform
+
+      - name: Validate configuration
+        run: terraform init -backend=false -input=false && terraform validate
+        working-directory: infrastructure/terraform
+
+      - name: Start throwaway emulator
+        run: |
+          docker run -d --name floci -p 4566:4566 \
+            -e AWS_ACCESS_KEY_ID=test -e AWS_SECRET_ACCESS_KEY=test \
+            -e AWS_DEFAULT_REGION=us-east-1 \
+            floci/floci:2.1.0-compat
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:4566/_floci/health > /dev/null 2>&1; then
+              echo "emulator ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "emulator did not become ready"; docker logs floci; exit 1
+
+      - name: Plan
+        run: terraform plan -input=false
+        working-directory: infrastructure/terraform
+
+  # Gated behind a manual dispatch on purpose. `plan` above proves the
+  # configuration is sound; this job is the only thing that changes
+  # infrastructure, so a human has to trigger it. On real AWS this job would
+  # carry real credentials and sit behind an environment approval rule.
+  apply:
+    name: Apply against a throwaway emulator
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    needs: plan
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
+          terraform_version: 1.16.4
+
+      - name: Start throwaway emulator
+        run: |
+          docker run -d --name floci -p 4566:4566 \
+            -e AWS_ACCESS_KEY_ID=test -e AWS_SECRET_ACCESS_KEY=test \
+            -e AWS_DEFAULT_REGION=us-east-1 \
+            floci/floci:2.1.0-compat
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:4566/_floci/health > /dev/null 2>&1; then
+              echo "emulator ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "emulator did not become ready"; docker logs floci; exit 1
+
+      - name: Init
+        run: terraform init -input=false
+        working-directory: infrastructure/terraform
+
+      - name: Run requested operation
+        run: |
+          case "${{ github.event.inputs.operation }}" in
+            apply)   terraform apply -auto-approve -input=false ;;
+            destroy) terraform destroy -auto-approve -input=false ;;
+            *)       terraform plan -input=false ;;
+          esac
+        working-directory: infrastructure/terraform

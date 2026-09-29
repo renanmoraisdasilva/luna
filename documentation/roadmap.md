@@ -294,7 +294,7 @@ Frontend rendering and data-fetching boundaries:
 
 **Decision:** Phase 2 runs on **Floci**, a free MIT-licensed local AWS emulator serving EventBridge, SQS, and SES on port `4566`, instead of RabbitMQ. It needs no account, auth token, or paid tier, and it is deployed rather than local-only: the same stack runs locally and on the self-hosted server through Dokploy. A separate **Floci UI** container on port `4500` gives a local browser for queues, EventBridge rules, and captured SES mail; it is a development tool and is never deployed. The rationale, the accepted caveats, the rejected alternatives (RabbitMQ and LocalStack), and the one-to-one AWS mapping contract are recorded in the [phase 2 decision record](dev_phases/phase-2/architecture.md#decision-record-floci-eventbridge--sqs--ses-instead-of-rabbitmq). RabbitMQ is not used anywhere in Luna.
 
-**Goal:** Introduce asynchronous messaging through the AWS SDK: an EventBridge bus, SQS queues with DLQs and redrive policies, routing rules, long-polling consumers, at-least-once delivery, competing consumers, and eventual consistency. Domain events go to the bus, work items go directly to a queue. A new Notification bounded context consumes its own queues and emails customers through SES. Publishing happens directly after the database commit, leaving the known dual-write window to be observed here and fixed by the Phase 5 outbox; duplicates are likewise surfaced here and fixed by Phase 4 idempotency. The Ops shipment-creation command queue is deferred to Phase 3.
+**Goal:** Introduce asynchronous messaging through the AWS SDK: an EventBridge bus, SQS queues with DLQs and redrive policies, routing rules, long-polling consumers, at-least-once delivery, competing consumers, and eventual consistency. Domain events go to the bus, work items go directly to a queue. The bus, queues, rules, and sender identity are declared in Terraform, so the same files apply locally, on the server, and on AWS in Phase 15. A new Notification bounded context consumes its own queues and emails customers through SES. Publishing happens directly after the database commit, leaving the known dual-write window to be observed here and fixed by the Phase 5 outbox; duplicates are likewise surfaced here and fixed by Phase 4 idempotency. The Ops shipment-creation command queue is deferred to Phase 3.
 
 **Milestone:** A customer places an order, watches it progress asynchronously, and receives emails produced by an independent service consuming its own queue, using the same calls that will run unchanged on AWS.
 
@@ -372,7 +372,7 @@ Use real databases and the pinned emulator image through Testcontainers. Cover d
 
 **Goal:** Run Luna in a production-like local environment and learn how infrastructure is provisioned and configured.
 
-This phase includes Docker and Docker Compose, a reverse proxy or gateway, multiple service instances, databases, the local AWS emulator, observability, CI/CD, backups, production-like configuration, and self-hosted infrastructure automation with Terraform and Ansible.
+This phase includes Docker and Docker Compose, a reverse proxy or gateway, multiple service instances, databases, the local AWS emulator, observability, CI/CD, backups, production-like configuration, and self-hosted infrastructure automation with Ansible. Terraform already covers the emulated AWS resources from Phase 2; this phase extends that same practice to the host-level and cloud-level infrastructure.
 
 The learning progression is:
 
@@ -390,7 +390,7 @@ Luna
 
 ### Phase 15: AWS
 
-**Goal:** Explore how the production-like local architecture maps to AWS and learn infrastructure-as-code and managed container deployment. Because Phase 2 already speaks to EventBridge, SQS, and SES through the AWS SDK, this phase is a change of endpoint plus Terraform rather than a messaging rewrite.
+**Goal:** Explore how the production-like local architecture maps to AWS and learn managed container deployment. Because Phase 2 already speaks to EventBridge, SQS, and SES through the AWS SDK and declares them in Terraform, this phase is a change of endpoint rather than a messaging rewrite.
 
 Terraform provisions and configures the AWS infrastructure:
 
@@ -403,9 +403,9 @@ Terraform
         ├── ECS/Fargate
         ├── RDS
         ├── S3
-        ├── EventBridge
-        ├── SQS
-        ├── SES
+        ├── EventBridge   (already declared in Phase 2)
+        ├── SQS           (already declared in Phase 2)
+        ├── SES           (already declared in Phase 2)
         ├── API Gateway
         └── CloudWatch
 ```
@@ -423,7 +423,7 @@ The local-to-cloud translation is:
 | Reverse proxy | ALB/API Gateway |
 | Local configuration and secrets | Secrets Manager |
 | Logs | CloudWatch |
-| Deploy-time seed script (AWS CLI) | Terraform |
+| Terraform (`infrastructure/terraform/`) | Terraform |
 | Terraform | Terraform |
 
 The point is to understand how cloud infrastructure provides capabilities the local system already demonstrates.
@@ -471,7 +471,7 @@ Phase 1 closure is still pending only on a recorded quality-gate run and the imp
 | --- | --- | --- |
 | 0 | Complete | Foundation, service boundaries, infrastructure, CI, and baseline security are implemented. |
 | 1 | In closure | Synchronous commerce path, customer tracking, the Orders/Shipping lifecycle proof, and the real-boundary checkout failure matrix are implemented; the recorded quality gate and closure review remain. |
-| 2 | Specified, infrastructure started | The Phase 2 specification and architecture are accepted. Floci (EventBridge + SQS + SES) replaces the earlier RabbitMQ plan and the earlier LocalStack choice, and the Ops command queue is deferred to Phase 3. The emulator and its UI are wired into the local Compose stack and verified by hand; the seed script and the Notification service do not exist yet. |
+| 2 | Specified, infrastructure started | The Phase 2 specification and architecture are accepted. Floci (EventBridge + SQS + SES) replaces the earlier RabbitMQ plan and the earlier LocalStack choice, and the Ops command queue is deferred to Phase 3. The emulator and its UI are wired into the local Compose stack, and the bus, queues, DLQs, rules, and sender identity are declared in Terraform and verified against the emulator; the producers and the Notification service do not exist yet. |
 | 3-7 | Not started | Simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
 | 8 | Foundation delivered | Telemetry and local SigNoz are implemented; operational dashboards and workflows remain later work. |
 | 9-16 | Not started | Operations Console, redundancy, chaos, advanced security, production infrastructure, AWS, and scenario exercises remain future work. |
@@ -479,6 +479,6 @@ Phase 1 closure is still pending only on a recorded quality-gate run and the imp
 ### Next steps
 
 1. Run the Docker-dependent integration suite, frontend build, Compose smoke checks, and coverage as one recorded quality gate. (The integration suite has passed locally; the frontend build, Compose smoke, and coverage still need to run together as one recorded pass.)
-2. Close Phase 1 with an implementation review, then continue Phase 2 by adding the idempotent seed script, the producers, and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required. The emulator is already running locally.
+2. Close Phase 1 with an implementation review, then continue Phase 2 by adding the event producers and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required. The emulator runs locally and the messaging resources are managed by Terraform.
 
 Asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.

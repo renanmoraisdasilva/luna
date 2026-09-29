@@ -59,8 +59,8 @@ In scope for Phase 2:
 - The Floci emulator added to the local stack, CI, and the deployed production
   stack (`docker-compose.prod.yml`, which Dokploy reads directly from this
   repository). No account, auth token, or paid tier is involved.
-- An event bus, queues, DLQs, and routing rules provisioned as code (seed
-  script), run automatically at stack startup and at every deployment.
+- An event bus, queues, DLQs, and routing rules declared in Terraform and
+  applied at every environment startup and deployment.
 - Emulator configuration (hostname, region, dummy credentials) delivered
   through `.env` locally and the Dokploy application environment on the server.
 - `Orders` publishes `OrderConfirmed` after a successful checkout.
@@ -229,8 +229,9 @@ No Phase 2 acceptance criterion depends on fixing these; all of them must be
 
 ## 8. Acceptance Criteria
 
-1. `docker compose up` (dev profile) starts the emulator healthy, the seed
-   script runs without error, and running it a second time is a no-op.
+1. `docker compose up` (dev profile) starts the emulator healthy;
+   `terraform plan` reports no changes on a second run; and `terraform apply`
+   after recreating the emulator container restores every declared resource.
 2. Placing an order returns synchronously with the same contract as Phase 1,
    and `OrderConfirmed` appears on `luna-bus` (verifiable through the AWS CLI or
    the emulator UI).
@@ -260,10 +261,10 @@ No Phase 2 acceptance criterion depends on fixing these; all of them must be
 12. The [AWS mapping contract](architecture.md#the-aws-mapping-contract)
     covers every new component introduced by this phase.
 13. The deployed server stack runs the same pipeline end to end: Dokploy
-    deploys the emulator as part of Luna's production compose, the seed runs
-    during deployment, and an order placed against the deployed application
-    produces a confirmation email through the deployed Notification workers.
-    The emulator UI is **not** deployed; only the emulator is.
+    deploys the emulator as part of Luna's production compose, Terraform is
+    applied during deployment, and an order placed against the deployed
+    application produces a confirmation email through the deployed Notification
+    workers. The emulator UI is **not** deployed; only the emulator is.
 
 ## 9. Testing
 
@@ -279,8 +280,8 @@ No Phase 2 acceptance criterion depends on fixing these; all of them must be
   for `/_floci/health` is the lower-risk option and needs no extra dependency.
   Re-evaluate the module once it matures.
 - **Integration (existing):** full Phase 1 suites remain green.
-- **Compose smoke:** emulator healthy, seed idempotent, one end-to-end
-  order -> confirmation email pass — verified against the local stack and,
+- **Compose smoke:** emulator healthy, `terraform plan` clean on a second run,
+  one end-to-end order -> confirmation email pass — verified against the local stack and,
   for [criterion 13](#8-acceptance-criteria), against the deployed production
   compose.
 - **Frontend:** order page polling behavior; Luna Ops Emails view loading,
@@ -309,9 +310,9 @@ requires updating the existing RabbitMQ direction recorded in:
 - `documentation/observability.md`: if it references RabbitMQ metrics, add
   queue-depth/DLQ metrics for SQS instead.
 - `infrastructure/README.md` and `.env.example`: document the `floci`
-  service, the local-only `floci-ui` service, the deploy-time seed step, and
-  the emulator settings the Dokploy application environment must carry. There
-  is no auth token to document.
+  service, the local-only `floci-ui` service, the Terraform configuration and
+  how it is applied, and the emulator settings the Dokploy application
+  environment must carry. There is no auth token to document.
 
 ## 11. Implementation Checklist
 
@@ -326,8 +327,14 @@ requires updating the existing RabbitMQ direction recorded in:
 - [x] Emulator service, health check, and dev UI added to the local stack and
       verified by hand on 2026-09-28 (bus, rule, SQS fan-out, receive counts,
       DLQ redrive, SES v1 send, `/_aws/ses` mailbox)
-- [ ] Idempotent seed script (bus, queues, DLQs, rules, SES identity) wired as
-      a one-shot init service so it runs at every startup and deployment
+- [x] Terraform configuration for the bus, queues, DLQs, rules, and SES identity
+      applied and verified: a second `terraform plan` reports no changes, and
+      publishing `OrderConfirmed` and `ShipmentInTransit` fans out to the correct
+      separate queues
+- [ ] Terraform configuration for the bus, queues, DLQs, rules, and SES
+      identity, applied at every environment startup and deployment
+- [ ] Terraform state and plan files excluded from version control; the provider
+      lock file committed
 - [ ] Dev stack runs two Notification instances; production compose runs two
       Notification replicas
 
@@ -364,7 +371,7 @@ requires updating the existing RabbitMQ direction recorded in:
 
 - [ ] Unit tests (templates, handlers, envelope)
 - [ ] Testcontainers integration tests against the pinned Floci image
-- [ ] Compose smoke including seed idempotency
+- [ ] Compose smoke including a clean `terraform plan` on a second run
 - [ ] Full recorded quality gate run
 
 ### Documentation
