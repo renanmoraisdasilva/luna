@@ -1,18 +1,29 @@
 // Builds `documentation/luna-demo.gif` by driving the running Luna stack.
 //
-// Why drive the real app instead of hand-drawing a mock-up: a demo that does not
-// match the product is worse than no demo. The same rule applies to the data —
-// a storefront with an empty cart and "No orders yet" is a truthful rendering of
-// an unused system and a useless demo, so this script creates a customer, fills
-// a cart and places a real order before it captures anything.
+// Five screens, two of them the operations console:
 //
-// The stack is expected to be already up (see infrastructure/README.md). This
-// script only reads and writes through the public HTTP surface.
+//   1. storefront        the catalogue
+//   2. cart              real line items and a real subtotal
+//   3. checkout          the order being submitted
+//   4. fulfillment       operations: the queue, with the demo's own order in it
+//   5. shipments         operations: the shipment that fulfilment created
+//
+// Why drive the real app instead of hand-drawing a mock-up: a demo that does
+// not match the product is worse than no demo. The same rule applies to the
+// data. An empty cart, a queue with nothing in it and a shipments list at zero
+// are all truthful renderings of an unused system, and none of them is a demo —
+// so this script places a real order and then walks it through fulfilment
+// before it captures anything.
+//
+// The stack is expected to be already up (see infrastructure/README.md); this
+// script only reads and writes through the public HTTP surface, plus one
+// INSERT that grants its own throwaway account the Admin role.
 //
 // Regenerate with: npm run demo:build   (from src/Frontend)
 // It is committed, not built in CI: the GIF is documentation, and rebuilding it
 // on every push would put a binary diff in every commit.
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,33 +36,41 @@ const { GIFEncoder, applyPalette, quantize } = gifenc;
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const BASE = process.env.LUNA_URL ?? 'http://localhost:3000';
+const SQL_CONTAINER = process.env.LUNA_SQL_CONTAINER ?? 'infrastructure-sqlserver-1';
 const outFile = path.join(repoRoot, 'documentation', 'luna-demo.gif');
 
-const VIEW = { width: 1280, height: 860 };
+// 1440 rather than 1280: the operations tables carry a seventh column, and at
+// 1280 the ACTION button was clipped off the right edge of the frame.
+const VIEW = { width: 1440, height: 900 };
 
 // A GIF is LZW over indexed colour, so the file size tracks pixels x frames
 // x colour count, and a portfolio page should not ship a multi-megabyte asset.
-// 5fps over ~12s is 60 frames at 680x458 over 96 colours, which lands around
-// 1.3MB. Two numbers here are load-bearing rather than cosmetic: the GIF canvas
-// caps at 65,535px tall and `sharp` stacks the frames into one buffer to
-// quantise the first one, so FRAMES x GIF_HEIGHT has to stay under that
-// (60 x 458 = 27,480).
+// 5fps over ~12s is 60 frames at 680x458 over 96 colours. Two numbers here are
+// load-bearing rather than cosmetic: the GIF canvas caps at 65,535px tall and
+// `sharp` stacks the frames into one buffer to quantise the first one, so
+// FRAMES x GIF_HEIGHT has to stay under that (60 x 458 = 27,480).
 const FPS = 5;
 const GIF_WIDTH = 680;
-const GIF_HEIGHT = 458;
+const GIF_HEIGHT = 425;
 const COLORS = 96;
 
 const frameDir = mkdtempSync(path.join(tmpdir(), 'luna-demo-frames-'));
 const frames = [];
 let index = 0;
 
-/** A throwaway customer per run, so the demo never collides with real data. */
-const email = `demo${Date.now()}@luna.test`;
-const PASSWORD = 'Demo!Passw0rd';
+/**
+ * A fixed demo customer, not a generated one.
+ *
+ * The name shows up in the operations queue, so `demo1738900000000@luna.test`
+ * would be in the middle of the GIF. A stable address also makes the script
+ * re-runnable: it signs in if the account is there and registers if it is not,
+ * rather than accumulating a new throwaway user on every build.
+ */
 const CUSTOMER = {
+  email: 'ada.lovenace@luna.test',
+  password: 'Demo!Passw0rd',
   firstName: 'Ada',
   lastName: 'Lovelace',
-  email,
   fullName: 'Ada Lovelace',
   addressLine1: '12 Analytical Way',
   city: 'Sao Paulo',
@@ -59,6 +78,22 @@ const CUSTOMER = {
   postalCode: '01310-100',
   country: 'BR',
 };
+
+/** Run one statement against the local dev database. */
+function sql(query) {
+  // The SA password lives in the gitignored dev .env, so no credential is ever
+  // written into this repository.
+  const pw = readFileSync(path.join(repoRoot, 'infrastructure', '.env'), 'utf8')
+    .match(/^MSSQL_SA_PASSWORD=(.*)$/m)[1]
+    .trim()
+    .replace(/^"|"$/g, '');
+  return execFileSync(
+    'docker',
+    ['exec', SQL_CONTAINER, '/opt/mssql-tools18/bin/sqlcmd', '-S', 'localhost', '-U', 'sa',
+      '-P', pw, '-C', '-h', '-1', '-W', '-Q', query],
+    { encoding: 'utf8' },
+  );
+}
 
 /** Hold the shot for `ms` so the eye can read it. */
 async function hold(page, ms = 1200) {
@@ -74,71 +109,84 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: VIEW, deviceScaleFactor: 1 });
 
 try {
-  // --- sign in -------------------------------------------------------------
+  // --- sign in, registering the demo customer on first run ------------------
   // Registration shows a "check your email" screen, but the backend only creates
-  // the user and never sends mail, so the account is usable immediately. The
-  // demo registers rather than reusing a fixed account so it can be re-run.
-  console.log('[demo] registering and signing in');
-  await page.goto(`${BASE}/register`, { waitUntil: 'networkidle' });
-  await page.fill('#firstName', CUSTOMER.firstName);
-  await page.fill('#lastName', CUSTOMER.lastName);
-  await page.fill('#email', CUSTOMER.email);
-  await page.fill('#password', PASSWORD);
-  await page.fill('#confirmPassword', PASSWORD);
-  await page.check('input[name="terms"]');
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await page.waitForTimeout(2500);
+  // the user and never sends mail, so the account is usable immediately.
+  console.log('[demo] signing in');
+  const signIn = async () => {
+    await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
+    await page.fill('#email', CUSTOMER.email);
+    await page.fill('#password', CUSTOMER.password);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.waitForTimeout(3500);
+    return !page.url().includes('/login');
+  };
 
-  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
-  await page.fill('#email', email);
-  await page.fill('#password', PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.waitForTimeout(3500);
-  if (page.url().includes('/login')) throw new Error('sign-in did not complete');
+  if (!(await signIn())) {
+    console.log('[demo] demo account not found, registering it');
+    await page.goto(`${BASE}/register`, { waitUntil: 'networkidle' });
+    await page.fill('#firstName', CUSTOMER.firstName);
+    await page.fill('#lastName', CUSTOMER.lastName);
+    await page.fill('#email', CUSTOMER.email);
+    await page.fill('#password', CUSTOMER.password);
+    await page.fill('#confirmPassword', CUSTOMER.password);
+    await page.check('input[name="terms"]');
+    await page.getByRole('button', { name: 'Create account' }).click();
+    await page.waitForTimeout(2500);
+    if (!(await signIn())) throw new Error('could not sign in after registering');
+  }
 
-  // --- storefront ----------------------------------------------------------
-  // Scoped to `main` so the sticky header does not push the product grid
-  // partly out of frame.
-  console.log('[demo] storefront');
+  // --- operations access ----------------------------------------------------
+  // `/operations/*` is gated on the Admin role, and Luna seeds roles but no
+  // users, so there is no way in through the UI. The role is a real backend
+  // authorization policy, not just a frontend redirect, so the demo grants it
+  // to its own throwaway account directly rather than pretending otherwise.
+  // The JWT is minted at sign-in, so the new role only lands after a fresh one.
+  console.log('[demo] ensuring Admin role');
+  // QUOTED_IDENTIFIER has to be ON for this write: the Identity tables carry
+  // filtered indexes, and SQL Server refuses the statement with Msg 1934
+  // otherwise — which looks like a permissions problem and is not one.
+  const userId = await page.evaluate(async () => (await (await fetch('/api/auth/me')).json()).id);
+  sql(
+    `SET QUOTED_IDENTIFIER ON;
+SET NOCOUNT ON;
+IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
+               WHERE UserId='${userId}'
+                 AND RoleId=(SELECT Id FROM IdentityDb.dbo.AspNetRoles WHERE Name='Admin'))
+  INSERT INTO IdentityDb.dbo.AspNetUserRoles (UserId, RoleId)
+  SELECT '${userId}', Id FROM IdentityDb.dbo.AspNetRoles WHERE Name='Admin';`,
+  );
+  if (!(await signIn())) throw new Error('re-authentication after the role grant failed');
+  const roles = await page.evaluate(async () => (await (await fetch('/api/auth/me')).json()).roles);
+  if (!roles.some((r) => r.toLowerCase() === 'admin')) {
+    throw new Error(`Admin role did not take effect, roles are ${JSON.stringify(roles)}`);
+  }
+
+  // --- 1. storefront --------------------------------------------------------
+  console.log('[demo] 1/5 storefront');
   await page.goto(`${BASE}/shop`, { waitUntil: 'networkidle' });
   await page.waitForSelector('img[src*="unsplash"]', { timeout: 30_000 });
   await page.waitForTimeout(3500);
-  await hold(page, 2400);
+  await hold(page, 2200);
 
-  // The grid links to each product, so the demo follows real ids rather than
-  // hard-coding GUIDs that the seed is free to change.
-  const products = await page.evaluate(() =>
-    [...document.querySelectorAll('a[href^="/shop/products/"]')].map((a) => ({
-      href: a.getAttribute('href'),
-      name: (a.textContent || '').trim(),
-    })),
-  );
-  const seen = new Set();
-  const picks = products.filter((p) => p.href && !seen.has(p.href) && seen.add(p.href)).slice(0, 3);
-  if (picks.length === 0) throw new Error('no product links found on the storefront');
-
-  // --- product detail, and a real cart line from each ----------------------
-  for (const [i, product] of picks.entries()) {
-    console.log(`[demo] product ${i + 1}: ${product.name}`);
-    await page.goto(`${BASE}${product.href}`, { waitUntil: 'networkidle' });
-    await page.waitForSelector('img[src*="unsplash"]', { timeout: 30_000 });
-    await page.waitForTimeout(2500);
-    await hold(page, i === 0 ? 1800 : 1200);
-    await page.getByRole('button', { name: /add to cart/i }).first().click();
-    await page.waitForTimeout(1200);
+  // --- 2. cart --------------------------------------------------------------
+  console.log('[demo] 2/5 cart');
+  const addToCart = page.getByRole('button', { name: 'Add to Cart' });
+  for (const i of [0, 2, 5]) {
+    await addToCart.nth(i).click();
+    await page.waitForTimeout(1000);
   }
-
-  // --- cart ----------------------------------------------------------------
-  console.log('[demo] cart');
   await page.goto(`${BASE}/cart`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(3000);
+  if (/your cart is empty/i.test(await page.locator('body').innerText())) {
+    throw new Error('the cart is empty; the demo would show a zero subtotal');
+  }
   await hold(page, 2000);
 
-  // --- checkout ------------------------------------------------------------
-  console.log('[demo] checkout');
+  // --- 3. checkout ----------------------------------------------------------
+  console.log('[demo] 3/5 checkout');
   await page.goto(`${BASE}/checkout`, { waitUntil: 'networkidle' });
   await page.waitForSelector('#fullName', { timeout: 30_000 });
-  await page.waitForTimeout(1500);
   await page.fill('#email', CUSTOMER.email);
   await page.fill('#fullName', CUSTOMER.fullName);
   await page.fill('#paymentMethod', '4242 4242 4242 4242');
@@ -150,28 +198,58 @@ try {
   await page.waitForTimeout(800);
   await hold(page, 1800);
 
-  console.log('[demo] placing order');
   await page.getByRole('button', { name: /place order/i }).first().click();
   await page.waitForTimeout(6000);
+  const orderId = new URL(page.url()).searchParams.get('orderId');
+  if (!orderId) throw new Error(`no orderId on ${page.url()}; the order was not placed`);
+  console.log(`[demo] placed order ${orderId}`);
 
-  // --- order history -------------------------------------------------------
-  // Reached by URL rather than by following the redirect, so a failed order
-  // still yields a frame instead of an exception.
-  console.log('[demo] orders');
-  await page.goto(`${BASE}/orders`, { waitUntil: 'networkidle' });
+  // --- 4. fulfilment queue --------------------------------------------------
+  // Captured *before* fulfilment is driven, and the order matters. The queue
+  // only lists Confirmed and Preparing orders, so the moment Create Shipment
+  // runs the order becomes Shipped and drops out of it. Capturing afterwards
+  // produced a queue reading "TOTAL ORDERS 0" — technically truthful, and
+  // exactly the dead screen this script exists to avoid.
+  console.log('[demo] 4/5 fulfilment');
+  await page.goto(`${BASE}/operations/fulfillment`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(3000);
-  // Guard the thing this script exists to prevent: a demo whose final frame
-  // says "No orders yet" is a truthful picture of an unused system, and a
-  // truthful picture of an unused system is not a demo.
-  const orderHistory = await page.locator('main').innerText();
-  if (/no orders yet/i.test(orderHistory)) {
-    throw new Error('order history is empty; the checkout step did not produce an order');
+  // The empty state is the honest signal to check. The metric cards put the
+  // count and its caption in separate elements, so matching on the caption
+  // text ("Total active orders 0") never fires and the guard guards nothing.
+  if (/no fulfillment orders match/i.test(await page.locator('body').innerText())) {
+    throw new Error('the fulfilment queue is empty; the demo would show three zeros');
   }
-  await hold(page, 2400);
+  await hold(page, 2200);
+
+  // --- walk the order through fulfilment ------------------------------------
+  // Preparing and creating the shipment are what put a row in the shipments
+  // list, so without these two clicks screen 5 is an empty table.
+  console.log('[demo] driving fulfilment');
+  await page.goto(`${BASE}/operations/fulfillment/${orderId}`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(2500);
+  for (const action of ['Start Order Preparation', 'Create Shipment']) {
+    const button = page.getByRole('button', { name: action, exact: true }).first();
+    if (await button.count()) {
+      await button.click();
+      await page.waitForTimeout(3500);
+    } else {
+      // A re-run may find the order already past this step, which is fine.
+      console.log(`[demo] "${action}" not offered, continuing`);
+    }
+  }
+
+  // --- 5. shipments ---------------------------------------------------------
+  console.log('[demo] 5/5 shipments');
+  await page.goto(`${BASE}/operations/shipments`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(3000);
+  if (!/LUNA-[A-Z0-9]+/.test(await page.locator('body').innerText())) {
+    throw new Error('no tracking number on the shipments screen; fulfilment did not create one');
+  }
+  await hold(page, 2200);
 
   await browser.close();
 
-  // --- stitch --------------------------------------------------------------
+  // --- stitch ---------------------------------------------------------------
   console.log(`[demo] stitching ${frames.length} frames at ${FPS}fps`);
   // One palette for the whole animation, taken from the first frame. The app's
   // palette is stable across the frames and sharing it lets the encoder store
