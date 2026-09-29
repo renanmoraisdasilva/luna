@@ -14,6 +14,7 @@
     "start": "next start",
     "lint": "eslint .",
     "demo:build": "node scripts/build-demo-gif.mjs",
+    "demo:stills": "node scripts/build-demo-gif.mjs --stills",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -38,6 +38,13 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const BASE = process.env.LUNA_URL ?? 'http://localhost:3000';
 const SQL_CONTAINER = process.env.LUNA_SQL_CONTAINER ?? 'infrastructure-sqlserver-1';
 const outFile = path.join(repoRoot, 'documentation', 'luna-demo.gif');
+const imageDir = path.join(repoRoot, 'documentation', 'images');
+
+// Two outputs from one walkthrough. `--stills` writes the captioned screenshots
+// the README uses; without it the same run writes the animated GIF. The setup is
+// all but identical, so keeping them in one script is what stops the stills
+// drifting away from the GIF.
+const STILLS = process.argv.includes('--stills');
 
 // 1440 rather than 1280: the operations tables carry a seventh column, and at
 // 1280 the ACTION button was clipped off the right edge of the frame.
@@ -45,10 +52,10 @@ const VIEW = { width: 1440, height: 900 };
 
 // A GIF is LZW over indexed colour, so the file size tracks pixels x frames
 // x colour count, and a portfolio page should not ship a multi-megabyte asset.
-// 5fps over ~12s is 60 frames at 680x458 over 96 colours. Two numbers here are
+// 5fps over ~12s is 60 frames at 680x425 over 96 colours. Two numbers here are
 // load-bearing rather than cosmetic: the GIF canvas caps at 65,535px tall and
 // `sharp` stacks the frames into one buffer to quantise the first one, so
-// FRAMES x GIF_HEIGHT has to stay under that (60 x 458 = 27,480).
+// FRAMES x GIF_HEIGHT has to stay under that (60 x 425 = 25,500).
 const FPS = 5;
 const GIF_WIDTH = 680;
 const GIF_HEIGHT = 425;
@@ -95,8 +102,19 @@ function sql(query) {
   );
 }
 
-/** Hold the shot for `ms` so the eye can read it. */
-async function hold(page, ms = 1200) {
+/**
+ * Hold the shot for `ms` so the eye can read it, or write one still.
+ *
+ * In stills mode this takes a single full-page screenshot and returns
+ * immediately, so the walkthrough below is the same in both modes and the
+ * screenshots cannot drift away from the GIF.
+ */
+async function capture(name, ms = 1200) {
+  if (STILLS) {
+    await page.screenshot({ path: path.join(imageDir, `${name}.png`), fullPage: true });
+    console.log(`[demo] still ${name}.png`);
+    return;
+  }
   const shots = Math.max(1, Math.round((ms / 1000) * FPS));
   for (let i = 0; i < shots; i++) {
     const file = path.join(frameDir, `frame-${String(index++).padStart(3, '0')}.png`);
@@ -107,6 +125,7 @@ async function hold(page, ms = 1200) {
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: VIEW, deviceScaleFactor: 1 });
+if (STILLS) mkdirSync(imageDir, { recursive: true });
 
 try {
   // --- sign in, registering the demo customer on first run ------------------
@@ -167,7 +186,7 @@ IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
   await page.goto(`${BASE}/shop`, { waitUntil: 'networkidle' });
   await page.waitForSelector('img[src*="unsplash"]', { timeout: 30_000 });
   await page.waitForTimeout(3500);
-  await hold(page, 2200);
+  await capture('storefront', 2200);
 
   // --- 2. cart --------------------------------------------------------------
   console.log('[demo] 2/5 cart');
@@ -181,7 +200,7 @@ IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
   if (/your cart is empty/i.test(await page.locator('body').innerText())) {
     throw new Error('the cart is empty; the demo would show a zero subtotal');
   }
-  await hold(page, 2000);
+  await capture('cart', 2000);
 
   // --- 3. checkout ----------------------------------------------------------
   console.log('[demo] 3/5 checkout');
@@ -196,7 +215,7 @@ IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
   await page.fill('#postalCode', CUSTOMER.postalCode);
   await page.fill('#country', CUSTOMER.country);
   await page.waitForTimeout(800);
-  await hold(page, 1800);
+  await capture('checkout', 1800);
 
   await page.getByRole('button', { name: /place order/i }).first().click();
   await page.waitForTimeout(6000);
@@ -219,7 +238,7 @@ IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
   if (/no fulfillment orders match/i.test(await page.locator('body').innerText())) {
     throw new Error('the fulfilment queue is empty; the demo would show three zeros');
   }
-  await hold(page, 2200);
+  await capture('fulfillment-queue', 2200);
 
   // --- walk the order through fulfilment ------------------------------------
   // Preparing and creating the shipment are what put a row in the shipments
@@ -227,6 +246,12 @@ IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
   console.log('[demo] driving fulfilment');
   await page.goto(`${BASE}/operations/fulfillment/${orderId}`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2500);
+
+  // The five-step pipeline on the detail page is the clearest single picture of
+  // what Luna does, and it is worth more as a captioned still than as another
+  // second of the GIF, so it is captured in stills mode only.
+  if (STILLS) await capture('fulfillment-detail', 0);
+
   for (const action of ['Start Order Preparation', 'Create Shipment']) {
     const button = page.getByRole('button', { name: action, exact: true }).first();
     if (await button.count()) {
@@ -245,9 +270,14 @@ IF NOT EXISTS (SELECT 1 FROM IdentityDb.dbo.AspNetUserRoles
   if (!/LUNA-[A-Z0-9]+/.test(await page.locator('body').innerText())) {
     throw new Error('no tracking number on the shipments screen; fulfilment did not create one');
   }
-  await hold(page, 2200);
+  await capture('shipments', 2200);
 
   await browser.close();
+
+  if (STILLS) {
+    console.log(`[demo] wrote stills to ${path.relative(repoRoot, imageDir)}`);
+    process.exit(0);
+  }
 
   // --- stitch ---------------------------------------------------------------
   console.log(`[demo] stitching ${frames.length} frames at ${FPS}fps`);
