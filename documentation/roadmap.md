@@ -60,25 +60,24 @@ The architecture will evolve as the project exposes new problems. The objective 
 
 ## End Goal
 
-Luna will be a locally hosted, production-inspired distributed system that simulates an e-commerce order from checkout through delivery. It will provide an operations dashboard for monitoring business health, infrastructure health, failures, performance, and recovery.
+Luna is a locally hosted, production-inspired distributed system that simulates an e-commerce order from checkout through delivery, with an operations console for watching business health, infrastructure health, failures, and recovery.
 
-```text
-Customer
-   |
-   v
-Catalog ------> Orders
-                 |  \
-                 |   +------> Payments
-                 |   +------> Inventory
-                 |              |
-                 |              v
-                 |          Fulfillment
-                 |              |
-                 |              v
-                 +----------> Shipping ---> Simulated Carrier
+```mermaid
+flowchart TB
+    Customer["Customer"] --> Catalog["Catalog"]
+    Catalog --> Orders["Orders"]
+    Orders --> Payments["Payments"]
+    Orders --> Inventory["Inventory"]
+    Inventory --> Fulfilment["Fulfilment"]
+    Fulfilment --> Shipping["Shipping"]
+    Shipping --> Carrier["Simulated carrier"]
 ```
 
-A free local AWS emulator (Floci) emulates EventBridge, SQS, and SES locally and on the self-hosted server, so Luna calls the AWS APIs it will use in Phase 15 instead of running a different broker locally and translating it later.
+The shape Luna is heading towards. What exists today is the synchronous subset of
+this, described in [architecture.md](architecture.md); the inventory-to-fulfilment
+handoff becomes asynchronous messaging in Phase 2.
+
+A free local AWS emulator (Floci) serves EventBridge, SQS, and SES on the developer's machine, so Luna calls the AWS APIs it will use in Phase 15 rather than running a different broker locally and translating it later. The emulator is a development tool and is never deployed.
 
 ## Customer Experience
 
@@ -91,31 +90,63 @@ Customers can:
 - View order history
 - Track order progress through a timeline
 
-An order progresses through this simulated lifecycle:
+An order progresses through this lifecycle, which is the `OrderStatus` enum in
+`src/Services/Orders/Orders.Domain/Order.cs`:
 
-```text
-Order Created -> Payment -> Inventory Reserved -> Fulfillment
-       -> Order Packed -> Shipping -> In Transit -> Delivered
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Confirmed: checkout succeeds
+    Pending --> PaymentFailed: payment declined
+    Pending --> Cancelled
+    Confirmed --> Preparing
+    Preparing --> Shipped: shipment created
+    Shipped --> Delivered
+    Delivered --> [*]
+    PaymentFailed --> [*]
+    Cancelled --> [*]
 ```
+
+The transition rules, and how the order and shipment state machines interlock,
+are in [architecture.md](architecture.md).
 
 ## Operations Console
 
-Luna will provide an internal operations dashboard covering both infrastructure and business health.
+Luna has an internal operations console covering the fulfillment queue, the
+fulfillment detail view, and shipments. What it does not yet do is aggregate
+service health into a single business-level dashboard; the view below is a
+target rather than a screen.
 
 ### Infrastructure health
 
-```text
-Orders        HEALTHY
-Payments      HEALTHY
-Inventory     HEALTHY
-Fulfillment   HEALTHY
-Shipping      HEALTHY
-Floci         HEALTHY
+```mermaid
+flowchart LR
+    subgraph Services["Luna services"]
+        Id["Identity"]
+        Ca["Catalog"]
+        Or["Orders"]
+        Pa["Payments"]
+        In["Inventory"]
+        Sh["Shipping"]
+    end
+
+    subgraph Platform["Platform, not Luna services"]
+        Sql[("SQL Server")]
+        Emu["Floci<br/>local emulator only"]
+        Obs["SigNoz + collector"]
+    end
+
+    Services --> Sql
+    Emu -.->|never deployed| Services
+    Services -.-> Obs
 ```
+
+Fulfillment is a module inside Orders, not a service of its own, and the
+emulator is a development tool that is never deployed.
 
 ### Business health
 
-Examples include:
+Examples the console should grow into:
 
 - Order stuck in fulfillment
 - Shipment delayed
@@ -145,9 +176,10 @@ Planned contexts include:
 - Shipping
 - Notification (Phase 2)
 
-Initial databases:
+Initial databases, one per service:
 
 ```text
+Identity      -> IdentityDb
 Catalog       -> CatalogDb
 Orders        -> OrdersDb
 Inventory     -> InventoryDb
@@ -155,7 +187,7 @@ Payments      -> PaymentsDb
 Shipping      -> ShippingDb
 ```
 
-Fulfillment is initially planned as a bounded context that can be extracted into its own service when the warehouse process becomes complex enough.
+Fulfillment is initially planned as a bounded context that can be extracted into its own service when the warehouse process becomes complex enough. It is currently a module inside Orders.
 
 ### Communication
 
