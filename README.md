@@ -87,62 +87,68 @@ single operation you are allowed to perform right now on the right.
 
 ```mermaid
 flowchart TB
-    Browser["Browser"] -->|"HTTP only"| GW["Next.js gateway<br/>frontend : 3000"]
+    Browser["Browser"] -->|"HTTPS"| GW["Next.js gateway<br/>frontend : 3000"]
 
-    subgraph Svc["Backend services — .NET 8, each owning its own database"]
+    subgraph Facing["Reached by the browser"]
         Identity["Identity<br/>OpenIddict"]
         Catalog["Catalog"]
-        Orders["Orders"]
-        Payments["Payments"]
-        Inventory["Inventory"]
+        Orders["Orders<br/><b>checkout coordinator</b>"]
         Shipping["Shipping"]
     end
 
-    subgraph Data["SQL Server — one database per service"]
-        IdDb[("IdentityDb")]
-        CatDb[("CatalogDb")]
-        OrdDb[("OrdersDb")]
-        PayDb[("PaymentsDb")]
-        InvDb[("InventoryDb")]
-        ShipDb[("ShippingDb")]
+    subgraph Checkout["Reached only by Orders, during checkout"]
+        Payments["Payments"]
+        Inventory["Inventory"]
     end
 
     GW --> Identity
     GW --> Catalog
     GW --> Orders
-    GW --> Payments
-    GW --> Inventory
     GW --> Shipping
 
-    Identity --> IdDb
-    Catalog --> CatDb
-    Orders --> OrdDb
-    Payments --> PayDb
-    Inventory --> InvDb
-    Shipping --> ShipDb
+    Orders --> Payments
+    Orders --> Inventory
+    Orders --> Shipping
+    Orders -.->|"customer token forwarded"| Catalog
+
+    Identity --> IdDb[("IdentityDb")]
+    Catalog --> CatDb[("CatalogDb")]
+    Orders --> OrdDb[("OrdersDb")]
+    Payments --> PayDb[("PaymentsDb")]
+    Inventory --> InvDb[("InventoryDb")]
+    Shipping --> ShipDb[("ShippingDb")]
+
+    classDef facing fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef internal fill:#f3e8ff,stroke:#7e22ce,color:#581c87
+    class Identity,Catalog,Orders,Shipping facing
+    class Payments,Inventory internal
 ```
 
 Three decisions shape everything else:
 
 **The browser talks to one service.** The Next.js gateway is the only public
-HTTP boundary. Backend containers are not published; nothing in the frontend
+HTTP boundary. Backend containers are not published, and nothing in the frontend
 addresses a Docker service name.
+
+**Orders orchestrates checkout.** It is the one place where several services
+must agree, so `Orders` coordinates it: it calls Inventory, Payments and Shipping
+with short-lived service tokens, and Catalog with the customer's own token
+forwarded unchanged. The frontend has API clients for four services and never
+touches Payments or Inventory.
 
 **A service owns its data.** Six databases, and no service reads another's
 tables. Cross-service work goes through an application port and a service token,
-never a shared connection string.
-
-**Five-layer Clean Architecture, repeated.** Five of the six services use the
-same `Api / Application / Contracts / Domain / Infrastructure` split, with
-domain code holding the invariants and controllers staying thin. Identity is a
-single project because its host predates the template; its folders still keep
-the responsibilities apart.
+never a shared connection string. Fulfilment is a module inside Orders rather
+than a service of its own, though the operations console presents it as its own
+area.
 
 Messaging arrives in Phase 2 on AWS primitives — an EventBridge bus, SQS with
-dead-letter queues, and SES — declared in Terraform so the same files target
-the local emulator, a server, and real AWS. The bus and all four queues carry
-`prevent_destroy`, because Terraform cannot know whether running code still
-needs them.
+dead-letter queues, and SES — declared in Terraform so the same files target a
+local emulator, a server, and real AWS. The emulator is a development tool and is
+never deployed.
+
+The full architecture, including the token flows and where the data lives, is in
+**[documentation/architecture.md](documentation/architecture.md)**.
 
 ---
 
@@ -181,26 +187,29 @@ the demo scripts, are in **[Getting Started](documentation/getting-started.md)**
 
 ## Roadmap
 
-| Phase | Focus | |
-| --- | --- | --- |
-| 0 | Architecture & Foundation | done |
-| 1 | Basic Commerce Flow | closing |
-| 2 | Messaging & Async Workflows | next |
-| 3 | Realistic Time & Simulation | |
-| 4 | Reliability & Failure Handling | |
-| 5 | Transactional Outbox | |
-| 6 | Payment Abstraction | |
-| 7 | Fulfillment Service | |
-| 8 | Observability | |
-| 9 | Operations Dashboard | |
-| 10 | Redundancy & Resilience | |
-| 11 | Chaos & Failure Simulation | |
-| 12 | Security | |
-| 13 | Testing & Quality | |
-| 14 | Production-like Local Infrastructure | |
-| 15 | AWS | |
-| 16 | Production Scenarios & Edge Cases | |
+| Phase | Focus |
+| --- | --- |
+| 0 | Architecture & Foundation |
+| 1 | Basic Commerce Flow |
+| 2 | Messaging & Async Workflows |
+| 3 | Realistic Time & Simulation |
+| 4 | Reliability & Failure Handling |
+| 5 | Transactional Outbox |
+| 6 | Payment Abstraction |
+| 7 | Fulfillment Service |
+| 8 | Observability |
+| 9 | Operations Dashboard |
+| 10 | Redundancy & Resilience |
+| 11 | Chaos & Failure Simulation |
+| 12 | Security |
+| 13 | Testing & Quality |
+| 14 | Production-like Local Infrastructure |
+| 15 | AWS |
+| 16 | Production Scenarios & Edge Cases |
 
+Phase **status** lives in one place only — the
+[roadmap's status table](documentation/roadmap.md), which is kept current as work
+lands.
 The reasoning behind each phase, and what has actually shipped, is in the
 [roadmap](documentation/roadmap.md).
 
@@ -208,11 +217,14 @@ The reasoning behind each phase, and what has actually shipped, is in the
 
 ## Documentation
 
-The repository separates **what Luna is**, **where it is going**, and **how each
-phase is designed**.
+The repository separates **what Luna is**, **how it is put together**, **where
+it is going**, and **how each phase was designed**.
 
 - **[Getting Started](documentation/getting-started.md)** — run it locally
-- [Roadmap](documentation/roadmap.md) — project vision and phase progression
+- **[Architecture](documentation/architecture.md)** — how it fits together today:
+  services, data ownership, the gateway boundary, token flows, the order
+  lifecycle, and the known gaps
+- [Roadmap](documentation/roadmap.md) — project vision and phase status
 - [Phase 0 Design](documentation/dev_phases/phase-0/design.md) — foundation and architectural decisions
 - [Phase 1 Specification](documentation/dev_phases/phase-1/spec.md) — commerce flow requirements
 - [Phase 1 Architecture](documentation/dev_phases/phase-1/architecture.md) — boundaries and decisions
@@ -220,6 +232,9 @@ phase is designed**.
 - [Phase 2 Specification](documentation/dev_phases/phase-2/spec.md) — messaging behaviour and acceptance criteria
 - [Phase 2 Architecture](documentation/dev_phases/phase-2/architecture.md) — emulator choice, AWS mapping, resource ownership
 - [Observability](documentation/observability.md) — OpenTelemetry, SigNoz, tracing a checkout
+
+The phase documents are historical records: each says so at the top and points
+at the architecture document for the current picture.
 
 Frontend implementation detail lives in [`src/Frontend/`](src/Frontend/).
 

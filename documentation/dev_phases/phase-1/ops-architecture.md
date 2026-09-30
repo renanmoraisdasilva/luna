@@ -1,5 +1,10 @@
 # Luna Ops - Fulfillment and Shipment Workflow Architecture
 
+> **Historical record.** This document describes the design as of the phase it
+> belongs to, and is kept because it records *why* the system is the way it is.
+> For how the system is put together **today**, see
+> [architecture.md](../../architecture.md).
+
 **Status:** Implemented; lifecycle integration verification pending
 **Scope:** Phase 1 - Luna Ops  
 **Applies to:** Orders, Shipping, Operations UI, and customer order tracking  

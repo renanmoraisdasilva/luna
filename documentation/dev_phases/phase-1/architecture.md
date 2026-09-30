@@ -1,5 +1,10 @@
 # Phase 1 Architecture
 
+> **Historical record.** This document describes the design as of the phase it
+> belongs to, and is kept because it records *why* the system is the way it is.
+> For how the system is put together **today**, see
+> [architecture.md](../../architecture.md).
+
 ## Contents
 
 - [1. Architectural Goals](#1-architectural-goals)

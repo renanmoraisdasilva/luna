@@ -2,7 +2,9 @@
 
 ## Documentation
 
-- `documentation/roadmap.md` is the high-level project roadmap, phase status, and next priorities.
+- `documentation/roadmap.md` is the high-level project roadmap, phase status, and next priorities. It is the **only** place phase status is recorded; the README lists phase focus without status so the two cannot disagree.
+- `documentation/architecture.md` describes how the system is put together **today**, and is verified against the code rather than derived from a phase. When the architecture changes, this is the document to update. It records what it was checked against in its last section, so a stale copy is detectable.
+- `documentation/dev_phases/` contains one folder per development phase (`phase-0/`, `phase-1/`, `phase-2/`, ...) holding that phase's design, specification, architecture, and acceptance-criteria documents, such as `phase-1/spec.md`, `phase-1/architecture.md`, and `phase-2/architecture.md`. These are **historical records** of why each phase was designed as it was, not descriptions of the current system; each carries a header pointing at `documentation/architecture.md`.
 - `documentation/getting-started.md` is the local run guide: environment files, Compose, frontend development, observability, Terraform, tests, and regenerating the demo media. The root `README.md` is the front door and links here rather than repeating setup steps.
 - `documentation/luna-demo.gif` and `documentation/images/*.webp` are committed documentation artifacts, not build output. They are produced by `src/Frontend/scripts/build-demo-gif.mjs` (`npm run demo:build` and `npm run demo:stills` from `src/Frontend`), which drives the running stack and writes the stills as WebP. Regenerate them when a screen or the demo data changes; do not hand-edit them.
 - `documentation/dev_phases/` contains one folder per development phase (`phase-0/`, `phase-1/`, `phase-2/`, ...) holding that phase's design, specification, architecture, and acceptance-criteria documents, such as `phase-1/spec.md`, `phase-1/architecture.md`, and `phase-2/architecture.md`.
