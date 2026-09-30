@@ -1,5 +1,10 @@
 # Phase 2 - Messaging and Async Workflows Specification
 
+> **Historical record.** This document describes the design as of the phase it
+> belongs to, and is kept because it records *why* the system is the way it is.
+> For how the system is put together **today**, see
+> [architecture.md](../../architecture.md).
+
 > Companion document: [phase 2 architecture](architecture.md) records
 > **how** this phase is built: the Floci decision, the AWS mapping
 > contract, messaging mechanics, infrastructure, and service structure. This
@@ -289,41 +294,34 @@ No Phase 2 acceptance criterion depends on fixing these; all of them must be
 
 ## 10. Documentation Updates Required
 
-Per `AGENTS.md`, documentation and implementation must not diverge. This phase
-requires updating the existing RabbitMQ direction recorded in:
+Per `AGENTS.md`, documentation and implementation must not diverge. This section
+was written when the emulator decision changed and has been carried out. It is
+kept as a record of what the change touched, not as outstanding work:
 
-- `documentation/roadmap.md`: "Why Build Luna?" bullet list; the End Goal
-  diagram note ("RabbitMQ connects..."); Operations Console RabbitMQ lines;
-  Communication and Reliability Patterns diagrams; Technology table
-  (`Messaging | RabbitMQ`); Phase 2 goal/milestone; Phase 13 (Testcontainers
-  RabbitMQ); Phase 14 infrastructure list; Phase 15 mapping table
-  (`RabbitMQ -> SQS` becomes `Floci EventBridge/SQS -> EventBridge/SQS`);
-  Phase 16 outage scenarios; Project Status next steps.
-- `documentation/dev_phases/phase-0/design.md`: lines referring to RabbitMQ
-  arriving in Phase 2 (including the numbered decision list).
-- `documentation/dev_phases/phase-1/architecture.md`: the three RabbitMQ
-  deferral statements.
-- `documentation/dev_phases/phase-1/spec.md` and
-  `documentation/dev_phases/phase-1/ops-architecture.md`: out-of-scope lists
-  mentioning RabbitMQ.
-- `README.md`: the "RabbitMQ is intentionally not part of Phase 0" note.
-- `documentation/observability.md`: if it references RabbitMQ metrics, add
-  queue-depth/DLQ metrics for SQS instead.
-- `infrastructure/README.md` and `.env.example`: document the `floci`
-  service, the local-only `floci-ui` service, the Terraform configuration and
-  how it is applied, and the emulator settings the Dokploy application
-  environment must carry. There is no auth token to document.
+- `documentation/roadmap.md` — the messaging decision, the phase table, and the
+  End Goal diagram now name Floci rather than RabbitMQ or LocalStack.
+- `documentation/dev_phases/phase-0/design.md` and
+  `documentation/dev_phases/phase-1/architecture.md` — the Phase 2 deferral
+  statements name the local AWS emulator and explicitly exclude RabbitMQ.
+- `README.md` and `documentation/getting-started.md` — rewritten; the emulator is
+  documented as a local-only development tool that is never deployed.
+- `infrastructure/README.md` and `.env.example` — document the `floci` service,
+  the local-only `floci-ui` service on `4500`, the Terraform configuration and
+  how it is applied. There is no auth token to document.
+- `documentation/observability.md` — the queue-depth and DLQ metrics named here
+  remain **outstanding**: they are part of the Phase 2 observability work and
+  are not yet implemented.
 
 ## 11. Implementation Checklist
 
 ### Infrastructure
 
-- [ ] `floci` service in `docker-compose.yml` **and**
-      `docker-compose.prod.yml`, pinned `-compat` tag, `FLOCI_HOSTNAME`,
-      dummy AWS credentials, and a `/_floci/health` health check (internal
-      network only in production)
-- [ ] `floci-ui` in `docker-compose.dev.yml` only, on port `4500`; not in the
-      production compose
+- [x] `floci` service in `docker-compose.yml`, pinned `-compat` tag,
+      `FLOCI_HOSTNAME`, dummy AWS credentials, and a `/_floci/health` health check
+- [x] `floci-ui` in `docker-compose.dev.yml` only, on port `4500`
+- [x] Neither the emulator nor its UI belongs in `docker-compose.prod.yml`. A
+      local emulator has no place in a deployed environment; production targets
+      real AWS in Phase 15, where the Terraform endpoint is left unset
 - [x] Emulator service, health check, and dev UI added to the local stack and
       verified by hand on 2026-09-28 (bus, rule, SQS fan-out, receive counts,
       DLQ redrive, SES v1 send, `/_aws/ses` mailbox)
@@ -331,9 +329,8 @@ requires updating the existing RabbitMQ direction recorded in:
       applied and verified: a second `terraform plan` reports no changes, and
       publishing `OrderConfirmed` and `ShipmentInTransit` fans out to the correct
       separate queues
-- [ ] Terraform configuration for the bus, queues, DLQs, rules, and SES
-      identity, applied at every environment startup and deployment
-- [ ] Terraform state and plan files excluded from version control; the provider
+- [ ] Terraform configuration applied at every environment startup and deployment
+- [x] Terraform state and plan files excluded from version control; the provider
       lock file committed
 - [ ] Dev stack runs two Notification instances; production compose runs two
       Notification replicas

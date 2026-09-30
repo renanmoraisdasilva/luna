@@ -1,5 +1,10 @@
 # Phase 2 - Messaging and Async Workflows Architecture
 
+> **Historical record.** This document describes the design as of the phase it
+> belongs to, and is kept because it records *why* the system is the way it is.
+> For how the system is put together **today**, see
+> [architecture.md](../../architecture.md).
+
 > Companion document: [phase 2 specification](spec.md) records **what** Phase 2
 > must do (behavior, failure model, acceptance criteria). This document records
 > **how** it is built: the broker decision, the AWS mapping contract, messaging
@@ -90,10 +95,12 @@ needs on the LocalStack-compatible port `4566`:
   local-only container on port `4500` for browsing SQS queues, EventBridge
   rules, and the captured SES mailbox. It is a development tool: it is never
   deployed to the server and no Luna service depends on it.
-- Floci is a **Luna-owned deployment component**, not a `server-infra`
-  platform service. It ships inside Luna's own Compose files (local and
-  production) and is deployed by Dokploy like every other Luna container, so
-  the `server-infra` repository needs no changes for Phase 2.
+- Floci itself is a **Luna development component**, not a `server-infra`
+  platform service and not a deployed one. It ships in the local Compose files
+  only — `docker-compose.yml` and `docker-compose.dev.yml` — and is deliberately
+  absent from `docker-compose.prod.yml`, because a local emulator has no place in
+  a deployed environment. Production targets real AWS in Phase 15, where the
+  endpoint is simply left unset.
 - Luna does not need the emulator's real-Docker features (RDS, ElastiCache,
   MSK, Lambda containers). Luna's databases stay in Luna's own SQL Server
   containers, and the workers stay Luna containers. Those services become real
