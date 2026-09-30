@@ -68,10 +68,17 @@ let index = 0;
 /**
  * A fixed demo customer, not a generated one.
  *
- * The name shows up in the operations queue, so `demo1738900000000@luna.test`
- * would be in the middle of the GIF. A stable address also makes the script
- * re-runnable: it signs in if the account is there and registers if it is not,
- * rather than accumulating a new throwaway user on every build.
+ * These are not credentials and they are not secrets. The account is created
+ * at run time against a local Compose stack that is reachable only from the
+ * developer's own machine, and it holds nothing: one throwaway order, and an
+ * `Admin` role that exists solely inside that local SQL Server. The address is
+ * fixed rather than generated because the customer's name appears in the middle
+ * of the operations queue, so `demo1738900000000@luna.test` would be baked into
+ * the committed GIF — and a fixed address also makes the script re-runnable,
+ * because it signs in if the account is already there.
+ *
+ * The SQL Server `sa` password is never hardcoded here; it is read from the
+ * gitignored `infrastructure/.env` at run time.
  */
 const CUSTOMER = {
   email: 'ada.lovenace@luna.test',
