@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { accessTokenCookieName, encryptAccessToken } from '../../../../lib/auth-cookie';
 
+// The storefront is a public OpenIddict client. It cannot keep a secret, so it authenticates with the
+// password grant only. The identifier must match LunaPublicClients.Storefront in Luna.Contracts.
+const storefrontClientId = 'luna-storefront';
+
 export async function POST(request: Request) {
   const identityBaseUrl = process.env.IDENTITY_API_INTERNAL_URL;
   if (!identityBaseUrl) {
@@ -13,6 +17,9 @@ export async function POST(request: Request) {
   const credentials = await request.json() as { email?: string; password?: string };
   const form = new URLSearchParams({
     grant_type: 'password',
+    client_id: storefrontClientId,
+    // Roles are read from the role claim, which the token endpoint copies from the account, so the storefront
+    // does not need the roles scope. Requesting scopes the public client is not granted is rejected outright.
     username: credentials.email ?? '',
     password: credentials.password ?? '',
     scope: 'openid',

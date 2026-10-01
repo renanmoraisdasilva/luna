@@ -21,6 +21,7 @@
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Infrastructure/Shipping.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Domain/Shipping.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Contracts/Shipping.Contracts.csproj" />
+    <ProjectReference Include="../../src/Services/Identity/Identity.csproj" Aliases="IdentityApi" />
     <ProjectReference Include="../../src/Shared/Luna.Authentication/Luna.Authentication.csproj" />
     <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />

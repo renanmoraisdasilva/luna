@@ -56,6 +56,8 @@ public static class IdentitySeed
             }, cancellationToken);
         }
 
+        await SeedStorefrontClientAsync(applicationManager, cancellationToken);
+
         var scopeManager = services.GetRequiredService<IOpenIddictScopeManager>();
         foreach (var scope in new[]
         {
@@ -74,5 +76,37 @@ public static class IdentitySeed
                 }, cancellationToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Registers the storefront as a public client.
+    ///
+    /// The storefront is a browser application and cannot hold a client secret, so it authenticates with the
+    /// resource owner password grant and nothing else. Registering it explicitly is what allows the token
+    /// endpoint to stop accepting anonymous clients, which in turn is what lets the client-credentials grant
+    /// require real client authentication. It is issued only the password and refresh grants, so a storefront
+    /// token can never be exchanged for service-to-service scopes.
+    /// </summary>
+    private static async Task SeedStorefrontClientAsync(
+        IOpenIddictApplicationManager applicationManager,
+        CancellationToken cancellationToken)
+    {
+        if (await applicationManager.FindByClientIdAsync(LunaPublicClients.Storefront, cancellationToken) is not null)
+        {
+            return;
+        }
+
+        await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = LunaPublicClients.Storefront,
+            ClientType = OpenIddictConstants.ClientTypes.Public,
+            DisplayName = "Luna storefront",
+            Permissions =
+            {
+                OpenIddictConstants.Permissions.Endpoints.Token,
+                OpenIddictConstants.Permissions.GrantTypes.Password,
+                OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+            },
+        }, cancellationToken);
     }
 }

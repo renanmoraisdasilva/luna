@@ -30,7 +30,6 @@ public static class IdentityServiceCollectionExtensions
                 options.AllowPasswordFlow();
                 options.AllowRefreshTokenFlow();
                 options.AllowClientCredentialsFlow();
-                options.AcceptAnonymousClients();
                 options.DisableAccessTokenEncryption();
                 options.AddDevelopmentEncryptionCertificate();
                 options.AddDevelopmentSigningCertificate();

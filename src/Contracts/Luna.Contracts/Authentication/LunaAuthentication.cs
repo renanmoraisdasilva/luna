@@ -15,6 +15,15 @@ public static class LunaServiceClients
     public const string Orders = "orders";
 }
 
+/// <summary>
+/// Clients that are not confidential service identities. The storefront is a browser application and cannot
+/// keep a secret, so it is registered as a public client and is limited to the password grant.
+/// </summary>
+public static class LunaPublicClients
+{
+    public const string Storefront = "luna-storefront";
+}
+
 public static class LunaServiceScopes
 {
     public const string InventoryReservationsWrite = "inventory.reservations.write";
