@@ -1,4 +1,6 @@
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
@@ -29,8 +31,21 @@ public sealed class IdentityServerFixture : IAsyncLifetime
 
     private Respawner respawner = null!;
 
+    /// <summary>
+    /// A self-signed certificate written to disk and reused by every host in this fixture. It stands in for a
+    /// key mounted from a secret in production: what is under test is that a configured key is loaded from a
+    /// path and reused across host starts, not any particular file format.
+    /// </summary>
+    public string SigningKeyPath { get; } = Path.Combine(
+        Path.GetTempPath(),
+        $"luna-identity-tests-{Guid.NewGuid():N}",
+        "signing.pfx");
+
     public async Task InitializeAsync()
     {
+        Directory.CreateDirectory(Path.GetDirectoryName(SigningKeyPath)!);
+        await File.WriteAllBytesAsync(SigningKeyPath, CreateSelfSignedCertificate("CN=Luna Identity Tests"));
+
         await container.StartAsync();
 
         // The container starts with only its default database, so the test database must be created before
@@ -45,7 +60,7 @@ public sealed class IdentityServerFixture : IAsyncLifetime
 
         // The Identity host migrates and seeds its schema during startup, so the first host is started before
         // Respawn inspects the database.
-        using (var warmup = Factory.CreateClient())
+        using (var warmup = CreateClient())
         {
             await warmup.GetAsync("/health");
         }
@@ -71,7 +86,22 @@ public sealed class IdentityServerFixture : IAsyncLifetime
     /// Creates a client for the Identity host. Each call gets a fresh client so tests cannot leak
     /// cookies or headers into one another.
     /// </summary>
-    public HttpClient CreateClient() => Factory.CreateClient();
+    public HttpClient CreateClient()
+    {
+        // The Identity service registers its OpenIddict keys while the host is being built, which happens before
+        // ConfigureAppConfiguration callbacks run, so the signing key path has to arrive through the process
+        // environment. The Identity collection disables parallelisation, so this is safe.
+        Environment.SetEnvironmentVariable("OpenIddict__Keys__SigningKeyPath", SigningKeyPath);
+        Environment.SetEnvironmentVariable("OpenIddict__Keys__EncryptionKeyPath", null);
+        try
+        {
+            return Factory.CreateClient();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("OpenIddict__Keys__SigningKeyPath", null);
+        }
+    }
 
     private IdentityServerFactory? factory;
 
@@ -89,7 +119,7 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         // re-runs startup, which reseeds the client through the production seeding path.
         Factory.Dispose();
         factory = new IdentityServerFactory(this);
-        using var warmup = Factory.CreateClient();
+        using var warmup = CreateClient();
         await warmup.GetAsync("/health");
     }
 
@@ -97,6 +127,31 @@ public sealed class IdentityServerFixture : IAsyncLifetime
     {
         factory?.Dispose();
         await container.DisposeAsync();
+
+        var keyDirectory = Path.GetDirectoryName(SigningKeyPath);
+        if (keyDirectory is not null && Directory.Exists(keyDirectory))
+        {
+            Directory.Delete(keyDirectory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Creates a throwaway certificate. The tests only need material that OpenIddict accepts as a key; which
+    /// certificate it is does not affect what they assert.
+    /// </summary>
+    internal static byte[] CreateSelfSignedCertificate(string subject)
+    {
+        using var key = RSA.Create(2048);
+        var request = new CertificateRequest(subject, key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(
+            X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
+            critical: false));
+
+        using var certificate = request.CreateSelfSigned(
+            DateTimeOffset.UtcNow.AddDays(-1),
+            DateTimeOffset.UtcNow.AddYears(1));
+
+        return certificate.Export(X509ContentType.Pfx);
     }
 
     /// <summary>
@@ -107,9 +162,20 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         string clientId,
         string? clientSecret,
         string? scope = null,
+        CancellationToken cancellationToken = default) =>
+        RequestClientCredentialsTokenAsync(clientId, clientSecret, scope, CreateClient(), cancellationToken);
+
+    /// <summary>
+    /// Posts a client-credentials request through a caller-supplied client, so a test can drive a specific
+    /// host rather than the fixture's shared one.
+    /// </summary>
+    public static Task<HttpResponseMessage> RequestClientCredentialsTokenAsync(
+        string clientId,
+        string? clientSecret,
+        string? scope,
+        HttpClient client,
         CancellationToken cancellationToken = default)
     {
-        var client = CreateClient();
         var form = new Dictionary<string, string> { ["grant_type"] = "client_credentials" };
         if (scope is not null)
         {

@@ -17,7 +17,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
     options.DocumentFilter<OpenIddictSwaggerDocumentFilter>());
-builder.Services.AddIdentityInfrastructure(builder.Configuration);
+builder.Services.AddIdentityInfrastructure(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<RegisterCustomerHandler>();
 builder.Services.AddAuthorization();
 builder.Services.AddHealthChecks();

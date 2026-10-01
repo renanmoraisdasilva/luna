@@ -17,10 +17,10 @@ public sealed class IdentityServerFactory(IdentityServerFixture fixture)
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // The Identity host runs as Production here because MigrateAndSeedIdentityAsync resolves a scoped
-        // DbContext from the root provider, which ASP.NET Core only permits when scope validation is off.
-        // That is how the service actually runs in the container, so the test mirrors it rather than
-        // masking the behaviour with a Development environment.
+        // The Identity host runs as Production because MigrateAndSeedIdentityAsync resolves a scoped DbContext
+        // from the root provider, which ASP.NET Core only permits when scope validation is off. That is how
+        // the service runs in the container, so the test mirrors it rather than masking the behaviour with a
+        // Development environment. Production also means the configured signing key is required.
         builder.UseEnvironment(Environments.Production);
         builder.ConfigureAppConfiguration((_, configuration) =>
         {

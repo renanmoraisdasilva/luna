@@ -1,6 +1,10 @@
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using OpenIddict.Abstractions;
+using OpenIddict.Server;
 
 namespace Luna.Identity.Infrastructure;
 
@@ -8,7 +12,8 @@ public static class IdentityServiceCollectionExtensions
 {
     public static IServiceCollection AddIdentityInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         services.AddDbContext<LunaIdentityDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("Database")));
@@ -31,8 +36,11 @@ public static class IdentityServiceCollectionExtensions
                 options.AllowRefreshTokenFlow();
                 options.AllowClientCredentialsFlow();
                 options.DisableAccessTokenEncryption();
-                options.AddDevelopmentEncryptionCertificate();
-                options.AddDevelopmentSigningCertificate();
+                ConfigureKeys(options, configuration, environment);
+
+                // Inter-service traffic runs over the private Compose network without TLS and the token
+                // endpoint is reached over plain HTTP there, so requiring transport security now would reject
+                // every internal call. This is re-enabled when TLS terminates on that network.
                 options.UseAspNetCore()
                     .EnableTokenEndpointPassthrough()
                     .DisableTransportSecurityRequirement();
@@ -44,5 +52,65 @@ public static class IdentityServiceCollectionExtensions
             });
 
         return services;
+    }
+
+    /// <summary>
+    /// Configures the keys the authorization server signs and encrypts tokens with.
+    /// </summary>
+    /// <remarks>
+    /// Development uses ephemeral certificates, which are convenient and need no configuration. Every other
+    /// environment requires <c>OpenIddict:Keys:SigningKeyPath</c> and fails fast without it. Falling back to a
+    /// development certificate outside Development would let a misconfigured deployment start successfully and
+    /// then invalidate every issued token on each restart, which is much harder to diagnose than a service that
+    /// refuses to start.
+    /// </remarks>
+    private static void ConfigureKeys(
+        OpenIddictServerBuilder options,
+        IConfiguration configuration,
+        IHostEnvironment environment)
+    {
+        if (environment.IsDevelopment())
+        {
+            options.AddDevelopmentEncryptionCertificate();
+            options.AddDevelopmentSigningCertificate();
+            return;
+        }
+
+        var keys = configuration.GetSection(OpenIddictKeyOptions.SectionName).Get<OpenIddictKeyOptions>();
+        if (string.IsNullOrWhiteSpace(keys?.SigningKeyPath))
+        {
+            throw new InvalidOperationException(
+                $"{OpenIddictKeyOptions.SectionName}:SigningKeyPath must be configured when the environment is " +
+                $"'{environment.EnvironmentName}'. The authorization server cannot fall back to a development " +
+                "certificate outside Development, because that certificate is not persisted and would change on " +
+                "every restart, invalidating all issued tokens. Generate one with: " +
+                "dotnet dev-certs export -k -p <path> (or supply a PKCS#12 or PEM certificate).");
+        }
+
+        options.AddSigningCertificate(
+            OpenIddictKeyLoader.Load(keys.SigningKeyPath, keys.Passphrase, "signing"));
+
+        // OpenIddict requires an encryption key even when access token encryption is disabled, because the
+        // authorization server publishes an encrypted JWKS document. A configured key is preferred so it
+        // survives restarts; otherwise an ephemeral one is generated.
+        if (!string.IsNullOrWhiteSpace(keys.EncryptionKeyPath))
+        {
+            options.AddEncryptionCertificate(
+                OpenIddictKeyLoader.Load(keys.EncryptionKeyPath, keys.Passphrase, "encryption"));
+        }
+        else
+        {
+            using var rsa = RSA.Create(2048);
+            var request = new CertificateRequest(
+                "CN=Luna OpenIddict Encryption",
+                rsa,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1);
+
+            options.AddEncryptionCertificate(
+                request.CreateSelfSigned(
+                    DateTimeOffset.UtcNow.AddDays(-1),
+                    DateTimeOffset.UtcNow.AddYears(1)));
+        }
     }
 }
