@@ -7,19 +7,38 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+  <!--
+    Every layered project is referenced so the architecture tests in Architecture/ can inspect the
+    real dependency graph. The Api projects are referenced under aliases because each declares its own
+    top-level Program class; the alias keeps them out of the global namespace.
+  -->
   <ItemGroup>
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Api/Catalog.Api.csproj" Aliases="CatalogApi" />
     <ProjectReference Include="../../src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" />
     <ProjectReference Include="../../src/Services/Catalog/Catalog.Contracts/Catalog.Contracts.csproj" />
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Orders/Orders.Api/Orders.Api.csproj" Aliases="OrdersApi" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Application/Orders.Application.csproj" />
+    <ProjectReference Include="../../src/Services/Orders/Orders.Contracts/Orders.Contracts.csproj" />
     <ProjectReference Include="../../src/Services/Orders/Orders.Domain/Orders.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Orders/Orders.Infrastructure/Orders.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Inventory/Inventory.Api/Inventory.Api.csproj" Aliases="InventoryApi" />
     <ProjectReference Include="../../src/Services/Inventory/Inventory.Application/Inventory.Application.csproj" />
+    <ProjectReference Include="../../src/Services/Inventory/Inventory.Contracts/Inventory.Contracts.csproj" />
     <ProjectReference Include="../../src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Payments/Payments.Api/Payments.Api.csproj" Aliases="PaymentsApi" />
     <ProjectReference Include="../../src/Services/Payments/Payments.Application/Payments.Application.csproj" />
+    <ProjectReference Include="../../src/Services/Payments/Payments.Contracts/Payments.Contracts.csproj" />
     <ProjectReference Include="../../src/Services/Payments/Payments.Domain/Payments.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Payments/Payments.Infrastructure/Payments.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Shipping/Shipping.Api/Shipping.Api.csproj" Aliases="ShippingApi" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Application/Shipping.Application.csproj" />
+    <ProjectReference Include="../../src/Services/Shipping/Shipping.Contracts/Shipping.Contracts.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Domain/Shipping.Domain.csproj" />
     <ProjectReference Include="../../src/Services/Shipping/Shipping.Infrastructure/Shipping.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Services/Identity/Identity.csproj" Aliases="IdentityApi" />
     <ProjectReference Include="../../src/Contracts/Luna.Contracts/Luna.Contracts.csproj" />
     <ProjectReference Include="../../src/Shared/Luna.Authentication/Luna.Authentication.csproj" />
     <ProjectReference Include="../../src/Shared/Luna.Observability/Luna.Observability.csproj" />
@@ -34,7 +53,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
-    <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="NetArchTest.Rules" Version="1.3.2" />
   </ItemGroup>
 </Project>

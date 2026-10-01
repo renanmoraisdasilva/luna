@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
+using OpenIddict.Validation;
 using Xunit;
 
 namespace Luna.UnitTests.Authentication;
@@ -25,7 +27,7 @@ public sealed class ServiceAuthenticationExtensionsTests
     }
 
     [Fact]
-    public void Registers_jwt_validation_with_configured_issuer()
+    public void Registers_jwt_validation_against_the_configured_issuer()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
@@ -34,17 +36,24 @@ public sealed class ServiceAuthenticationExtensionsTests
 
         services.AddLunaJwtValidation(configuration);
 
-        services.Should().NotBeEmpty();
+        ResolveConfiguredIssuer(services).Should().Be("https://identity.example/");
     }
 
     [Fact]
-    public void Registers_jwt_validation_with_default_issuer()
+    public void Registers_jwt_validation_against_the_local_development_issuer_by_default()
     {
         var services = new ServiceCollection();
 
         services.AddLunaJwtValidation(new ConfigurationBuilder().Build());
 
-        services.Should().NotBeEmpty();
+        ResolveConfiguredIssuer(services).Should().Be("http://localhost:5001/");
+    }
+
+    private static string ResolveConfiguredIssuer(IServiceCollection services)
+    {
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptions<OpenIddictValidationOptions>>().Value;
+        return options.Issuer!.ToString();
     }
 
     [Fact]
