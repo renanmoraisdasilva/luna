@@ -15,10 +15,17 @@ const nextConfig = {
 	},
 	async rewrites() {
 		const configuredServices = serviceSpecs.filter(([, baseUrl]) => baseUrl);
-		const swaggerRewrites = configuredServices.map(([service, baseUrl]) => ({
-			source: `/api/swagger/${service}`,
-			destination: `${baseUrl}/swagger/v1/swagger.json`,
-		}));
+
+		// The OpenAPI documents are proxied only when the explorer is explicitly enabled. The services serve
+		// them in Development only, so without this gate the rewrite would exist in production and simply
+		// return 404 from the upstream service.
+		const swaggerEnabled = process.env.ENABLE_API_EXPLORER === 'true';
+		const swaggerRewrites = swaggerEnabled
+			? configuredServices.map(([service, baseUrl]) => ({
+					source: `/api/swagger/${service}`,
+					destination: `${baseUrl}/swagger/v1/swagger.json`,
+				}))
+			: [];
 		const serviceHealthRewrites = configuredServices.map(([service, baseUrl]) => ({
 			source: `/api/services/${service}/health`,
 			destination: `${baseUrl}/health`,

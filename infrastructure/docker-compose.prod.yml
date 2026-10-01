@@ -68,6 +68,9 @@ services:
       SHIPPING_API_INTERNAL_URL: http://shipping:8080
       LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY:?Set LUNA_COOKIE_ENCRYPTION_KEY in .env}"
       AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE:?Set AUTH_COOKIE_SECURE in .env}"
+      # The API explorer is off in production. It is set here so the intent is explicit rather than inherited
+      # from the absence of a variable.
+      ENABLE_API_EXPLORER: "false"
     networks:
       - luna
     extra_hosts: *telemetry-hosts

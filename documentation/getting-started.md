@@ -91,6 +91,12 @@ and the unified API explorer, which fronts every service behind the gateway, at:
 http://localhost:3000/swagger
 ```
 
+The explorer is development-only and administrator-only. It requires
+`ENABLE_API_EXPLORER=true` (set for you in `docker-compose.yml`, forced to
+`false` in `docker-compose.prod.yml`) and an account holding the `Admin` role.
+Each service also serves its own document in Development; outside Development
+the OpenAPI endpoints return 404.
+
 Backend containers are not published individually in this configuration. The
 frontend is the public HTTP boundary; the browser never addresses a Docker
 service name or a private service URL.

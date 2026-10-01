@@ -76,6 +76,8 @@ services:
       SHIPPING_API_INTERNAL_URL: http://shipping:8080
       LUNA_COOKIE_ENCRYPTION_KEY: "${LUNA_COOKIE_ENCRYPTION_KEY}"
       AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE}"
+      # The API explorer is available locally and disabled in production by default.
+      ENABLE_API_EXPLORER: "true"
       OTEL_SERVICE_NAME: "${OTEL_SERVICE_NAME_FRONTEND:-luna-frontend}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_HTTP_ENDPOINT:-http://host.docker.internal:4318}"
       OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=${TELEMETRY_ENVIRONMENT:-Development}"

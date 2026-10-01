@@ -10,8 +10,15 @@ public static class IdentityApplicationExtensions
     public static WebApplication UseIdentityPipeline(this WebApplication app)
     {
         app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exception) => httpContext.Request.Path == "/health" ? LogEventLevel.Verbose : exception is not null ? LogEventLevel.Error : LogEventLevel.Information);
-        app.UseSwagger();
-        app.UseSwaggerUI();
+
+        if (app.Environment.IsDevelopment())
+        {
+            // The OpenAPI document is development-only. Publishing it would disclose the token endpoint, the
+            // registered client identifiers and the flows the authorization server supports.
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseCorrelationHandling();
