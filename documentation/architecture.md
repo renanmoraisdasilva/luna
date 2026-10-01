@@ -29,19 +29,18 @@ point. The browser talks to four of them. The two it does not talk to, it does
 not need to know about.
 
 ```mermaid
-flowchart TB
-    Browser["Browser"] -->|HTTPS| Next["Next.js gateway<br/>frontend : 3000"]
+%%{init: {"flowchart": {"curve": "linear"}} }%%
+flowchart LR
+    Browser["Browser"] -->|"HTTPS"| Next["Next.js gateway<br/>frontend : 3000"]
 
-    subgraph Facing["Reached by the browser"]
-        Identity["Identity<br/><br/>ASP.NET Core Identity<br/>+ OpenIddict"]
-        Catalog["Catalog"]
-        Orders["Orders<br/><br/>checkout coordinator"]
-        Shipping["Shipping"]
-    end
+    Identity["Identity<br/><br/>ASP.NET Core Identity<br/>+ OpenIddict<br/><i>IdentityDb</i>"]
+    Catalog["Catalog<br/><i>CatalogDb</i>"]
+    Orders["Orders<br/><br/>checkout coordinator<br/><i>OrdersDb</i>"]
+    Shipping["Shipping<br/><i>ShippingDb</i>"]
 
     subgraph Checkout["Reached only by Orders, during checkout"]
-        Payments["Payments"]
-        Inventory["Inventory"]
+        Payments["Payments<br/><i>PaymentsDb</i>"]
+        Inventory["Inventory<br/><i>InventoryDb</i>"]
     end
 
     Next --> Identity
@@ -52,21 +51,12 @@ flowchart TB
     Orders --> Payments
     Orders --> Inventory
     Orders --> Shipping
-    Orders -.->|"customer token forwarded"| Catalog
-
-    Identity --> IdentityDb[("IdentityDb")]
-    Catalog --> CatalogDb[("CatalogDb")]
-    Orders --> OrdersDb[("OrdersDb")]
-    Payments --> PaymentsDb[("PaymentsDb")]
-    Inventory --> InventoryDb[("InventoryDb")]
-    Shipping --> ShippingDb[("ShippingDb")]
+    Orders -->|"reads the price snapshot"| Catalog
 
     classDef facing fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef internal fill:#f3e8ff,stroke:#7e22ce,color:#581c87
-    classDef store fill:#f1f5f9,stroke:#475569,color:#0f172a
     class Identity,Catalog,Orders,Shipping facing
     class Payments,Inventory internal
-    class IdentityDb,CatalogDb,OrdersDb,PaymentsDb,InventoryDb,ShippingDb store
 ```
 
 Two things in that diagram are worth stating in words, because they are the
@@ -79,7 +69,7 @@ registered in
 
 | Client | Target | Credential |
 | --- | --- | --- |
-| `ICatalogCheckoutClient` | Catalog | the caller's own token, forwarded |
+| `ICatalogCheckoutClient` | Catalog | none — the product read is public browsing data |
 | `IInventoryCheckoutClient` | Inventory | service token, scope `InventoryReservationsWrite` |
 | `IPaymentsCheckoutClient` | Payments | service token, scope `PaymentsAuthorize` |
 | `IShippingCheckoutClient` | Shipping | service token, scope `ShippingShipmentsWrite` |
@@ -148,7 +138,7 @@ flowchart LR
     Orders -->|7. client credentials<br/>service token request| Identity
     Identity -->|8. short-lived service JWT| Orders
 
-    Orders -->|9. caller's token forwarded| Catalog
+    Orders -->|9. price snapshot, no credential| Catalog
     Orders -->|10. service bearer token| Inventory
     Orders -->|10. service bearer token| Payments
     Orders -->|10. service bearer token| Shipping
@@ -166,22 +156,34 @@ flowchart LR
 ```
 
 **Step 6, the customer token.** The gateway validates the session cookie and
-calls the service with the customer's own bearer token. Catalog and Shipping
-authorize against it directly.
+calls the service with the customer's own bearer token. Shipping authorizes
+against it directly. Catalog does not: the catalog surface is public browsing
+data.
 
-**Step 9, the forwarded token.** When `Orders` calls Catalog during checkout it
-uses `BearerTokenHandler`, which copies the inbound `Authorization` header onto
-the outgoing request unchanged. Catalog therefore sees the *customer* acting,
-not a service. This is the one call that is not a service-to-service call in the
-credential sense, and it is easy to misread — the
-[Phase 1 architecture](dev_phases/phase-1/architecture.md) diagram groups
-Catalog with the service-token calls, which the code does not do.
+**Step 9, the product read.** When `Orders` calls Catalog during checkout it
+sends no credential. `CatalogController` carries no `[Authorize]` attribute and
+Catalog registers no fallback authorization policy, so the product read is
+anonymous by construction. `Orders` is reading the same price and SKU data the
+storefront already serves, not a customer-scoped resource, so a customer token
+would assert something the call does not depend on. The `Product` entity has no
+stock or cost field, so the response carries nothing to protect. The
+[Phase 1 architecture](dev_phases/phase-1/architecture.md) diagram shows Catalog
+among the service-token calls; the code has never done that.
 
 **Step 10, service tokens.** Inventory, Payments and Shipping are called with a
 token minted by `ServiceTokenHandler`, which requests a short-lived JWT from
 Identity with a declared scope and *replaces* any existing `Authorization`
 header. Each call site declares the scope it needs, so a service token for
 `PaymentsAuthorize` cannot be replayed against Shipping.
+
+`POST api/v1/quotes` and the shipment write endpoints enforce this with
+`LunaServicePolicies.OrdersShippingShipmentsWrite`, which requires both the
+`orders` client id and the scope. Publishing shipping *methods* stays anonymous
+because the storefront lists them; creating a quote does not, because it writes
+to the Shipping database. Note that a quote carries no ownership check: Orders
+mints the `orderId` itself and persists the order only after the quote returns,
+so Shipping has no order to validate against and `ShippingQuotes.OrderId` is an
+indexed column rather than a foreign key.
 
 No session store, no Redis, no sticky sessions. The encrypted HttpOnly cookie
 is the session.
@@ -376,11 +378,17 @@ anyone can trust.
 ## 11. What this document is checked against
 
 Every claim above was verified against the repository on **2026-09-30**, at
-commit `d6bce6a`:
+commit `d6bce6a`, and re-verified after the Catalog read was changed to send no
+credential and the quotes endpoint was given a service-token policy (HEAD
+`9b4eb73` plus the change under review):
 
 - the service list and the database table against `infrastructure/docker-compose.yml`
 - the outbound clients, token types and scopes against `OrdersInfrastructureExtensions.cs`
-- the forwarded-token behaviour against `BearerTokenHandler.cs` and `ServiceTokenHandler.cs`
+- the absence of a credential on the Catalog read against `OrdersInfrastructureExtensions.cs`, `CatalogController.cs` and `Catalog.Api/Program.cs`
+- what the catalog read exposes against `ProductResponses.cs` and `ProductReadRepository.cs`
+- the service-token minting against `ServiceTokenHandler.cs`
+- the quotes and shipment authorization policies against `QuotesController.cs`, `ShipmentsController.cs` and `Shipping.Api/Program.cs`
+- the quote's write behaviour and its unverified `orderId` against `QuoteCommands.cs` and `ShippingDbContext.cs`
 - the order states and their guards against `Order.cs`
 - the frontend's service clients against `src/Frontend/lib/api/`
 - the emulator's scope against the Compose files

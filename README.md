@@ -13,10 +13,6 @@ architecture has a reason to change.
 
 ![The storefront, checkout, and the Luna Ops fulfillment and shipments screens](documentation/luna-demo.gif)
 
-*The demo is the real application, driven end to end: a customer registers, fills
-a cart, places an order, and an operator prepares and ships it. Regenerate it
-with `npm run demo:build`.*
-
 ---
 
 ## What actually happens to an order
@@ -86,19 +82,18 @@ single operation you are allowed to perform right now on the right.
 ## Architecture
 
 ```mermaid
-flowchart TB
+%%{init: {"flowchart": {"curve": "linear"}} }%%
+flowchart LR
     Browser["Browser"] -->|"HTTPS"| GW["Next.js gateway<br/>frontend : 3000"]
 
-    subgraph Facing["Reached by the browser"]
-        Identity["Identity<br/>OpenIddict"]
-        Catalog["Catalog"]
-        Orders["Orders<br/><b>checkout coordinator</b>"]
-        Shipping["Shipping"]
-    end
+    Identity["Identity<br/>OpenIddict<br/><i>IdentityDb</i>"]
+    Catalog["Catalog<br/><i>CatalogDb</i>"]
+    Orders["Orders<br/><b>checkout coordinator</b><br/><i>OrdersDb</i>"]
+    Shipping["Shipping<br/><i>ShippingDb</i>"]
 
     subgraph Checkout["Reached only by Orders, during checkout"]
-        Payments["Payments"]
-        Inventory["Inventory"]
+        Payments["Payments<br/><i>PaymentsDb</i>"]
+        Inventory["Inventory<br/><i>InventoryDb</i>"]
     end
 
     GW --> Identity
@@ -109,14 +104,7 @@ flowchart TB
     Orders --> Payments
     Orders --> Inventory
     Orders --> Shipping
-    Orders -.->|"customer token forwarded"| Catalog
-
-    Identity --> IdDb[("IdentityDb")]
-    Catalog --> CatDb[("CatalogDb")]
-    Orders --> OrdDb[("OrdersDb")]
-    Payments --> PayDb[("PaymentsDb")]
-    Inventory --> InvDb[("InventoryDb")]
-    Shipping --> ShipDb[("ShippingDb")]
+    Orders -->|"reads the price snapshot"| Catalog
 
     classDef facing fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef internal fill:#f3e8ff,stroke:#7e22ce,color:#581c87
@@ -132,9 +120,9 @@ addresses a Docker service name.
 
 **Orders orchestrates checkout.** It is the one place where several services
 must agree, so `Orders` coordinates it: it calls Inventory, Payments and Shipping
-with short-lived service tokens, and Catalog with the customer's own token
-forwarded unchanged. The frontend has API clients for four services and never
-touches Payments or Inventory.
+with short-lived service tokens, and reads the product price snapshot from
+Catalog, which is public browsing data and needs no credential. The frontend has
+API clients for four services and never touches Payments or Inventory.
 
 **A service owns its data.** Six databases, and no service reads another's
 tables. Cross-service work goes through an application port and a service token,
