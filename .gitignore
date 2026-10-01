@@ -10,6 +10,7 @@ out/
 *.user
 TestResults/
 coverage-report/
+src/Frontend/coverage/
 IMPROVEMENT_PLAN.md
 src/Frontend/tsconfig.tsbuildinfo
 src/Frontend/next-env.d.ts

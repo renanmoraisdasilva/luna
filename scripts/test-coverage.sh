@@ -74,9 +74,9 @@ run_suite "Backend integration tests" "$repository_root" \
 
 run_suite "Frontend lint" "$repository_root/src/Frontend" npm run lint
 
+# `npm test` already passes --coverage, which is what makes Vitest enforce the 90% branch threshold.
 run_suite "Frontend tests" "$repository_root/src/Frontend" \
     npm test -- \
-    --coverage \
     --coverage.reporter=json-summary \
     --coverage.reporter=html \
     --coverage.reporter=text \
@@ -115,29 +115,21 @@ else
         "-targetdir:$backend_target_directory" \
         '-reporttypes:Html;Cobertura' >"$results_directory/ReportGenerator.log" 2>&1 || overall_status=1
 
-    if [[ -f "$backend_coverage_directory/Cobertura.xml" && -f "$frontend_coverage_directory/coverage-summary.json" ]]; then
-        if ! node - "$backend_coverage_directory/Cobertura.xml" "$frontend_coverage_directory/coverage-summary.json" <<'NODE'
-const fs = require('fs');
-
-const [backendPath, frontendPath] = process.argv.slice(2);
-const backend = fs.readFileSync(backendPath, 'utf8').match(/branch-rate="([0-9.]+)"/);
-const frontend = JSON.parse(fs.readFileSync(frontendPath, 'utf8')).total.branches.pct / 100;
-const backendRate = backend ? Number(backend[1]) : NaN;
-const backendMinimum = 0.8;
-const frontendMinimum = 0.9;
-
-if (!Number.isFinite(backendRate) || backendRate < backendMinimum || frontend < frontendMinimum) {
-    console.error(`Branch coverage must be at least 80% for backend and 90% for frontend (backend: ${Number.isFinite(backendRate) ? (backendRate * 100).toFixed(2) : 'unavailable'}%, frontend: ${(frontend * 100).toFixed(2)}%).`);
-    process.exit(1);
-}
-
-console.log(`Branch coverage gate passed (backend: ${(backendRate * 100).toFixed(2)}%, frontend: ${(frontend * 100).toFixed(2)}%).`);
-NODE
-        then
+    # The backend gate lives in scripts/check-backend-coverage.mjs so that CI and this script decide it
+    # identically. The frontend threshold is enforced by Vitest itself, which only applies it when a
+    # coverage reporter is active — that is why `npm test` runs `vitest run --coverage`.
+    if [[ -f "$backend_coverage_directory/Cobertura.xml" ]]; then
+        if ! node "$repository_root/scripts/check-backend-coverage.mjs" \
+            "$backend_coverage_directory/Cobertura.xml"; then
             overall_status=1
         fi
     else
-        echo "Coverage summary files are missing; unable to enforce the backend 80% and frontend 90% branch coverage gates." >&2
+        echo "The merged backend coverage report is missing; unable to enforce the backend branch coverage gate." >&2
+        overall_status=1
+    fi
+
+    if [[ ! -f "$frontend_coverage_directory/coverage-summary.json" ]]; then
+        echo "The frontend coverage summary is missing; unable to confirm the frontend branch coverage gate." >&2
         overall_status=1
     fi
 fi

@@ -392,6 +392,9 @@ credential and the quotes endpoint was given a service-token policy (HEAD
 - the order states and their guards against `Order.cs`
 - the frontend's service clients against `src/Frontend/lib/api/`
 - the emulator's scope against the Compose files
+- the layered dependency graph against `tests/Unit/Architecture/LayeringArchitectureTests.cs`, which enforces
+  rules 1-9 of `AGENTS.md` as executable checks rather than leaving them to discipline
+- the coverage numbers and gates against `documentation/roadmap.md`, "Recorded quality gate"
 
 If any of those change and this document is not updated, it is wrong. That is
 the trade this document makes: it is a snapshot, not a living link, and it goes

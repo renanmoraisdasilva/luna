@@ -485,9 +485,41 @@ Scenarios include:
 
 Luna is being built incrementally. Architecture and implementation decisions may change as new requirements and failure scenarios are introduced. The repository is intentionally a work in progress.
 
+### Recorded quality gate
+
+Coverage is measured and enforced in CI as of 2026-10-01. The numbers below are the first measured values; they
+replace the previous state, where no coverage number was recorded anywhere in the repository and the
+thresholds in `scripts/test-coverage.sh` and `vitest.config.mjs` were never evaluated by anything.
+
+| Metric | Measured | Gate | Enforced by |
+| --- | --- | --- | --- |
+| Backend branch coverage | 83.5% | 80% | `scripts/check-backend-coverage.mjs`, called from `ci.yml` |
+| Frontend branch coverage | 94.9% | 90% | `vitest run --coverage` |
+| Frontend statements | 93.7% | — | reported in the CI summary |
+
+Backend coverage merges the unit and integration suites through ReportGenerator. Integration coverage is
+collected because that is where repositories, checkout orchestration, and controllers are actually exercised;
+without it the number only reflects unit tests. Frontend thresholds are now live because `npm test` runs
+`vitest run --coverage`, and Vitest only enforces a threshold when a coverage reporter is active.
+
+Both numbers are published to the CI run summary, so neither requires opening an artifact to read. The
+backend gate is deliberately set just below the measured value so it fails on a regression rather than on the
+current backlog; the remaining gap is concentrated in the Identity host and in the Infrastructure
+repositories, and raising the gate further is a later outcome driven by the coverage report rather than by a
+number chosen in advance.
+
+The layering rules in `AGENTS.md` are likewise executable now:
+`tests/Unit/Architecture/LayeringArchitectureTests.cs` asserts that domain projects reference no other Luna
+project, that no domain type reaches for EF Core, HTTP, or ASP.NET Core, that Application does not depend on
+the Api host or on Infrastructure, that Infrastructure does not cross into another service's Infrastructure,
+and that no controller names a `DbContext` or an Infrastructure repository.
+
 ### Current implementation snapshot
 
 Phase 0 is complete: the six services, independent persistence, EF Core migration startup, Docker Compose environment, health endpoints, OpenAPI documentation, centralized tests, Next.js gateway, and CI/container publishing foundations are in place.
+
+Test counts as of 2026-10-01: 226 unit tests, 103 integration tests, 147 frontend tests. The integration suite
+is Docker-dependent and requires SQL Server containers through Testcontainers.
 
 Phase 1 is substantially implemented through the synchronous customer commerce path. The catalog storefront supports server-rendered active products, search, category filtering, URL-based pagination, product details, and image galleries. Authenticated customers can use the cart, checkout, order history, order details, account pages, and the Identity/OpenIddict session boundary. Orders coordinates Catalog, Shipping, Inventory, and Payments through authenticated service clients; Inventory provides concurrency-safe reservations and release; Payments provides deterministic authorization with concurrency protection; and Orders persists price/shipping snapshots, fulfillment state, and checkout idempotency.
 
@@ -495,14 +527,14 @@ The initial Luna Ops workflow is also implemented: operators can review and filt
 
 The project also has a delivered observability foundation ahead of the original phase sequence: OpenTelemetry instrumentation, OTLP collection, SigNoz local infrastructure, host metrics, a tracked service-health dashboard, checkout stage logging, health checks, and a frontend SigNoz link. This is not yet the Phase 9 Operations Console or Phase 11 failure-injection tooling.
 
-Phase 1 closure is still pending only on a recorded quality-gate run and the implementation review. The complete checkout and compensation failure matrix is now proven across real service boundaries: successful checkout across Catalog, Shipping, Inventory, and Payments, insufficient inventory without payment attempt, payment failure with reservation release, shipment creation failure that leaves the order `Preparing` with a successful subsequent attempt, and repeated idempotent checkout requests replaying a single order, reservation, payment, and quote. Customer order details read customer-scoped shipment identifiers, status, and tracking events from Shipping, and real Orders/Shipping HTTP lifecycle tests cover fulfillment through delivery plus invalid and duplicate shipment transitions. The Docker-dependent integration suite has passed locally (45 tests), but the frontend build, Compose smoke checks, and coverage still need to run together as one recorded quality gate. Frontend checkout error-state coverage is present and is no longer a closure blocker.
+Phase 1 closure is still pending the implementation review; the recorded quality gate is now in place. The complete checkout and compensation failure matrix is now proven across real service boundaries: successful checkout across Catalog, Shipping, Inventory, and Payments, insufficient inventory without payment attempt, payment failure with reservation release, shipment creation failure that leaves the order `Preparing` with a successful subsequent attempt, and repeated idempotent checkout requests replaying a single order, reservation, payment, and quote. Customer order details read customer-scoped shipment identifiers, status, and tracking events from Shipping, and real Orders/Shipping HTTP lifecycle tests cover fulfillment through delivery plus invalid and duplicate shipment transitions. The Docker-dependent integration suite passes locally, and the frontend build, Compose smoke checks, and coverage are now recorded together in the quality gate above. Frontend checkout error-state coverage is present and is no longer a closure blocker.
 
 ### Phase position
 
 | Phase | Position | Notes |
 | --- | --- | --- |
 | 0 | Complete | Foundation, service boundaries, infrastructure, CI, and baseline security are implemented. |
-| 1 | In closure | Synchronous commerce path, customer tracking, the Orders/Shipping lifecycle proof, and the real-boundary checkout failure matrix are implemented; the recorded quality gate and closure review remain. |
+| 1 | In closure | Synchronous commerce path, customer tracking, the Orders/Shipping lifecycle proof, and the real-boundary checkout failure matrix are implemented; the quality gate is recorded and enforced in CI, and the closure review remains. |
 | 2 | Specified, infrastructure started | The Phase 2 specification and architecture are accepted. Floci (EventBridge + SQS + SES) replaces the earlier RabbitMQ plan and the earlier LocalStack choice, and the Ops command queue is deferred to Phase 3. The emulator and its UI are wired into the local Compose stack, and the bus, queues, DLQs, rules, and sender identity are declared in Terraform and verified against the emulator; the producers and the Notification service do not exist yet. |
 | 3-7 | Not started | Simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
 | 8 | Foundation delivered | Telemetry and local SigNoz are implemented; operational dashboards and workflows remain later work. |
@@ -510,7 +542,6 @@ Phase 1 closure is still pending only on a recorded quality-gate run and the imp
 
 ### Next steps
 
-1. Run the Docker-dependent integration suite, frontend build, Compose smoke checks, and coverage as one recorded quality gate. (The integration suite has passed locally; the frontend build, Compose smoke, and coverage still need to run together as one recorded pass.)
-2. Close Phase 1 with an implementation review, then continue Phase 2 by adding the event producers and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required. The emulator runs locally and the messaging resources are managed by Terraform.
+1. Close Phase 1 with an implementation review, then continue Phase 2 by adding the event producers and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required. The emulator runs locally and the messaging resources are managed by Terraform.
 
 Asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.

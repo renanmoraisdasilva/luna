@@ -5,10 +5,19 @@ on:
   push:
     branches: [ main ]
 
+# Rapid pushes to a branch produce a run per push. Cancelling superseded runs keeps the Checks tab
+# readable and stops paying for a build whose result nobody will read.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dotnet:
     name: .NET build and tests
     runs-on: ubuntu-latest
+    # The integration suite boots five SQL Server containers. Without a bound, a hung `dotnet test`
+    # is only limited by GitHub's six-hour default.
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -25,11 +34,20 @@ jobs:
       - name: Build solution
         run: dotnet build Luna.sln --configuration Release --no-restore
 
+      # .editorconfig sets end_of_line = lf, so a runner with autocrlf enabled would fail the format gate
+      # on line endings alone. .gitattributes pins the working tree to LF for the same reason.
+      - name: Verify formatting
+        run: dotnet format Luna.sln --verify-no-changes --no-restore
+
+      - name: Check NuGet packages for known vulnerabilities
+        run: dotnet list Luna.sln package --vulnerable --include-transitive
+
       - name: Run unit tests
         run: >-
           dotnet test tests/Unit/Luna.UnitTests.csproj
           --configuration Release
           --nologo
+          --logger "trx;LogFileName=unit-tests.trx"
           --collect:"XPlat Code Coverage"
           --settings tests/coverage.runsettings
           --results-directory TestResults/Unit
@@ -41,12 +59,69 @@ jobs:
           path: TestResults/Unit/**/coverage.cobertura.xml
           if-no-files-found: error
 
+      # Without a test reporter the run reports "some tests failed" with no indication of which, and the
+      # failure is only readable by downloading an artifact.
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: unit-test-results
+          path: TestResults/Unit/**/*.trx
+          if-no-files-found: ignore
+
       - name: Run integration tests
-        run: dotnet test tests/Integration/Luna.IntegrationTests.csproj --configuration Release --nologo
+        run: >-
+          dotnet test tests/Integration/Luna.IntegrationTests.csproj
+          --configuration Release
+          --nologo
+          --logger "trx;LogFileName=integration-tests.trx"
+          --collect:"XPlat Code Coverage"
+          --settings tests/coverage.runsettings
+          --results-directory TestResults/Integration
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v6
+        with:
+          name: integration-test-coverage
+          path: TestResults/Integration/**/coverage.cobertura.xml
+          if-no-files-found: error
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: integration-test-results
+          path: TestResults/Integration/**/*.trx
+          if-no-files-found: ignore
+
+      # The integration suite is where repositories, checkout orchestration, and controllers are actually
+      # exercised. Without coverage collection here the backend number only reflects unit tests, and the
+      # branch gate has nothing to evaluate. See documentation/roadmap.md, "Recorded quality gate".
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Enforce backend branch coverage gate
+        env:
+          BACKEND_BRANCH_MINIMUM: '0.80'
+        run: |
+          reports=$(find TestResults/Unit TestResults/Integration -name 'coverage.cobertura.xml' | paste -sd ';' -)
+          reportgenerator \
+            "-reports:$reports" \
+            "-targetdir:coverage-report/backend" \
+            '-reporttypes:Html;Cobertura;TextSummary'
+          node scripts/check-backend-coverage.mjs coverage-report/backend/Cobertura.xml
+
+      - name: Upload backend coverage report
+        uses: actions/upload-artifact@v6
+        with:
+          name: backend-coverage-report
+          path: coverage-report/backend/**
+          if-no-files-found: error
 
   frontend:
     name: Frontend lint, tests, and build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -63,13 +138,36 @@ jobs:
         working-directory: src/Frontend
         run: npm ci
 
+      # `npm audit` fails the step on a high or critical advisory. Nothing in the repository would
+      # otherwise ever flag a vulnerable frontend dependency.
+      - name: Audit frontend dependencies
+        working-directory: src/Frontend
+        run: npm audit --audit-level=high
+
       - name: Lint frontend
         working-directory: src/Frontend
         run: npm run lint
 
-      - name: Run frontend unit tests
+      # `npm test` is `vitest run --coverage`, so the 90% branch threshold in vitest.config.mjs is
+      # actually evaluated. Vitest only enforces a threshold when a coverage reporter is active.
+      - name: Run frontend unit tests with coverage
         working-directory: src/Frontend
         run: npm test
+
+      - name: Summarise frontend coverage
+        if: always()
+        working-directory: src/Frontend
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e '
+              const fs = require("fs");
+              const total = JSON.parse(fs.readFileSync("coverage/coverage-summary.json", "utf8")).total;
+              const line = (name, value) => `${name}: ${value.pct}% (${value.covered}/${value.total})\n`;
+              fs.appendFileSync(
+                process.env.GITHUB_STEP_SUMMARY ?? "/dev/null",
+                `## Frontend coverage\n\n${line("Statements", total.statements)}${line("Branches", total.branches)}${line("Functions", total.functions)}${line("Lines", total.lines)}`);
+            '
+          fi
 
       - name: Build frontend
         working-directory: src/Frontend
@@ -78,6 +176,7 @@ jobs:
   compose:
     name: Docker Compose smoke check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout

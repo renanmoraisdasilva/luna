@@ -1,0 +1,11 @@
+# Normalise line endings in the working tree. Without this, a checkout on a machine with
+# core.autocrlf=true materialises CRLF files, which contradicts `end_of_line = lf` in .editorconfig and makes
+# `dotnet format --verify-no-changes` report every line of every file as needing a fix. That turns the
+# formatting gate into noise instead of a signal.
+* text=auto eol=lf
+
+# A shell script must never gain CRLF: a shebang line ending in \r is not a valid shebang on Linux.
+*.sh text eol=lf
+
+# Terraform rewrites the state file in place; normalising it would mark it dirty on every checkout.
+infrastructure/terraform/*.tfstate binary

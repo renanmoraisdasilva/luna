@@ -127,6 +127,25 @@ cd src/Frontend
 npm test
 ```
 
+`npm test` runs Vitest with coverage, so the 90% branch threshold in
+`vitest.config.mjs` is enforced on every run. The measured numbers and the
+backend gate are recorded in `documentation/roadmap.md` under "Recorded quality
+gate".
+
+Integration tests boot SQL Server containers through Testcontainers, so Docker
+must be running. `scripts/test-coverage.sh` runs everything together — both
+backend suites with coverage, the frontend suite, the frontend build, and the
+merged branch-coverage gate — and writes an HTML report to `coverage-report/`. It
+needs ReportGenerator:
+
+```bash
+dotnet tool install -g dotnet-reportgenerator-globaltool
+./scripts/test-coverage.sh
+```
+
+Formatting is gated in CI with `dotnet format --verify-no-changes`. Run the same
+command before pushing to catch it locally.
+
 ## 7. Regenerating the demo media
 
 `documentation/luna-demo.gif` and `documentation/images/*.png` are committed

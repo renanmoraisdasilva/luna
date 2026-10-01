@@ -1,11 +1,15 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Pinned by digest rather than by the floating `8.0` tag, matching the pattern already used for SQL Server
+# in docker-compose.prod.yml. A tag can be repointed at different content at any time; a digest cannot, so the
+# same commit always builds from the same base image. Dependabot tracks the Docker ecosystem, so a digest bump
+# arrives as a reviewable pull request rather than silently changing what production runs.
+FROM mcr.microsoft.com/dotnet/sdk:8.0@sha256:7ff19b091200c3a3a1bf1eefa6abae9efd7995d8e3298e66aa0d6905872bf642 AS build
 ARG PROJECT
 WORKDIR /src
 COPY . .
 RUN dotnet restore "$PROJECT"
 RUN dotnet publish "$PROJECT" -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0@sha256:2e2e502493d0dd89639e03b5eda4633f8061dee061332738a66f48f5a9f63e65 AS runtime
 ARG PROJECT
 ARG APP_UID=1654
 ARG APP_GID=1654
