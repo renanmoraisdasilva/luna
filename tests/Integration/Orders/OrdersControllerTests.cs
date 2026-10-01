@@ -8,12 +8,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Orders;
 
 [Collection(OrdersDatabaseCollection.Name)]
-public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture)
+public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Health_endpoint_responds()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
 
@@ -25,7 +31,6 @@ public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Customer_reads_only_their_own_orders()
     {
-        await fixture.ResetAsync();
         var customerId = Guid.NewGuid();
         var order = await SeedOrderAsync(customerId, "Jane Customer");
         using var factory = new OrdersApiFactory(fixture);
@@ -49,7 +54,6 @@ public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Customer_gets_not_found_for_an_unknown_order()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.CustomerHeader, Guid.NewGuid().ToString());
@@ -64,7 +68,6 @@ public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture)
     [InlineData("/api/v1/orders/{orderId}")]
     public async Task Requests_without_a_customer_subject_are_rejected_with_a_conflict(string template)
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");

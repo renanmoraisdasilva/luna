@@ -17,12 +17,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Orders;
 
 [Collection(OrdersDatabaseCollection.Name)]
-public sealed class CheckoutWorkflowTests(OrdersSqlServerFixture fixture)
+public sealed class CheckoutWorkflowTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Completes_checkout_across_catalog_shipping_inventory_and_payments()
     {
-        await fixture.ResetAsync();
         var state = new CheckoutServiceState();
         using var factory = new CheckoutApiFactory(fixture, state);
         using var client = CreateAuthenticatedClient(factory, state.CustomerId);
@@ -60,7 +66,6 @@ public sealed class CheckoutWorkflowTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Releases_inventory_when_payment_is_declined()
     {
-        await fixture.ResetAsync();
         var state = new CheckoutServiceState { PaymentAuthorized = false };
         using var factory = new CheckoutApiFactory(fixture, state);
         using var client = CreateAuthenticatedClient(factory, state.CustomerId);
@@ -83,7 +88,6 @@ public sealed class CheckoutWorkflowTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Reports_failed_compensation_when_inventory_release_fails()
     {
-        await fixture.ResetAsync();
         var state = new CheckoutServiceState
         {
             PaymentAuthorized = false,

@@ -8,12 +8,20 @@ using Xunit;
 namespace Luna.IntegrationTests.Catalog;
 
 [Collection(CatalogDatabaseCollection.Name)]
-public sealed class ProductReadRepositoryTests(CatalogSqlServerFixture fixture)
+public sealed class ProductReadRepositoryTests(CatalogSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
     [Fact]
     public async Task Returns_active_products_ordered_with_projected_images()
     {
-        await using var db = await fixture.CreateDbContextAsync();
+        await using var db = fixture.CreateDbContext();
         var category = new Category { Id = Guid.NewGuid(), Name = "Electronics", Slug = "electronics" };
         var firstProduct = CreateProduct(category, "Keyboard", isActive: true);
         var secondProduct = CreateProduct(category, "Mouse", isActive: true);
@@ -35,7 +43,7 @@ public sealed class ProductReadRepositoryTests(CatalogSqlServerFixture fixture)
     [Fact]
     public async Task Applies_case_insensitive_search_and_category_filters()
     {
-        await using var db = await fixture.CreateDbContextAsync();
+        await using var db = fixture.CreateDbContext();
         var category = new Category { Id = Guid.NewGuid(), Name = "Electronics", Slug = "electronics" };
         db.AddRange(
             category,
@@ -53,7 +61,7 @@ public sealed class ProductReadRepositoryTests(CatalogSqlServerFixture fixture)
     [Fact]
     public async Task Returns_requested_page_with_total_count()
     {
-        await using var db = await fixture.CreateDbContextAsync();
+        await using var db = fixture.CreateDbContext();
         var category = new Category { Id = Guid.NewGuid(), Name = "Electronics", Slug = "electronics" };
         db.AddRange(
             category,
@@ -74,7 +82,7 @@ public sealed class ProductReadRepositoryTests(CatalogSqlServerFixture fixture)
     [Fact]
     public async Task Returns_only_active_product_for_detail_lookup()
     {
-        await using var db = await fixture.CreateDbContextAsync();
+        await using var db = fixture.CreateDbContext();
         var category = new Category { Id = Guid.NewGuid(), Name = "Electronics", Slug = "electronics" };
         var activeProduct = CreateProduct(category, "Active", isActive: true);
         var inactiveProduct = CreateProduct(category, "Inactive", isActive: false);

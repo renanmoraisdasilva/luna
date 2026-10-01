@@ -32,13 +32,6 @@ public sealed class CatalogSqlServerFixture : IAsyncLifetime
 
     public Task ResetAsync() => respawner.ResetAsync(ConnectionString);
 
-    public async Task<CatalogDbContext> CreateDbContextAsync()
-    {
-        await respawner.ResetAsync(ConnectionString);
-        var db = CreateDbContext();
-        return db;
-    }
-
     public CatalogDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<CatalogDbContext>()

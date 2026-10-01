@@ -9,12 +9,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Payments;
 
 [Collection(PaymentsDatabaseCollection.Name)]
-public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture)
+public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Saves_a_new_payment_and_its_authorization_attempt()
     {
-        await fixture.ResetAsync();
         await using var db = fixture.CreateDbContext();
         var payment = Payment.Create(Guid.NewGuid(), 25.50m, "USD");
         payment.RecordAuthorizationAttempt(succeeded: true, providerReference: "prov-1");
@@ -34,7 +40,6 @@ public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture)
     [Fact]
     public async Task Rejects_a_second_payment_for_the_same_order()
     {
-        await fixture.ResetAsync();
         var orderId = Guid.NewGuid();
         await using var seedDb = fixture.CreateDbContext();
         seedDb.Payments.Add(Payment.Create(orderId, 10m, "USD"));
@@ -53,7 +58,6 @@ public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture)
     [Fact]
     public async Task Propagates_a_primary_key_conflict_that_is_not_order_uniqueness()
     {
-        await fixture.ResetAsync();
         var paymentId = Guid.NewGuid();
         await using var seedDb = fixture.CreateDbContext();
         seedDb.Payments.Add(Payment.Create(Guid.NewGuid(), 10m, "USD", paymentId));
@@ -73,7 +77,6 @@ public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture)
     [Fact]
     public async Task Propagates_a_row_version_conflict_from_a_concurrent_update()
     {
-        await fixture.ResetAsync();
         var orderId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
         {
@@ -103,7 +106,6 @@ public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture)
     [Fact]
     public async Task Propagates_a_constraint_violation_that_is_not_a_duplicate_key()
     {
-        await fixture.ResetAsync();
         await using var db = fixture.CreateDbContext();
         var payment = Payment.Create(Guid.NewGuid(), 10m, "USD");
         payment.RecordAuthorizationAttempt(succeeded: true, providerReference: new string('p', 400));

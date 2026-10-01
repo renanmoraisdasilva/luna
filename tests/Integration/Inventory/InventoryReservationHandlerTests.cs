@@ -10,12 +10,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Inventory;
 
 [Collection(InventoryDatabaseCollection.Name)]
-public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture fixture)
+public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Seed_creates_stock_for_every_catalog_product_and_is_idempotent()
     {
-        await fixture.ResetAsync();
         await using var db = fixture.CreateDbContext();
 
         await InventorySeed.SeedAsync(db);
@@ -30,7 +36,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Reserves_and_releases_inventory_using_persisted_state()
     {
-        await fixture.ResetAsync();
         var productId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
         {
@@ -63,7 +68,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Reports_actual_available_quantity_when_inventory_is_insufficient()
     {
-        await fixture.ResetAsync();
         var productId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
         {
@@ -85,7 +89,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Distinguishes_missing_stock_from_insufficient_inventory()
     {
-        await fixture.ResetAsync();
         await using var db = fixture.CreateDbContext();
         var handler = new ReserveInventoryHandler(new InventoryRepository(db));
 
@@ -99,7 +102,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Failed_multi_item_reservation_rolls_back_previous_stock_updates()
     {
-        await fixture.ResetAsync();
         var firstProductId = Guid.NewGuid();
         var secondProductId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
@@ -131,7 +133,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Releasing_an_already_released_reservation_is_idempotent()
     {
-        await fixture.ResetAsync();
         var productId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
         {
@@ -168,7 +169,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Concurrent_releases_do_not_release_the_same_stock_twice()
     {
-        await fixture.ResetAsync();
         var productId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
         {
@@ -210,7 +210,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Reservation_row_version_detects_concurrent_state_changes()
     {
-        await fixture.ResetAsync();
         var productId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
         {
@@ -246,7 +245,6 @@ public sealed class InventoryReservationHandlerTests(InventorySqlServerFixture f
     [Fact]
     public async Task Concurrent_reservations_cannot_overbook_one_available_unit()
     {
-        await fixture.ResetAsync();
         var productId = Guid.NewGuid();
         await using (var seedDb = fixture.CreateDbContext())
         {

@@ -16,12 +16,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Orders;
 
 [Collection(OrdersDatabaseCollection.Name)]
-public sealed class CartsControllerTests(OrdersSqlServerFixture fixture)
+public sealed class CartsControllerTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Rejects_requests_without_a_validated_customer()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
 
@@ -33,7 +39,6 @@ public sealed class CartsControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Returns_only_the_authenticated_customers_cart()
     {
-        await fixture.ResetAsync();
         var firstCustomer = Guid.NewGuid();
         var secondCustomer = Guid.NewGuid();
         using var factory = new OrdersApiFactory(fixture);
@@ -57,7 +62,6 @@ public sealed class CartsControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Rejects_non_positive_item_quantity()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.CustomerHeader, Guid.NewGuid().ToString());
@@ -72,7 +76,6 @@ public sealed class CartsControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Rejects_changing_quantity_when_customer_has_no_cart()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.CustomerHeader, Guid.NewGuid().ToString());

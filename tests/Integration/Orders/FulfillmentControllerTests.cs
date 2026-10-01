@@ -8,12 +8,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Orders;
 
 [Collection(OrdersDatabaseCollection.Name)]
-public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
+public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Admin_can_filter_the_fulfillment_queue_and_read_order_details()
     {
-        await fixture.ResetAsync();
         var order = await SeedConfirmedOrderAsync("Jane Operator");
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -41,7 +47,6 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Admin_gets_not_found_for_an_unknown_fulfillment_order()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
@@ -54,7 +59,6 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Admin_can_start_preparing_a_confirmed_order()
     {
-        await fixture.ResetAsync();
         var order = await SeedConfirmedOrderAsync("Jane Operator");
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -82,7 +86,6 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Admin_gets_conflict_when_preparing_an_order_twice()
     {
-        await fixture.ResetAsync();
         var order = await SeedConfirmedOrderAsync("Jane Operator");
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -100,7 +103,6 @@ public sealed class FulfillmentControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Customer_cannot_read_the_operations_queue()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.CustomerHeader, Guid.NewGuid().ToString());

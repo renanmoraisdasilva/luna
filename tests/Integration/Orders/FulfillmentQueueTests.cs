@@ -7,12 +7,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Orders;
 
 [Collection(OrdersDatabaseCollection.Name)]
-public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture)
+public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Queue_defaults_to_active_fulfillment_statuses_when_no_status_is_supplied()
     {
-        await fixture.ResetAsync();
         var order = await SeedOrderAsync(OrderStatus.Confirmed, "Jane Operator");
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -31,7 +37,6 @@ public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Queue_reports_the_action_for_a_preparing_order()
     {
-        await fixture.ResetAsync();
         var order = await SeedOrderAsync(OrderStatus.Preparing, "Preparing Operator");
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -49,7 +54,6 @@ public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Fulfillment_detail_reports_no_action_for_an_order_outside_the_workflow()
     {
-        await fixture.ResetAsync();
         var order = await SeedOrderAsync(OrderStatus.Pending, "Pending Operator");
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -70,7 +74,6 @@ public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture)
     [InlineData("status=Shipped")]
     public async Task Queue_rejects_statuses_that_are_not_fulfillment_work(string query)
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
@@ -89,7 +92,6 @@ public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture)
     [InlineData("pageSize=101")]
     public async Task Queue_rejects_invalid_paging(string query)
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
@@ -104,7 +106,6 @@ public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Fulfillment_commands_return_not_found_for_unknown_ids()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");

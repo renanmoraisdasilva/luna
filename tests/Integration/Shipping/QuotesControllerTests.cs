@@ -14,12 +14,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Shipping;
 
 [Collection(ShippingDatabaseCollection.Name)]
-public sealed class QuotesControllerTests(ShippingSqlServerFixture fixture)
+public sealed class QuotesControllerTests(ShippingSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Anonymous_quote_request_is_rejected_and_writes_nothing()
     {
-        await fixture.ResetAsync();
         await SeedStandardMethodAsync();
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -33,7 +39,6 @@ public sealed class QuotesControllerTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task Customer_token_cannot_create_a_quote()
     {
-        await fixture.ResetAsync();
         await SeedStandardMethodAsync();
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -48,7 +53,6 @@ public sealed class QuotesControllerTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task Orders_service_token_creates_a_quote()
     {
-        await fixture.ResetAsync();
         await SeedStandardMethodAsync();
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();

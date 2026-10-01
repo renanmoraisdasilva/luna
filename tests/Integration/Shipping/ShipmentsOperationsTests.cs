@@ -9,12 +9,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Shipping;
 
 [Collection(ShippingDatabaseCollection.Name)]
-public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
+public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Health_endpoint_responds()
     {
-        await fixture.ResetAsync();
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
 
@@ -26,7 +32,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task List_requires_an_operations_role()
     {
-        await fixture.ResetAsync();
         using var factory = new ShippingApiFactory(fixture);
 
         using var anonymousClient = factory.CreateClient();
@@ -48,7 +53,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task List_accepts_a_standard_role_claim_as_well_as_the_luna_role_claim()
     {
-        await fixture.ResetAsync();
         using var factory = new ShippingApiFactory(fixture);
 
         using var lunaRoleClient = factory.CreateClient();
@@ -66,7 +70,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task List_filters_by_status_search_text_and_paging()
     {
-        await fixture.ResetAsync();
         var created = await SeedShipmentAsync("Jane Doe", "Austin", ShipmentStatus.Created);
         var inTransit = await SeedShipmentAsync("John Roe", "Dallas", ShipmentStatus.InTransit);
         using var factory = new ShippingApiFactory(fixture);
@@ -111,7 +114,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
     [InlineData("pageSize=101")]
     public async Task List_rejects_invalid_filters(string query)
     {
-        await fixture.ResetAsync();
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
@@ -127,7 +129,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task Detail_returns_the_recipient_and_reports_missing_shipments()
     {
-        await fixture.ResetAsync();
         var delivered = await SeedShipmentAsync("Jane Doe", "Austin", ShipmentStatus.Delivered);
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -150,7 +151,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task Tracking_requires_a_resolvable_customer_subject()
     {
-        await fixture.ResetAsync();
         var shipment = await SeedShipmentAsync("Jane Doe", "Austin", ShipmentStatus.Created);
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -166,7 +166,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture)
     [Fact]
     public async Task Lifecycle_endpoints_return_not_found_for_unknown_shipments()
     {
-        await fixture.ResetAsync();
         using var factory = new ShippingApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.ServiceHeader, "orders");

@@ -18,12 +18,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Shipping;
 
 [Collection(ShippingDatabaseCollection.Name)]
-public sealed class ShipmentTrackingControllerTests(ShippingSqlServerFixture fixture)
+public sealed class ShipmentTrackingControllerTests(ShippingSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Customer_can_read_own_tracking_without_recipient_details()
     {
-        await fixture.ResetAsync();
         var customerId = Guid.NewGuid();
         var shipment = await SeedShipmentAsync(customerId);
         using var factory = new ShippingApiFactory(fixture);
@@ -45,7 +51,6 @@ public sealed class ShipmentTrackingControllerTests(ShippingSqlServerFixture fix
     [Fact]
     public async Task Customer_cannot_read_another_customers_tracking()
     {
-        await fixture.ResetAsync();
         var ownerId = Guid.NewGuid();
         var shipment = await SeedShipmentAsync(ownerId);
         using var factory = new ShippingApiFactory(fixture);
@@ -60,7 +65,6 @@ public sealed class ShipmentTrackingControllerTests(ShippingSqlServerFixture fix
     [Fact]
     public async Task Tracking_reflects_shipment_lifecycle_events()
     {
-        await fixture.ResetAsync();
         var customerId = Guid.NewGuid();
         var shipment = await SeedShipmentAsync(customerId);
         await using var db = fixture.CreateDbContext();

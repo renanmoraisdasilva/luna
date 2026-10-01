@@ -28,13 +28,23 @@ public sealed class CommerceWorkflowCollection :
 [Collection(CommerceWorkflowCollection.Name)]
 public sealed class FulfillmentShippingWorkflowTests(
     OrdersSqlServerFixture ordersFixture,
-    ShippingSqlServerFixture shippingFixture)
+    ShippingSqlServerFixture shippingFixture) : IAsyncLifetime
 {
-    [Fact]
-    public async Task Completes_fulfillment_and_shipping_lifecycle_across_real_http_boundaries()
+    /// <summary>
+    /// Both databases are reset here rather than as the first statement of each test, so a test that
+    /// throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public async Task InitializeAsync()
     {
         await ordersFixture.ResetAsync();
         await shippingFixture.ResetAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task Completes_fulfillment_and_shipping_lifecycle_across_real_http_boundaries()
+    {
         var order = await SeedConfirmedOrderAsync();
         using var shippingFactory = new ShippingApiFactory(shippingFixture);
         using var ordersFactory = new OrdersWithShippingFactory(ordersFixture, shippingFactory);
@@ -97,8 +107,6 @@ public sealed class FulfillmentShippingWorkflowTests(
     [Fact]
     public async Task Rejects_invalid_and_duplicate_shipment_transitions_across_real_http_boundaries()
     {
-        await ordersFixture.ResetAsync();
-        await shippingFixture.ResetAsync();
         var order = await SeedConfirmedOrderAsync();
         using var shippingFactory = new ShippingApiFactory(shippingFixture);
         using var ordersFactory = new OrdersWithShippingFactory(ordersFixture, shippingFactory);

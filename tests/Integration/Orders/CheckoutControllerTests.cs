@@ -7,12 +7,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Orders;
 
 [Collection(OrdersDatabaseCollection.Name)]
-public sealed class CheckoutControllerTests(OrdersSqlServerFixture fixture)
+public sealed class CheckoutControllerTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Checkout_without_a_customer_subject_is_rejected_with_a_conflict()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
@@ -33,7 +39,6 @@ public sealed class CheckoutControllerTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Checkout_without_an_idempotency_key_is_rejected_as_unprocessable()
     {
-        await fixture.ResetAsync();
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.CustomerHeader, Guid.NewGuid().ToString());

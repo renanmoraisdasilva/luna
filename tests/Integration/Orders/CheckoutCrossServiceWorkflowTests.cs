@@ -41,14 +41,28 @@ public sealed class CheckoutCrossServiceWorkflowTests(
     CatalogSqlServerFixture catalogFixture,
     InventorySqlServerFixture inventoryFixture,
     PaymentsSqlServerFixture paymentsFixture,
-    ShippingSqlServerFixture shippingFixture)
+    ShippingSqlServerFixture shippingFixture) : IAsyncLifetime
 {
     private const decimal UnitPrice = 12.50m;
+
+    /// <summary>
+    /// All five databases are reset as a lifecycle hook rather than as the first statement of each test,
+    /// so a test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public async Task InitializeAsync()
+    {
+        await ordersFixture.ResetAsync();
+        await catalogFixture.ResetAsync();
+        await inventoryFixture.ResetAsync();
+        await paymentsFixture.ResetAsync();
+        await shippingFixture.ResetAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Completes_checkout_across_real_catalog_shipping_inventory_and_payments_services()
     {
-        await ResetAsync();
         using var stack = CreateStack();
         var customerId = Guid.NewGuid();
         var productId = await SeedProductAsync(quantityOnHand: 5);
@@ -125,7 +139,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
     [Fact]
     public async Task Rejects_checkout_when_inventory_is_insufficient_without_attempting_payment()
     {
-        await ResetAsync();
         using var stack = CreateStack();
         var customerId = Guid.NewGuid();
         var productId = await SeedProductAsync(quantityOnHand: 1);
@@ -165,7 +178,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
     [Fact]
     public async Task Releases_inventory_and_fails_the_order_when_payment_is_declined()
     {
-        await ResetAsync();
         using var stack = CreateStack();
         var customerId = Guid.NewGuid();
         var productId = await SeedProductAsync(quantityOnHand: 5);
@@ -213,7 +225,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
     [Fact]
     public async Task Keeps_order_preparing_when_shipping_rejects_shipment_creation()
     {
-        await ResetAsync();
         using var stack = CreateStack();
         var customerId = Guid.NewGuid();
         var productId = await SeedProductAsync(quantityOnHand: 5);
@@ -307,7 +318,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
     [Fact]
     public async Task Replays_repeated_checkout_requests_with_the_same_idempotency_key()
     {
-        await ResetAsync();
         using var stack = CreateStack();
         var customerId = Guid.NewGuid();
         var productId = await SeedProductAsync(quantityOnHand: 5);
@@ -353,15 +363,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
         {
             (await shippingDb.ShippingQuotes.CountAsync(item => item.OrderId == first.OrderId)).Should().Be(1);
         }
-    }
-
-    private async Task ResetAsync()
-    {
-        await ordersFixture.ResetAsync();
-        await catalogFixture.ResetAsync();
-        await inventoryFixture.ResetAsync();
-        await paymentsFixture.ResetAsync();
-        await shippingFixture.ResetAsync();
     }
 
     private CommerceStack CreateStack()

@@ -8,12 +8,18 @@ using Xunit;
 namespace Luna.IntegrationTests.Orders;
 
 [Collection(OrdersDatabaseCollection.Name)]
-public sealed class CartRepositoryTests(OrdersSqlServerFixture fixture)
+public sealed class CartRepositoryTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
+    /// <summary>
+    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
+    /// test that throws during setup cannot leak rows into the next one.
+    /// </summary>
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
     public async Task Concurrent_first_cart_creation_returns_the_same_persisted_cart()
     {
-        await fixture.ResetAsync();
         var customerId = Guid.NewGuid();
         await using var firstDb = fixture.CreateDbContext();
         await using var secondDb = fixture.CreateDbContext();
@@ -32,7 +38,6 @@ public sealed class CartRepositoryTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task Existing_cart_is_returned_without_creating_a_duplicate()
     {
-        await fixture.ResetAsync();
         var customerId = Guid.NewGuid();
         await using var db = fixture.CreateDbContext();
         var repository = new CartRepository(db);
@@ -46,7 +51,6 @@ public sealed class CartRepositoryTests(OrdersSqlServerFixture fixture)
     [Fact]
     public async Task A_cart_created_between_the_existence_check_and_the_insert_is_returned()
     {
-        await fixture.ResetAsync();
         var customerId = Guid.NewGuid();
         var competingCartId = Guid.NewGuid();
         var interceptor = new CompetingCartInterceptor(fixture, customerId, competingCartId);
