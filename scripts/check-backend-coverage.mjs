@@ -7,8 +7,8 @@
 //
 // Usage: node scripts/check-backend-coverage.mjs <path-to-Cobertura.xml>
 //
-// The gate sits just below the measured value so it fails on a regression rather than on the current
-// backlog. See documentation/roadmap.md, "Recorded quality gate".
+// The gate sits below the measured 87.8% so it fails on a regression rather than on the current backlog.
+// See documentation/roadmap.md, "Recorded quality gate".
 
 import { readFileSync, appendFileSync } from 'node:fs';
 

@@ -493,7 +493,7 @@ thresholds in `scripts/test-coverage.sh` and `vitest.config.mjs` were never eval
 
 | Metric | Measured | Gate | Enforced by |
 | --- | --- | --- | --- |
-| Backend branch coverage | 83.5% | 80% | `scripts/check-backend-coverage.mjs`, called from `ci.yml` |
+| Backend branch coverage | 87.8% | 80% | `scripts/check-backend-coverage.mjs`, called from `ci.yml` |
 | Frontend branch coverage | 94.9% | 90% | `vitest run --coverage` |
 | Frontend statements | 93.7% | — | reported in the CI summary |
 
@@ -502,11 +502,19 @@ collected because that is where repositories, checkout orchestration, and contro
 without it the number only reflects unit tests. Frontend thresholds are now live because `npm test` runs
 `vitest run --coverage`, and Vitest only enforces a threshold when a coverage reporter is active.
 
-Both numbers are published to the CI run summary, so neither requires opening an artifact to read. The
-backend gate is deliberately set just below the measured value so it fails on a regression rather than on the
-current backlog; the remaining gap is concentrated in the Identity host and in the Infrastructure
-repositories, and raising the gate further is a later outcome driven by the coverage report rather than by a
-number chosen in advance.
+Both numbers are published to the CI run summary, so neither requires opening an artifact to read.
+
+The backend gate is set below the measured value so it fails on a regression rather than on the current
+backlog. The remaining gap is concentrated and worth naming rather than averaging away:
+
+- **Identity, 36% branch.** A single-project host with no per-layer separation, and by far the weakest area.
+- **Catalog.Api, 75% branch**, against 97-100% for the other five Api hosts.
+- **The Infrastructure repositories, 81-89% branch**, almost entirely in error and concurrency paths that
+  need a real database to reach.
+
+Every Domain, Application, and Contracts project is at or near 100%. The three services whose
+Infrastructure is thin in a specific way are the ones dragging the number, and that is where the next round
+of tests belongs.
 
 The layering rules in `AGENTS.md` are likewise executable now:
 `tests/Unit/Architecture/LayeringArchitectureTests.cs` asserts that domain projects reference no other Luna
@@ -518,7 +526,7 @@ and that no controller names a `DbContext` or an Infrastructure repository.
 
 Phase 0 is complete: the six services, independent persistence, EF Core migration startup, Docker Compose environment, health endpoints, OpenAPI documentation, centralized tests, Next.js gateway, and CI/container publishing foundations are in place.
 
-Test counts as of 2026-10-01: 226 unit tests, 103 integration tests, 147 frontend tests. The integration suite
+Test counts as of 2026-10-01: 226 unit tests, 115 integration tests, 147 frontend tests. The integration suite
 is Docker-dependent and requires SQL Server containers through Testcontainers.
 
 Phase 1 is substantially implemented through the synchronous customer commerce path. The catalog storefront supports server-rendered active products, search, category filtering, URL-based pagination, product details, and image galleries. Authenticated customers can use the cart, checkout, order history, order details, account pages, and the Identity/OpenIddict session boundary. Orders coordinates Catalog, Shipping, Inventory, and Payments through authenticated service clients; Inventory provides concurrency-safe reservations and release; Payments provides deterministic authorization with concurrency protection; and Orders persists price/shipping snapshots, fulfillment state, and checkout idempotency.
