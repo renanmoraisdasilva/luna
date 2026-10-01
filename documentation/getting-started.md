@@ -20,6 +20,46 @@ Both files are needed before the first start.
 | `ORDERS_SERVICE_CLIENT_SECRET` | Client secret the frontend uses to obtain a token from Identity. |
 | `LUNA_COOKIE_ENCRYPTION_KEY` | Base64-encoded 32-byte key. Must be identical in both env files. |
 
+### Identity signing keys
+
+The local stack runs Identity in Development, which generates an ephemeral
+signing certificate at startup. Nothing is needed locally beyond the variables
+above.
+
+**Production does require a key.** Outside Development the authorization server
+refuses to start unless `OpenIddict:Keys:SigningKeyPath` points at a readable
+certificate, because the development certificate is not persisted: every restart
+would otherwise generate a different key and invalidate every issued token and
+every other service's cached JWKS.
+
+Generate a pair and store them outside the repository:
+
+```bash
+mkdir -p infrastructure/secrets/identity
+openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes \
+  -keyout infrastructure/secrets/identity/signing.key \
+  -out infrastructure/secrets/identity/signing.crt
+openssl pkcs12 -export -out infrastructure/secrets/identity/signing.pfx \
+  -inkey infrastructure/secrets/identity/signing.key \
+  -in infrastructure/secrets/identity/signing.crt -passout pass:"$PASSWORD"
+```
+
+Then set in `.env`:
+
+| Variable | Notes |
+| --- | --- |
+| `IDENTITY_SIGNING_KEY_PATH` | Defaults to `/run/secrets/identity/signing.pfx`. |
+| `IDENTITY_SIGNING_KEY_PASSWORD` | Passphrase for the PKCS#12 file. Required. |
+| `IDENTITY_KEY_DIRECTORY` | Host directory mounted read-only at `/run/secrets/identity`. Defaults to `./secrets/identity`. |
+| `IDENTITY_ENCRYPTION_KEY_PATH` | Optional. Used for the encrypted JWKS document. |
+| `IDENTITY_ENCRYPTION_KEY_PASSWORD` | Optional passphrase for the encryption key. |
+
+PKCS#12 (`.pfx`) and PEM are both accepted. PEM files are detected by content
+rather than by extension, so a `.pem` file holding a PKCS#12 bundle still loads.
+
+`infrastructure/secrets/` must be gitignored. Confirm it is before committing
+anything in that directory.
+
 **`src/Frontend/.env`** — set the local service URLs to `http://localhost:5001`
 through `http://localhost:5006`, and the same `LUNA_COOKIE_ENCRYPTION_KEY`.
 
