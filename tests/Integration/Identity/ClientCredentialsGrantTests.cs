@@ -16,8 +16,8 @@ namespace Luna.IntegrationTests.Identity;
 /// controller echoed <c>request.ClientId</c> into the token. Any anonymous caller could therefore mint a
 /// service token for any client and any scope.
 /// </summary>
+[Collection(IdentityServerCollection.Name)]
 public sealed class ClientCredentialsGrantTests(IdentityServerFixture fixture)
-    : IClassFixture<IdentityServerFixture>
 {
     private readonly IdentityServerFixture fixture = fixture;
 

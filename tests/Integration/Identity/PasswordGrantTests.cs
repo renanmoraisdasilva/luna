@@ -22,8 +22,8 @@ namespace Luna.IntegrationTests.Identity;
 /// anonymous clients: the registered public storefront client can sign a customer in, an unregistered client
 /// cannot, and a bad password never produces a token.
 /// </summary>
-public sealed class PasswordGrantTests(IdentityServerFixture fixture)
-    : IClassFixture<IdentityServerFixture>, IAsyncLifetime
+[Collection(IdentityServerCollection.Name)]
+public sealed class PasswordGrantTests(IdentityServerFixture fixture) : IAsyncLifetime
 {
     private const string Email = "password.grant.customer@example.test";
     private const string Password = "Customer-Password-123!";

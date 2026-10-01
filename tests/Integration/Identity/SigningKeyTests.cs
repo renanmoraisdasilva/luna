@@ -22,7 +22,8 @@ namespace Luna.IntegrationTests.Identity;
 /// service's cached JWKS, turning a routine restart into a fleet-wide authentication outage. Outside
 /// Development the server must require an explicitly configured key and refuse to start without one.
 /// </summary>
-public sealed class SigningKeyTests(IdentityServerFixture fixture) : IClassFixture<IdentityServerFixture>
+[Collection(IdentityServerCollection.Name)]
+public sealed class SigningKeyTests(IdentityServerFixture fixture)
 {
     [Fact]
     public async Task Uses_the_configured_signing_key_when_one_is_supplied()
