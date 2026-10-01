@@ -17,10 +17,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddLunaJwtValidation(builder.Configuration);
 builder.Services.AddAuthorization(options => options.AddPolicy(
-	LunaServicePolicies.OrdersInventoryReservationsWrite,
-	policy => policy.RequireLunaService(
-		LunaServiceClients.Orders,
-		LunaServiceScopes.InventoryReservationsWrite)));
+    LunaServicePolicies.OrdersInventoryReservationsWrite,
+    policy => policy.RequireLunaService(
+        LunaServiceClients.Orders,
+        LunaServiceScopes.InventoryReservationsWrite)));
 builder.Services.AddInventoryInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ReserveInventoryHandler>();
 builder.Services.AddScoped<ReleaseReservationHandler>();

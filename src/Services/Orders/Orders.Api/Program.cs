@@ -17,13 +17,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddLunaJwtValidation(builder.Configuration);
 builder.Services.AddAuthorization(options => options.AddPolicy(
-	OrdersAuthorizationPolicies.Operations,
-	policy => policy
-		.AddAuthenticationSchemes(LunaAuthenticationDefaults.ValidationScheme)
-		.RequireAuthenticatedUser()
-		.RequireAssertion(context => context.User.Claims.Any(claim =>
-			(claim.Type == LunaAuthentication.RoleClaim || claim.Type == ClaimTypes.Role)
-			&& claim.Value.Equals("Admin", StringComparison.OrdinalIgnoreCase)))));
+    OrdersAuthorizationPolicies.Operations,
+    policy => policy
+        .AddAuthenticationSchemes(LunaAuthenticationDefaults.ValidationScheme)
+        .RequireAuthenticatedUser()
+        .RequireAssertion(context => context.User.Claims.Any(claim =>
+            (claim.Type == LunaAuthentication.RoleClaim || claim.Type == ClaimTypes.Role)
+            && claim.Value.Equals("Admin", StringComparison.OrdinalIgnoreCase)))));
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GetFulfillmentQueueHandler>();
 builder.Services.AddScoped<GetFulfillmentOrderHandler>();
