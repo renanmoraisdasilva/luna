@@ -7,7 +7,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('next/headers', () => ({ cookies: mocks.cookies }));
 vi.mock('../../lib/auth-cookie', () => ({
-  accessTokenCookieName: 'luna_access_token',
+  accessTokenCookieName: () => 'luna_access_token',
+  isSecureCookieRequired: () => true,
   decryptAccessToken: mocks.decryptAccessToken,
 }));
 

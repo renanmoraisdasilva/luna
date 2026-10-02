@@ -26,8 +26,8 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}"
       MSSQL_COLLATION: "SQL_Latin1_General_CP1_CI_AS"
-    ports:
-      - "1433:1433"
+    # No host port. Every service reaches SQL Server over the private luna network as Server=sqlserver, so
+    # publishing 1433 exposed a full-privilege sa credential to whatever the host firewall permitted.
     volumes:
       - luna-sqlserver:/var/opt/mssql
     networks:

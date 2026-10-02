@@ -30,6 +30,8 @@
             PaginationRequest pagination,
             CancellationToken cancellationToken)
         {
+            pagination.Validate();
+
             var query = db.Products
                 .AsNoTracking()
                 .Where(product => product.IsActive);

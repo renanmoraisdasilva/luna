@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import type { CurrentUser } from '../types/auth';
 
 export async function getAccessToken(): Promise<string | null> {
-  const cookieValue = (await cookies()).get(accessTokenCookieName)?.value;
+  const cookieValue = (await cookies()).get(accessTokenCookieName())?.value;
 
   if (!cookieValue) {
     return null;

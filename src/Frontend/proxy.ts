@@ -8,7 +8,7 @@ function isProtectedPage(pathname: string): boolean {
 }
 
 export async function proxy(request: NextRequest) {
-  const encryptedToken = request.cookies.get(accessTokenCookieName)?.value;
+  const encryptedToken = request.cookies.get(accessTokenCookieName())?.value;
   if (!encryptedToken) {
     if (isProtectedPage(request.nextUrl.pathname)) {
       const loginUrl = new URL('/login', request.url);

@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const decryptAccessToken = vi.hoisted(() => vi.fn());
 vi.mock('../lib/auth-cookie', () => ({
-  accessTokenCookieName: 'luna_access_token',
+  accessTokenCookieName: () => 'luna_access_token',
+  isSecureCookieRequired: () => true,
   decryptAccessToken,
 }));
 

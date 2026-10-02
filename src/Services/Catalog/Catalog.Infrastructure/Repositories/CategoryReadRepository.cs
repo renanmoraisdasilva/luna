@@ -17,6 +17,8 @@ public sealed class CategoryReadRepository(CatalogDbContext db) : ICategoryReadR
         PaginationRequest pagination,
         CancellationToken cancellationToken)
     {
+        pagination.Validate();
+
         var query = db.Categories
             .AsNoTracking()
             .OrderBy(category => category.Name)

@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { accessTokenCookieName, encryptAccessToken } from '../../../../lib/auth-cookie';
+import {
+  accessTokenCookieName,
+  encryptAccessToken,
+  isSecureCookieRequired,
+} from '../../../../lib/auth-cookie';
 
 // The storefront is a public OpenIddict client. It cannot keep a secret, so it authenticates with the
 // password grant only. The identifier must match LunaPublicClients.Storefront in Luna.Contracts.
@@ -49,12 +53,23 @@ export async function POST(request: Request) {
 
   const encryptedToken = await encryptAccessToken(token.access_token);
   const response = NextResponse.json({ authenticated: true });
-  const secureCookie = process.env.AUTH_COOKIE_SECURE === 'true';
+  const secure = isSecureCookieRequired();
+
+  // The __Host- cookie name is only accepted by a browser alongside Secure, Path=/ and no Domain. Without
+  // this guard the browser would silently drop the session cookie in production.
+  const name = accessTokenCookieName();
+  if (name.startsWith('__Host-') && !secure) {
+    throw new Error(
+      'The session cookie uses the __Host- prefix, which requires a secure cookie. AUTH_COOKIE_SECURE=false ' +
+      'cannot be used in production.',
+    );
+  }
+
   response.cookies.set({
-    name: accessTokenCookieName,
+    name,
     value: encryptedToken,
     httpOnly: true,
-    secure: secureCookie,
+    secure,
     sameSite: 'lax',
     path: '/',
     maxAge: token.expires_in ?? 3600,
