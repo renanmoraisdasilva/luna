@@ -272,7 +272,36 @@ public sealed class ShippingAddress
             throw new ArgumentException("A complete shipping address is required.");
         }
 
+        // The persistence mapping declares HasMaxLength on every one of these columns. Validating the same limits
+        // here keeps an over-length value from reaching the database, where it would surface as an unmapped
+        // DbUpdateException and therefore as a 500 for what is a client input error.
+        RequireLength(nameof(fullName), fullName, MaxFullNameLength);
+        RequireLength(nameof(addressLine1), addressLine1, MaxAddressLine1Length);
+        RequireLength(nameof(addressLine2), addressLine2, MaxAddressLine2Length);
+        RequireLength(nameof(city), city, MaxCityLength);
+        RequireLength(nameof(stateOrProvince), stateOrProvince, MaxStateOrProvinceLength);
+        RequireLength(nameof(postalCode), postalCode, MaxPostalCodeLength);
+        RequireLength(nameof(country), country, MaxCountryLength);
+
         return new ShippingAddress(fullName.Trim(), addressLine1.Trim(), string.IsNullOrWhiteSpace(addressLine2) ? null : addressLine2.Trim(), city.Trim(), stateOrProvince.Trim(), postalCode.Trim(), country.Trim());
+    }
+
+    public const int MaxFullNameLength = 160;
+    public const int MaxAddressLine1Length = 200;
+    public const int MaxAddressLine2Length = 200;
+    public const int MaxCityLength = 100;
+    public const int MaxStateOrProvinceLength = 100;
+    public const int MaxPostalCodeLength = 30;
+    public const int MaxCountryLength = 100;
+
+    private static void RequireLength(string parameterName, string? value, int maximumLength)
+    {
+        if (value is not null && value.Trim().Length > maximumLength)
+        {
+            throw new ArgumentException(
+                $"The shipping address field must be at most {maximumLength} characters.",
+                parameterName);
+        }
     }
 }
 
