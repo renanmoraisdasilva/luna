@@ -28,9 +28,6 @@ public sealed class TokenController(
         {
             var user = await userManager.FindByEmailAsync(request.Username!);
 
-            // CheckPasswordSignInAsync with lockoutOnFailure records the failed attempt against the account, so
-            // repeated guesses for one account are throttled in addition to the per-address request rate limit.
-            // A locked-out account is refused without the password being checked at all.
             if (user is null)
             {
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);

@@ -10,10 +10,6 @@ namespace Luna.IntegrationTests.Orders;
 [Collection(OrdersDatabaseCollection.Name)]
 public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture) : IAsyncLifetime
 {
-    /// <summary>
-    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
-    /// test that throws during setup cannot leak rows into the next one.
-    /// </summary>
     public Task InitializeAsync() => fixture.ResetAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -74,8 +70,6 @@ public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture) : IAsy
 
         var response = await client.GetAsync(template.Replace("{orderId}", Guid.NewGuid().ToString()));
 
-        // An admin token with no customer subject is an authentication failure, not a conflict. Reporting 409
-        // told the caller its request collided with server state, which no retry could fix.
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         var error = await response.Content.ReadFromJsonAsync<ErrorDto>();
         error!.Code.Should().Be("UNAUTHENTICATED");

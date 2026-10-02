@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Luna.Orders.Infrastructure.Database.Migrations
 {
-    /// <inheritdoc />
     public partial class AddCheckoutIdempotency : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -50,7 +48,6 @@ namespace Luna.Orders.Infrastructure.Database.Migrations
                 unique: true);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(

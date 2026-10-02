@@ -22,13 +22,8 @@ public sealed class MiddlewareTests
             (new KeyNotFoundException("missing"), StatusCodes.Status404NotFound, "CART_NOT_FOUND"),
             (new InvalidOperationException("unexpected"), StatusCodes.Status409Conflict, "FULFILLMENT_CONFLICT"),
 
-            // A request with no usable customer identity is an authentication failure. It previously reported
-            // 409 FULFILLMENT_CONFLICT, telling the client its request conflicted with server state when in
-            // fact nobody was authenticated and no retry could succeed.
             (new UnauthenticatedCustomerException(), StatusCodes.Status401Unauthorized, "UNAUTHENTICATED"),
 
-            // A stale write is distinct from a state-machine violation: the client can usefully retry it, so it
-            // gets its own code rather than sharing FULFILLMENT_CONFLICT.
             (new DbUpdateConcurrencyException("stale row"), StatusCodes.Status409Conflict, "ORDER_CONCURRENCY_CONFLICT"),
         };
 

@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Luna.Shipping.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class AddShipmentRecipientSnapshot : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -74,7 +72,6 @@ namespace Luna.Shipping.Infrastructure.Migrations
                 defaultValue: "");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

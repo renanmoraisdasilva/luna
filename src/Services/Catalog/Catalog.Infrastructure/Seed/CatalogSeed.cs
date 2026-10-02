@@ -53,14 +53,6 @@ public static class CatalogSeed
         }).ToArray();
         db.Products.AddRange(products);
 
-        // Images are listed per product, in gallery order, and are keyed by SKU
-        // rather than paired against a shared pool by array position.
-        //
-        // The positional form was the bug: `imageUrls[index * 2]` put a lantern
-        // photo on a water bottle the moment a product was added, removed, or
-        // reordered, and nothing failed. Keying on the SKU makes a product with
-        // no images throw instead of rendering someone else's photograph, which
-        // is the failure you actually want.
         var productImages = new Dictionary<string, string[]>
         {
             ["LUNA-KB-01"] = new[] { "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=1200&q=85", "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=1200&q=85" },

@@ -19,8 +19,6 @@ public sealed class ShippingExceptionHandlingMiddleware(
         }
         catch (UnauthenticatedCustomerException exception)
         {
-            // No usable customer identity on the request. This is an authentication failure, so it must not be
-            // reported as a conflict with server state.
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new { code = UnauthenticatedCustomerException.ErrorCode, message = exception.Message });
         }

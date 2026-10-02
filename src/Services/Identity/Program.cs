@@ -31,10 +31,4 @@ app.Run();
 
 public partial class Program { }
 
-/// <summary>
-/// Test-hosting marker. The integration test project references Identity under a project alias, so the
-/// global <c>Program</c> class cannot be named as <c>IdentityApi.Program</c> the way the other services are
-/// referenced. This uniquely named type gives <c>WebApplicationFactory</c> something to bind to without
-/// changing how the host is built.
-/// </summary>
 public sealed class IdentityServerEntryPoint;

@@ -14,7 +14,6 @@ namespace Luna.Identity.Migrations
     [Migration("20260904141648_AddUserNames")]
     partial class AddUserNames
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

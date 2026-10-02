@@ -3,30 +3,10 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Luna.Identity.Infrastructure;
 
-/// <summary>
-/// Loads the X.509 material the authorization server signs and encrypts tokens with.
-/// </summary>
-/// <remarks>
-/// PEM is supported alongside PKCS#12 because that is what <c>dotnet dev-certs</c> and most secret tooling
-/// produce. PKCS#12 is detected from its DER header rather than its file extension, so a misnamed file still
-/// loads correctly.
-/// </remarks>
 public static class OpenIddictKeyLoader
 {
-    /// <summary>
-    /// DER SEQUENCE header. A PKCS#12 file always begins with a SEQUENCE whose two-byte length follows.
-    /// </summary>
     private static ReadOnlySpan<byte> Pkcs12Magic => [0x30, 0x82];
 
-    /// <summary>
-    /// Loads a signing or encryption certificate from a PKCS#12 or PEM file.
-    /// </summary>
-    /// <param name="path">Absolute path to the key file.</param>
-    /// <param name="passphrase">Passphrase for the file, when it is protected.</param>
-    /// <param name="purpose">Name of the key being loaded, used in error messages.</param>
-    /// <exception cref="InvalidOperationException">
-    /// The file is absent, empty, or cannot be read as a usable certificate.
-    /// </exception>
     public static X509Certificate2 Load(string path, string? passphrase, string purpose)
     {
         if (string.IsNullOrWhiteSpace(path))

@@ -20,10 +20,6 @@ namespace Luna.IntegrationTests.Shipping;
 [Collection(ShippingDatabaseCollection.Name)]
 public sealed class ShipmentTrackingControllerTests(ShippingSqlServerFixture fixture) : IAsyncLifetime
 {
-    /// <summary>
-    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
-    /// test that throws during setup cannot leak rows into the next one.
-    /// </summary>
     public Task InitializeAsync() => fixture.ResetAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;

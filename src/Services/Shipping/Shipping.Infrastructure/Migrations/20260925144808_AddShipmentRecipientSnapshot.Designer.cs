@@ -15,7 +15,6 @@ namespace Luna.Shipping.Infrastructure.Migrations
     [Migration("20260925144808_AddShipmentRecipientSnapshot")]
     partial class AddShipmentRecipientSnapshot
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Luna.Catalog.Infrastructure.Database.Migrations
 {
-    /// <inheritdoc />
     public partial class InitialCatalog : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase(collation: "SQL_Latin1_General_CP1_CI_AS");
@@ -106,7 +104,6 @@ namespace Luna.Catalog.Infrastructure.Database.Migrations
                 unique: true);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

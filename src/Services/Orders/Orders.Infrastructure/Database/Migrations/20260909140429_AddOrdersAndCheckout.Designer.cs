@@ -15,7 +15,6 @@ namespace Luna.Orders.Infrastructure.Database.Migrations
     [Migration("20260909140429_AddOrdersAndCheckout")]
     partial class AddOrdersAndCheckout
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

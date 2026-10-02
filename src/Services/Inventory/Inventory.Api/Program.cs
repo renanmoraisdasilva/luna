@@ -30,8 +30,6 @@ await app.Services.InitializeInventoryDatabaseAsync();
 app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exception) => httpContext.Request.Path == "/health" ? LogEventLevel.Verbose : exception is not null ? LogEventLevel.Error : LogEventLevel.Information);
 if (app.Environment.IsDevelopment())
 {
-    // The OpenAPI document is development-only. Publishing it hands anonymous callers the full endpoint
-    // surface of the service, including the scopes its internal endpoints require.
     app.UseSwagger();
     app.UseSwaggerUI();
 }

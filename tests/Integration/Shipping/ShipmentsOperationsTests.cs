@@ -11,10 +11,6 @@ namespace Luna.IntegrationTests.Shipping;
 [Collection(ShippingDatabaseCollection.Name)]
 public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture) : IAsyncLifetime
 {
-    /// <summary>
-    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
-    /// test that throws during setup cannot leak rows into the next one.
-    /// </summary>
     public Task InitializeAsync() => fixture.ResetAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -158,7 +154,6 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture) :
 
         var response = await client.GetAsync($"/api/v1/shipments/{shipment.Id}/tracking");
 
-        // An admin token with no customer subject is an authentication failure, not a state conflict.
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         var error = await response.Content.ReadFromJsonAsync<ErrorDto>();
         error!.Code.Should().Be("UNAUTHENTICATED");

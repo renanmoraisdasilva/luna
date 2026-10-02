@@ -15,7 +15,6 @@ namespace Luna.Catalog.Infrastructure.Database.Migrations
     [Migration("20260820203857_InitialCatalog")]
     partial class InitialCatalog
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

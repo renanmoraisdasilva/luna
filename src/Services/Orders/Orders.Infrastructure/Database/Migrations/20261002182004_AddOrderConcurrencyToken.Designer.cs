@@ -15,7 +15,6 @@ namespace Luna.Orders.Infrastructure.Database.Migrations
     [Migration("20261002182004_AddOrderConcurrencyToken")]
     partial class AddOrderConcurrencyToken
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

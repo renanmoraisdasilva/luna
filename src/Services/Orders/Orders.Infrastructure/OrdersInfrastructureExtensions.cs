@@ -18,7 +18,6 @@ public static class OrdersInfrastructureExtensions
     {
         services.AddDbContext<OrdersDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("Database")));
         services.AddLunaServiceAuthentication(configuration);
-        // The catalog product read is public browsing data, so Orders sends no credential.
         services.AddHttpClient<ICatalogCheckoutClient, CatalogCheckoutClient>(client => client.BaseAddress = GetServiceUri(configuration, "CatalogApi"));
         services.AddHttpClient<IShippingCheckoutClient, ShippingCheckoutClient>(client => client.BaseAddress = GetServiceUri(configuration, "ShippingApi"))
             .AddHttpMessageHandler(serviceProvider => new ServiceTokenHandler(

@@ -14,14 +14,6 @@ using Xunit;
 
 namespace Luna.IntegrationTests.Identity;
 
-/// <summary>
-/// Tests how the authorization server sources the keys it signs tokens with.
-///
-/// The defect this pins down is that the development certificate is ephemeral: it is not persisted, so every
-/// Identity restart generates a different key. That invalidates every outstanding access token and every other
-/// service's cached JWKS, turning a routine restart into a fleet-wide authentication outage. Outside
-/// Development the server must require an explicitly configured key and refuse to start without one.
-/// </summary>
 [Collection(IdentityServerCollection.Name)]
 public sealed class SigningKeyTests(IdentityServerFixture fixture)
 {
@@ -43,9 +35,6 @@ public sealed class SigningKeyTests(IdentityServerFixture fixture)
     [Fact]
     public async Task Refuses_to_start_outside_development_without_a_configured_signing_key()
     {
-        // An unset key must fail loudly at startup. Falling back to the development certificate would produce a
-        // running service whose tokens break on every restart, which is far harder to diagnose than a container
-        // that will not start.
         using var host = new KeyedIdentityServerFactory(fixture, signingKeyPath: null, encryptionKeyPath: null);
 
         var act = () => host.Client;
@@ -100,9 +89,6 @@ public sealed class SigningKeyTests(IdentityServerFixture fixture)
     [Fact]
     public async Task Issues_tokens_verifiable_by_a_host_started_afterwards()
     {
-        // The point of a configured key: a second host, standing in for a restart or another replica, signs
-        // tokens with the same key, so tokens survive a restart. Under an ephemeral development certificate
-        // every restart would produce a different signing key and invalidate everything already issued.
         using var first = new KeyedIdentityServerFactory(fixture, fixture.SigningKeyPath, encryptionKeyPath: null);
         using var firstResponse = await RequestServiceTokenAsync(first);
         firstResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -113,9 +99,6 @@ public sealed class SigningKeyTests(IdentityServerFixture fixture)
 
         var claims = IdentityServerFixture.ReadAccessTokenClaims((await ReadAccessTokenAsync(secondResponse))!);
 
-        // A token signed by the configured key decodes as a JWS carrying the shared API audience, which is what
-        // the resource services validate against. The issuer is read at registration time from appsettings.json,
-        // so only its presence is asserted here.
         claims.Should().ContainKey("iss");
         claims["iss"].GetString().Should().NotBeNullOrWhiteSpace();
         claims.Should().ContainKey("aud");
@@ -137,21 +120,6 @@ public sealed class SigningKeyTests(IdentityServerFixture fixture)
     }
 }
 
-/// <summary>
-/// An Identity host with an explicit signing key, so each test can supply its own key path or none at all.
-/// </summary>
-/// <remarks>
-/// Production is used deliberately: the scoped <c>DbContext</c> resolved during startup is only permitted when
-/// scope validation is off, which is how the container runs the service, and Production is also what makes the
-/// configured signing key mandatory.
-/// <para>
-/// The key paths are supplied as environment variables rather than through <c>ConfigureAppConfiguration</c>.
-/// The service registers its OpenIddict keys while the host is being built, which happens before
-/// <c>ConfigureAppConfiguration</c> callbacks run, so an in-memory source added there is not visible yet.
-/// Environment variables are read by the host builder before that point. The collection disables
-/// parallelisation, so mutating the process environment for the duration of a test is safe.
-/// </para>
-/// </remarks>
 internal sealed class KeyedIdentityServerFactory(
     IdentityServerFixture fixture,
     string? signingKeyPath,
@@ -181,10 +149,6 @@ internal sealed class KeyedIdentityServerFactory(
         builder.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Warning));
     }
 
-    /// <summary>
-    /// A client for this host. The environment variables are applied immediately before the host starts and
-    /// cleared once it is built, which is what lets the fail-fast tests observe the startup exception.
-    /// </summary>
     public HttpClient Client => client ??= CreateClientWithKeys();
 
     private HttpClient CreateClientWithKeys()

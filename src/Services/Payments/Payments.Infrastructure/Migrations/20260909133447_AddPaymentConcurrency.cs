@@ -4,10 +4,8 @@
 
 namespace Luna.Payments.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class AddPaymentConcurrency : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<byte[]>(
@@ -19,7 +17,6 @@ namespace Luna.Payments.Infrastructure.Migrations
                 defaultValue: new byte[0]);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

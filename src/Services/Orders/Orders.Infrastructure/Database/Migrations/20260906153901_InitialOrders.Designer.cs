@@ -15,7 +15,6 @@ namespace Luna.Orders.Infrastructure.Database.Migrations
     [Migration("20260906153901_InitialOrders")]
     partial class InitialOrders
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

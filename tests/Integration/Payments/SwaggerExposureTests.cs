@@ -7,14 +7,6 @@ using Xunit;
 
 namespace Luna.IntegrationTests.Payments;
 
-/// <summary>
-/// Tests that the OpenAPI document and its UI are development-only.
-///
-/// Payments is the service to check: it is internal-only, every mutating endpoint requires a service token
-/// with the payments.authorize scope, and its document names those scopes. Publishing it would tell an
-/// anonymous caller exactly which endpoints exist and which scopes they need, which is the reconnaissance
-/// half of the attack the service-scope policies are there to prevent.
-/// </summary>
 public sealed class SwaggerExposureTests : IClassFixture<PaymentsSqlServerFixture>
 {
     private readonly PaymentsSqlServerFixture fixture;
@@ -52,8 +44,6 @@ public sealed class SwaggerExposureTests : IClassFixture<PaymentsSqlServerFixtur
     [Fact]
     public async Task Still_serves_the_openapi_document_in_development()
     {
-        // The gate must not accidentally disable local development, where the document is how the API is
-        // explored. This is the half that would silently regress if the condition were inverted.
         using var factory = new PaymentsDevelopmentFactory(fixture);
 
         using var client = factory.CreateClient();

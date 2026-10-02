@@ -11,10 +11,6 @@ namespace Luna.IntegrationTests.Payments;
 [Collection(PaymentsDatabaseCollection.Name)]
 public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture) : IAsyncLifetime
 {
-    /// <summary>
-    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
-    /// test that throws during setup cannot leak rows into the next one.
-    /// </summary>
     public Task InitializeAsync() => fixture.ResetAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -85,8 +81,6 @@ public sealed class PaymentUnitOfWorkTests(PaymentsSqlServerFixture fixture) : I
             await seedDb.SaveChangesAsync();
         }
 
-        // Both contexts must read the payment before either commits, otherwise the
-        // second context loads the already-updated RowVersion and is not stale.
         await using var firstDb = fixture.CreateDbContext();
         await using var staleDb = fixture.CreateDbContext();
         var firstPayment = await firstDb.Payments.SingleAsync(value => value.OrderId == orderId);

@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Luna.Orders.Infrastructure.Database.Migrations
 {
-    /// <inheritdoc />
     public partial class AddOrdersAndCheckout : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -69,7 +67,6 @@ namespace Luna.Orders.Infrastructure.Database.Migrations
                 columns: new[] { "CustomerId", "CreatedAt" });
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

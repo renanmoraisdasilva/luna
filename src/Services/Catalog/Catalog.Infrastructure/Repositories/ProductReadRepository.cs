@@ -30,8 +30,6 @@ public sealed class ProductReadRepository(CatalogDbContext db) : IProductReadRep
         PaginationRequest pagination,
         CancellationToken cancellationToken)
     {
-        // Catalog is the only anonymously reachable read surface, so an unbounded page size would let any
-        // caller ask the database to materialise the whole product table in one response.
         pagination.Validate();
 
         var query = db.Products

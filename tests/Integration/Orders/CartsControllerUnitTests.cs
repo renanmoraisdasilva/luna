@@ -27,8 +27,6 @@ public sealed class CartsControllerUnitTests
 
         var act = () => controller.Get(CancellationToken.None);
 
-        // A dedicated exception type rather than InvalidOperationException, so the middleware reports 401
-        // instead of a 409 that would read as a conflict with server state.
         await act.Should().ThrowAsync<UnauthenticatedCustomerException>();
     }
 

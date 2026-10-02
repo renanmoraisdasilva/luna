@@ -14,14 +14,6 @@ using Xunit.Abstractions;
 
 namespace Luna.IntegrationTests.Identity;
 
-/// <summary>
-/// Tests the customer password grant against the real authorization server.
-///
-/// The storefront login route posts <c>grant_type</c>, <c>client_id</c>, <c>username</c>, <c>password</c> and
-/// <c>scope</c>. These tests pin the behaviour the token endpoint must keep after it stopped accepting
-/// anonymous clients: the registered public storefront client can sign a customer in, an unregistered client
-/// cannot, and a bad password never produces a token.
-/// </summary>
 [Collection(IdentityServerCollection.Name)]
 public sealed class PasswordGrantTests(IdentityServerFixture fixture) : IAsyncLifetime
 {
@@ -81,7 +73,6 @@ public sealed class PasswordGrantTests(IdentityServerFixture fixture) : IAsyncLi
         var accessToken = document.RootElement.GetProperty("access_token").GetString();
         accessToken.Should().NotBeNullOrWhiteSpace();
 
-        // The token must carry the customer as its subject, not a service client.
         var claims = IdentityServerFixture.ReadAccessTokenClaims(accessToken!);
         claims.Should().ContainKey(LunaAuthentication.SubjectClaim);
         claims[LunaAuthentication.SubjectClaim].GetString().Should().NotBeNullOrWhiteSpace();
@@ -109,8 +100,6 @@ public sealed class PasswordGrantTests(IdentityServerFixture fixture) : IAsyncLi
     [Fact]
     public async Task Rejects_a_password_grant_for_an_unregistered_public_client()
     {
-        // This is the regression that matters for removing AcceptAnonymousClients(): an unregistered
-        // client identifier must not be accepted for the password grant either.
         using var response = await fixture.RequestPasswordTokenAsync(
             Email,
             Password,
@@ -123,8 +112,6 @@ public sealed class PasswordGrantTests(IdentityServerFixture fixture) : IAsyncLi
     [Fact]
     public async Task Rejects_a_storefront_request_for_a_service_scope()
     {
-        // The storefront client is public and is granted only the password and refresh grants. It must not be
-        // able to obtain the scope that authorises payment authorisation between services.
         var client = fixture.CreateClient();
         using var response = await client.PostAsync(
             "/api/v1/identity/connect/token",
@@ -145,8 +132,6 @@ public sealed class PasswordGrantTests(IdentityServerFixture fixture) : IAsyncLi
     [Fact]
     public async Task Rejects_a_storefront_client_credentials_request()
     {
-        // The storefront is public and holds no secret, so it must never be able to use the grant that
-        // authorises service-to-service calls. This is the boundary that matters most for the fix.
         var client = fixture.CreateClient();
         using var response = await client.PostAsync(
             "/api/v1/identity/connect/token",

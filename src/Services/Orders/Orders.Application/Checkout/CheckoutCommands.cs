@@ -49,8 +49,6 @@ public sealed class CheckoutHandler(
         var address = CreateShippingAddress(command.Request);
         var orderId = Guid.NewGuid();
 
-        // The shipping quote and the product snapshot fetches do not depend on each other,
-        // so both requests are started together and joined once instead of running serially.
         var quoteTask = shippingClient.QuoteAsync(orderId, command.Request.ShippingMethodCode, address, cancellationToken);
         var productsTask = LoadProductsAsync(cart, cancellationToken);
         await Task.WhenAll(quoteTask, productsTask);
@@ -145,7 +143,6 @@ public sealed class CheckoutHandler(
         CartResponse cart,
         CancellationToken cancellationToken)
     {
-        // Preserve cart order while fetching distinct products concurrently instead of one-by-one.
         var orderedProductIds = new List<Guid>();
         var seenProductIds = new HashSet<Guid>();
         foreach (var item in cart.Items)

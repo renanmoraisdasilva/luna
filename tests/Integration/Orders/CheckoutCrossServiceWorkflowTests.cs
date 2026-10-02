@@ -30,11 +30,6 @@ using Xunit;
 
 namespace Luna.IntegrationTests.Orders;
 
-/// <summary>
-/// Phase 1 SPEC-TEST-003: proves checkout and its failure matrix across real service
-/// boundaries. Every downstream service runs as its own host with its own database;
-/// only the Orders host under test is wired to them through real HTTP calls.
-/// </summary>
 [Collection(CheckoutCommerceCollection.Name)]
 public sealed class CheckoutCrossServiceWorkflowTests(
     OrdersSqlServerFixture ordersFixture,
@@ -45,10 +40,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
 {
     private const decimal UnitPrice = 12.50m;
 
-    /// <summary>
-    /// All five databases are reset as a lifecycle hook rather than as the first statement of each test,
-    /// so a test that throws during setup cannot leak rows into the next one.
-    /// </summary>
     public async Task InitializeAsync()
     {
         await ordersFixture.ResetAsync();
@@ -237,7 +228,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
         checkout.Should().NotBeNull();
         var orderId = checkout!.OrderId;
 
-        // Make Shipping reject shipment creation by removing the quote Orders snapshots.
         ShippingQuote removedQuote;
         await using (var shippingDb = shippingFixture.CreateDbContext())
         {
@@ -278,7 +268,6 @@ public sealed class CheckoutCrossServiceWorkflowTests(
             (await shippingDb.Shipments.AnyAsync(item => item.OrderId == orderId)).Should().BeFalse();
         }
 
-        // Restore the quote and run Create Shipment again through the Operations workflow.
         await using (var shippingDb = shippingFixture.CreateDbContext())
         {
             shippingDb.ShippingQuotes.Add(ShippingQuote.Create(

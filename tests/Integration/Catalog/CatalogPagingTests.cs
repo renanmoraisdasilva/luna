@@ -5,15 +5,6 @@ using Xunit;
 
 namespace Luna.IntegrationTests.Catalog;
 
-/// <summary>
-/// Tests that the catalog read surface refuses an unbounded page size.
-/// </summary>
-/// <remarks>
-/// Catalog is the only anonymously reachable read endpoint in the system: <c>CatalogController</c> carries no
-/// <c>[Authorize]</c> and Catalog registers bare <c>AddAuthorization()</c>. A page size with no ceiling
-/// therefore let any anonymous caller ask the database to materialise the whole product table in one response,
-/// including every product's description and image collection.
-/// </remarks>
 [Collection(CatalogDatabaseCollection.Name)]
 public sealed class CatalogPagingTests : IAsyncLifetime
 {
@@ -80,8 +71,6 @@ public sealed class CatalogPagingTests : IAsyncLifetime
     [Fact]
     public async Task Still_serves_a_page_size_at_the_ceiling()
     {
-        // Guards against the ceiling being applied where it should not be. A legitimate caller asking for the
-        // maximum allowed page must still succeed.
         await using var db = fixture.CreateDbContext();
 
         var response = await new Luna.Catalog.Infrastructure.Repositories.ProductReadRepository(db)

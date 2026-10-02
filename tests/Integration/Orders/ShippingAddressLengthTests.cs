@@ -6,15 +6,6 @@ using Xunit;
 
 namespace Luna.IntegrationTests.Orders;
 
-/// <summary>
-/// Tests that an over-length shipping address is rejected before it reaches the database.
-/// </summary>
-/// <remarks>
-/// <c>ShippingAddress.Create</c> checks only that each field is non-blank, while the EF mapping declares
-/// <c>HasMaxLength</c> on every one of them. A long value therefore passed domain validation and failed at
-/// <c>SaveChangesAsync</c> as a <see cref="DbUpdateException"/>, which no exception middleware maps, so the
-/// client received a 500 for what is plainly a client input error.
-/// </remarks>
 [Collection(OrdersDatabaseCollection.Name)]
 public sealed class ShippingAddressLengthTests : IAsyncLifetime
 {
@@ -40,7 +31,6 @@ public sealed class ShippingAddressLengthTests : IAsyncLifetime
         { "Country", new string('x', 5000) },
     };
 
-    /// <summary>Maps the friendly field name used in the test data to the C# parameter name of the factory.</summary>
     private static readonly Dictionary<string, string> ParameterNames = new(StringComparer.Ordinal)
     {
         ["FullName"] = "fullName",
@@ -57,8 +47,6 @@ public sealed class ShippingAddressLengthTests : IAsyncLifetime
     {
         var act = () => CreateAddress(field, value);
 
-        // ArgumentException is what the Orders middleware maps to 400. A DbUpdateException from the column
-        // constraint would surface as an unmapped 500.
         act.Should().Throw<ArgumentException>().WithParameterName(ParameterNames[field]);
     }
 
@@ -73,7 +61,6 @@ public sealed class ShippingAddressLengthTests : IAsyncLifetime
         }
         catch (ArgumentException)
         {
-            // Rejected before it could reach the database, which is the outcome this test is asserting.
             return;
         }
 
@@ -91,7 +78,6 @@ public sealed class ShippingAddressLengthTests : IAsyncLifetime
     [Fact]
     public void Accepts_a_value_at_the_documented_limit()
     {
-        // Guards the other direction: the bound must not be so tight that a legitimate address is rejected.
         var act = () => CreateAddress("FullName", new string('n', 160));
 
         act.Should().NotThrow();

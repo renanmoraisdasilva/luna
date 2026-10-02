@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Luna.Shipping.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class AddShipmentTrackingEvents : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -37,7 +35,6 @@ namespace Luna.Shipping.Infrastructure.Migrations
                 columns: new[] { "ShipmentId", "OccurredAt" });
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

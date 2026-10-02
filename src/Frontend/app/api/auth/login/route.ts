@@ -5,8 +5,6 @@ import {
   isSecureCookieRequired,
 } from '../../../../lib/auth-cookie';
 
-// The storefront is a public OpenIddict client. It cannot keep a secret, so it authenticates with the
-// password grant only. The identifier must match LunaPublicClients.Storefront in Luna.Contracts.
 const storefrontClientId = 'luna-storefront';
 
 export async function POST(request: Request) {
@@ -22,8 +20,6 @@ export async function POST(request: Request) {
   const form = new URLSearchParams({
     grant_type: 'password',
     client_id: storefrontClientId,
-    // Roles are read from the role claim, which the token endpoint copies from the account, so the storefront
-    // does not need the roles scope. Requesting scopes the public client is not granted is rejected outright.
     username: credentials.email ?? '',
     password: credentials.password ?? '',
     scope: 'openid',
@@ -55,8 +51,6 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ authenticated: true });
   const secure = isSecureCookieRequired();
 
-  // The __Host- cookie name is only accepted by a browser alongside Secure, Path=/ and no Domain. Without
-  // this guard the browser would silently drop the session cookie in production.
   const name = accessTokenCookieName();
   if (name.startsWith('__Host-') && !secure) {
     throw new Error(

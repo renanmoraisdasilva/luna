@@ -11,14 +11,10 @@ public static class IdentityApplicationExtensions
     {
         app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exception) => httpContext.Request.Path == "/health" ? LogEventLevel.Verbose : exception is not null ? LogEventLevel.Error : LogEventLevel.Information);
 
-        // Must run before the token endpoint so that a throttled request is rejected before any credential is
-        // checked.
         app.UseRateLimiter();
 
         if (app.Environment.IsDevelopment())
         {
-            // The OpenAPI document is development-only. Publishing it would disclose the token endpoint, the
-            // registered client identifiers and the flows the authorization server supports.
             app.UseSwagger();
             app.UseSwaggerUI();
         }

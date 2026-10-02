@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Luna.Shipping.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class InitialShipping : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -84,7 +82,6 @@ namespace Luna.Shipping.Infrastructure.Migrations
                 column: "OrderId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

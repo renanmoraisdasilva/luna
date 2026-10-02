@@ -1,4 +1,3 @@
-/** @type {import('next').NextConfig} */
 const serviceSpecs = [
 	['identity', process.env.IDENTITY_API_INTERNAL_URL],
 	['catalog', process.env.CATALOG_API_INTERNAL_URL],
@@ -16,9 +15,6 @@ const nextConfig = {
 	async rewrites() {
 		const configuredServices = serviceSpecs.filter(([, baseUrl]) => baseUrl);
 
-		// The OpenAPI documents are proxied only when the explorer is explicitly enabled. The services serve
-		// them in Development only, so without this gate the rewrite would exist in production and simply
-		// return 404 from the upstream service.
 		const swaggerEnabled = process.env.ENABLE_API_EXPLORER === 'true';
 		const swaggerRewrites = swaggerEnabled
 			? configuredServices.map(([service, baseUrl]) => ({

@@ -15,7 +15,6 @@ namespace Luna.Inventory.Migrations
     [Migration("20260908144729_InitialInventory")]
     partial class InitialInventory
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

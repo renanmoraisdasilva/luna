@@ -8,10 +8,6 @@ namespace Luna.IntegrationTests.Payments;
 [Collection(PaymentsDatabaseCollection.Name)]
 public sealed class PaymentDbContextTests(PaymentsSqlServerFixture fixture) : IAsyncLifetime
 {
-    /// <summary>
-    /// The database is reset as a lifecycle hook rather than as the first statement of each test, so a
-    /// test that throws during setup cannot leak rows into the next one.
-    /// </summary>
     public Task InitializeAsync() => fixture.ResetAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -30,9 +26,6 @@ public sealed class PaymentDbContextTests(PaymentsSqlServerFixture fixture) : IA
             .Should().ContainSingle()
             .Which.State.Should().Be(EntityState.Added);
 
-        // An attempt EF mistook for an existing row would be reported as an update, affect no rows, and
-        // throw. Only a real database round trip proves the insert, which the original version of this test
-        // — inspecting the change tracker against an unattached graph — could not.
         await db.SaveChangesAsync();
 
         await using var verificationDb = fixture.CreateDbContext();

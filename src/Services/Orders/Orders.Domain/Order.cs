@@ -40,11 +40,6 @@ public sealed class Order
     public decimal ShippingCost { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
-    /// <summary>
-    /// Concurrency token. Every fulfillment transition is a read-modify-write on this aggregate, so without
-    /// one, two operators acting at the same moment could both pass the state guards and both advance the
-    /// shipment. Matches the tokens already present on Stock, InventoryReservation and Payment.
-    /// </summary>
     public byte[] RowVersion { get; private set; } = [];
 
     public IReadOnlyCollection<OrderItem> Items => items.AsReadOnly();
@@ -272,9 +267,6 @@ public sealed class ShippingAddress
             throw new ArgumentException("A complete shipping address is required.");
         }
 
-        // The persistence mapping declares HasMaxLength on every one of these columns. Validating the same limits
-        // here keeps an over-length value from reaching the database, where it would surface as an unmapped
-        // DbUpdateException and therefore as a 500 for what is a client input error.
         RequireLength(nameof(fullName), fullName, MaxFullNameLength);
         RequireLength(nameof(addressLine1), addressLine1, MaxAddressLine1Length);
         RequireLength(nameof(addressLine2), addressLine2, MaxAddressLine2Length);

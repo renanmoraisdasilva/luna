@@ -4,10 +4,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Luna.Inventory.Migrations;
 
-/// <inheritdoc />
 public partial class AddReservationRowVersion : Migration
 {
-    /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.AddColumn<byte[]>(
@@ -18,7 +16,6 @@ public partial class AddReservationRowVersion : Migration
             nullable: false);
     }
 
-    /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.DropColumn(

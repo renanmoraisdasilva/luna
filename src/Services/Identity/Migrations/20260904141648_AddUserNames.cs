@@ -4,10 +4,8 @@
 
 namespace Luna.Identity.Migrations
 {
-    /// <inheritdoc />
     public partial class AddUserNames : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -25,7 +23,6 @@ namespace Luna.Identity.Migrations
                 defaultValue: "");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

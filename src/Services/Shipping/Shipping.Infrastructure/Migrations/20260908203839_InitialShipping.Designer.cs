@@ -15,7 +15,6 @@ namespace Luna.Shipping.Infrastructure.Migrations
     [Migration("20260908203839_InitialShipping")]
     partial class InitialShipping
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

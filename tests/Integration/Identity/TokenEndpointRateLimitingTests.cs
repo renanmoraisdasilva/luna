@@ -12,21 +12,12 @@ using Xunit;
 
 namespace Luna.IntegrationTests.Identity;
 
-/// <summary>
-/// Tests that the token endpoint is rate limited.
-///
-/// The token endpoint is the only unauthenticated surface on the authorization server. Without a limit it is
-/// an unlimited credential-guessing oracle: an attacker can submit password grants at whatever rate the
-/// network allows and learn from the responses which accounts exist.
-/// </summary>
 [Collection(IdentityServerCollection.Name)]
 public sealed class TokenEndpointRateLimitingTests(IdentityServerFixture fixture)
 {
     [Fact]
     public async Task Rejects_token_requests_beyond_the_configured_limit()
     {
-        // Three requests per window, so the fourth must be refused. A generous default would make this test
-        // slow and brittle, which is why the limit is configuration rather than a constant.
         using var host = new ThrottledIdentityServerFactory(fixture, permitLimit: 3);
         using var client = host.Client;
 
@@ -55,8 +46,6 @@ public sealed class TokenEndpointRateLimitingTests(IdentityServerFixture fixture
         using var host = new ThrottledIdentityServerFactory(fixture, permitLimit: 1);
         using var client = host.Client;
 
-        // Exhaust the token budget, then prove an unrelated endpoint is unaffected. A global limiter that was
-        // applied to every path would be a self-inflicted outage on the health checks the orchestrator polls.
         using (var _ = await IdentityServerFixture.RequestPasswordTokenAsync(
             "nobody@example.test",
             "wrong-password",
@@ -81,10 +70,6 @@ public sealed class TokenEndpointRateLimitingTests(IdentityServerFixture fixture
     }
 }
 
-/// <summary>
-/// An Identity host with a deliberately small token-endpoint budget so the limiter can be observed without
-/// issuing hundreds of requests.
-/// </summary>
 internal sealed class ThrottledIdentityServerFactory(IdentityServerFixture fixture, int permitLimit)
     : WebApplicationFactory<IdentityApi::IdentityServerEntryPoint>
 {
@@ -105,11 +90,6 @@ internal sealed class ThrottledIdentityServerFactory(IdentityServerFixture fixtu
         builder.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Warning));
     }
 
-    /// <summary>
-    /// The limit is read while the host is being built, which happens before ConfigureAppConfiguration
-    /// callbacks run, so it is supplied through the process environment. The Identity collection disables
-    /// parallelisation, so this is safe.
-    /// </summary>
     public HttpClient Client
     {
         get

@@ -4,10 +4,8 @@
 
 namespace Luna.Orders.Infrastructure.Database.Migrations
 {
-    /// <inheritdoc />
     public partial class AddOrderConcurrencyToken : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<byte[]>(
@@ -19,7 +17,6 @@ namespace Luna.Orders.Infrastructure.Database.Migrations
                 defaultValue: new byte[0]);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

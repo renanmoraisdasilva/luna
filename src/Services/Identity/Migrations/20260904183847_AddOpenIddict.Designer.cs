@@ -14,7 +14,6 @@ namespace Luna.Identity.Migrations
     [Migration("20260904183847_AddOpenIddict")]
     partial class AddOpenIddict
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

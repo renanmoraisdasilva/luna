@@ -15,7 +15,6 @@ namespace Luna.Orders.Infrastructure.Migrations
     [Migration("20260925145922_AddShipmentReference")]
     partial class AddShipmentReference
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

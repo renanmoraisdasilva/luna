@@ -12,12 +12,6 @@ using Xunit;
 
 namespace Luna.IntegrationTests.Identity;
 
-/// <summary>
-/// Hosts the real Identity authorization server against a containerised SQL Server so the token endpoint
-/// can be exercised over HTTP. The service-to-service client-credentials grant and the password grant are
-/// both security boundaries, so they are tested against the real OpenIddict pipeline rather than a fake
-/// authentication handler.
-/// </summary>
 public sealed class IdentityServerFixture : IAsyncLifetime
 {
     public const string DatabasePassword = "Your_password123";
@@ -31,11 +25,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
 
     private Respawner respawner = null!;
 
-    /// <summary>
-    /// A self-signed certificate written to disk and reused by every host in this fixture. It stands in for a
-    /// key mounted from a secret in production: what is under test is that a configured key is loaded from a
-    /// path and reused across host starts, not any particular file format.
-    /// </summary>
     public string SigningKeyPath { get; } = Path.Combine(
         Path.GetTempPath(),
         $"luna-identity-tests-{Guid.NewGuid():N}",
@@ -48,8 +37,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
 
         await container.StartAsync();
 
-        // The container starts with only its default database, so the test database must be created before
-        // Respawn can inspect it and before the Identity host can migrate it.
         await using (var connection = new SqlConnection(MasterConnectionString))
         {
             await connection.OpenAsync();
@@ -58,8 +45,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
             await create.ExecuteNonQueryAsync();
         }
 
-        // The Identity host migrates and seeds its schema during startup, so the first host is started before
-        // Respawn inspects the database.
         using (var warmup = CreateClient())
         {
             await warmup.GetAsync("/health");
@@ -82,15 +67,8 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         InitialCatalog = DatabaseName
     }.ConnectionString;
 
-    /// <summary>
-    /// Creates a client for the Identity host. Each call gets a fresh client so tests cannot leak
-    /// cookies or headers into one another.
-    /// </summary>
     public HttpClient CreateClient()
     {
-        // The Identity service registers its OpenIddict keys while the host is being built, which happens before
-        // ConfigureAppConfiguration callbacks run, so the signing key path has to arrive through the process
-        // environment. The Identity collection disables parallelisation, so this is safe.
         Environment.SetEnvironmentVariable("OpenIddict__Keys__SigningKeyPath", SigningKeyPath);
         Environment.SetEnvironmentVariable("OpenIddict__Keys__EncryptionKeyPath", null);
         try
@@ -105,18 +83,12 @@ public sealed class IdentityServerFixture : IAsyncLifetime
 
     private IdentityServerFactory? factory;
 
-    /// <summary>
-    /// The host is created lazily because seeding of the service clients happens during host startup, which
-    /// requires the container to already be running.
-    /// </summary>
     public IdentityServerFactory Factory => factory ??= new IdentityServerFactory(this);
 
     public async Task ResetAsync()
     {
         await respawner.ResetAsync(ConnectionString);
 
-        // The client application is stored in the same database, so a reset removes it. Rebuilding the host
-        // re-runs startup, which reseeds the client through the production seeding path.
         Factory.Dispose();
         factory = new IdentityServerFactory(this);
         using var warmup = CreateClient();
@@ -135,10 +107,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         }
     }
 
-    /// <summary>
-    /// Creates a throwaway certificate. The tests only need material that OpenIddict accepts as a key; which
-    /// certificate it is does not affect what they assert.
-    /// </summary>
     internal static byte[] CreateSelfSignedCertificate(string subject)
     {
         using var key = RSA.Create(2048);
@@ -154,10 +122,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         return certificate.Export(X509ContentType.Pfx);
     }
 
-    /// <summary>
-    /// Posts a client-credentials request. A null <paramref name="clientSecret"/> omits the Authorization
-    /// header entirely, which is how an unauthenticated caller would attempt the grant.
-    /// </summary>
     public Task<HttpResponseMessage> RequestClientCredentialsTokenAsync(
         string clientId,
         string? clientSecret,
@@ -165,10 +129,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         CancellationToken cancellationToken = default) =>
         RequestClientCredentialsTokenAsync(clientId, clientSecret, scope, CreateClient(), cancellationToken);
 
-    /// <summary>
-    /// Posts a client-credentials request through a caller-supplied client, so a test can drive a specific
-    /// host rather than the fixture's shared one.
-    /// </summary>
     public static Task<HttpResponseMessage> RequestClientCredentialsTokenAsync(
         string clientId,
         string? clientSecret,
@@ -202,10 +162,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         return client.SendAsync(request, cancellationToken);
     }
 
-    /// <summary>
-    /// Posts a resource owner password grant. The storefront route sends the registered public client
-    /// identifier, so that is the default here.
-    /// </summary>
     public Task<HttpResponseMessage> RequestPasswordTokenAsync(
         string email,
         string password,
@@ -213,10 +169,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         CancellationToken cancellationToken = default) =>
         RequestPasswordTokenAsync(email, password, clientId, CreateClient(), cancellationToken);
 
-    /// <summary>
-    /// Posts a password grant through a caller-supplied client, so a test can drive a specific host rather than
-    /// the fixture's shared one.
-    /// </summary>
     public static Task<HttpResponseMessage> RequestPasswordTokenAsync(
         string email,
         string password,
@@ -237,14 +189,6 @@ public sealed class IdentityServerFixture : IAsyncLifetime
             cancellationToken);
     }
 
-    /// <summary>
-    /// Reads the claim set from an issued access token.
-    ///
-    /// Luna runs OpenIddict with <c>DisableAccessTokenEncryption()</c>, so access tokens are signed but not
-    /// encrypted and the payload is readable. Reading the payload is therefore the direct way to assert what
-    /// the token asserts about its caller, which is the property these tests care about: the <c>client_id</c>
-    /// must be the client that authenticated, not a string the caller chose.
-    /// </summary>
     public static IDictionary<string, JsonElement> ReadAccessTokenClaims(string accessToken)
     {
         var segments = accessToken.Split('.');

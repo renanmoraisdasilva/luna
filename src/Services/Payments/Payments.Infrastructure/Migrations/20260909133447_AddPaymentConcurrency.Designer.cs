@@ -15,7 +15,6 @@ namespace Luna.Payments.Infrastructure.Migrations
     [Migration("20260909133447_AddPaymentConcurrency")]
     partial class AddPaymentConcurrency
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
