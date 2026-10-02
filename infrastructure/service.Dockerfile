@@ -9,7 +9,7 @@ COPY . .
 RUN dotnet restore "$PROJECT"
 RUN dotnet publish "$PROJECT" -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0@sha256:2e2e502493d0dd89639e03b5eda4633f8061dee061332738a66f48f5a9f63e65 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:57460add89e2b3dd1950c41d8b7dc96eeb7a24d13d98e3656ce9997a8b746bd6 AS runtime
 ARG PROJECT
 ARG APP_UID=1654
 ARG APP_GID=1654
