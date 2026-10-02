@@ -66,7 +66,7 @@ public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture) : IAsy
     [Theory]
     [InlineData("/api/v1/orders")]
     [InlineData("/api/v1/orders/{orderId}")]
-    public async Task Requests_without_a_customer_subject_are_rejected_with_a_conflict(string template)
+    public async Task Requests_without_a_customer_subject_are_rejected_as_unauthorized(string template)
     {
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -74,9 +74,11 @@ public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture) : IAsy
 
         var response = await client.GetAsync(template.Replace("{orderId}", Guid.NewGuid().ToString()));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        // An admin token with no customer subject is an authentication failure, not a conflict. Reporting 409
+        // told the caller its request collided with server state, which no retry could fix.
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         var error = await response.Content.ReadFromJsonAsync<ErrorDto>();
-        error!.Code.Should().Be("FULFILLMENT_CONFLICT");
+        error!.Code.Should().Be("UNAUTHENTICATED");
     }
 
     private async Task<Order> SeedOrderAsync(Guid customerId, string customerName)

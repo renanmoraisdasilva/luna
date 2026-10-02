@@ -2,6 +2,7 @@ using Luna.Authentication;
 using Luna.Orders.Application.Carts;
 using Luna.Orders.Contracts.Carts;
 using Microsoft.AspNetCore.Authorization;
+using Luna.Contracts.Errors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Orders.Api.Controllers;
@@ -44,6 +45,6 @@ public sealed class CartsController(
     {
         return User.TryGetSubjectId(out var customerId)
             ? customerId
-            : throw new InvalidOperationException("The authenticated customer ID is missing or invalid.");
+            : throw new UnauthenticatedCustomerException();
     }
 }

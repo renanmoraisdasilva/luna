@@ -158,9 +158,10 @@ public sealed class ShipmentsOperationsTests(ShippingSqlServerFixture fixture) :
 
         var response = await client.GetAsync($"/api/v1/shipments/{shipment.Id}/tracking");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        // An admin token with no customer subject is an authentication failure, not a state conflict.
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         var error = await response.Content.ReadFromJsonAsync<ErrorDto>();
-        error!.Code.Should().Be("SHIPPING_CONFLICT");
+        error!.Code.Should().Be("UNAUTHENTICATED");
     }
 
     [Fact]

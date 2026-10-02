@@ -17,7 +17,7 @@ public sealed class CheckoutControllerTests(OrdersSqlServerFixture fixture) : IA
 
     public Task DisposeAsync() => Task.CompletedTask;
     [Fact]
-    public async Task Checkout_without_a_customer_subject_is_rejected_with_a_conflict()
+    public async Task Checkout_without_a_customer_subject_is_rejected_as_unauthorized()
     {
         using var factory = new OrdersApiFactory(fixture);
         using var client = factory.CreateClient();
@@ -31,9 +31,11 @@ public sealed class CheckoutControllerTests(OrdersSqlServerFixture fixture) : IA
 
         var response = await client.SendAsync(message);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        // An admin token with no customer subject is an authentication failure. Reporting a conflict implied the
+        // request collided with server state, which no retry could fix.
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         var error = await response.Content.ReadFromJsonAsync<ErrorDto>();
-        error!.Code.Should().Be("FULFILLMENT_CONFLICT");
+        error!.Code.Should().Be("UNAUTHENTICATED");
     }
 
     [Fact]

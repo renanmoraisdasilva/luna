@@ -2,6 +2,7 @@ using Luna.Authentication;
 using Luna.Orders.Application.Orders;
 using Luna.Orders.Contracts.Orders;
 using Microsoft.AspNetCore.Authorization;
+using Luna.Contracts.Errors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Orders.Api.Controllers;
@@ -16,7 +17,7 @@ public sealed class OrdersController(IOrderReadRepository orders) : ControllerBa
     {
         if (!User.TryGetSubjectId(out var customerId))
         {
-            throw new InvalidOperationException("The authenticated customer ID is missing or invalid.");
+            throw new UnauthenticatedCustomerException();
         }
 
         return Ok(await orders.GetByCustomerIdAsync(customerId, cancellationToken));
@@ -27,7 +28,7 @@ public sealed class OrdersController(IOrderReadRepository orders) : ControllerBa
     {
         if (!User.TryGetSubjectId(out var customerId))
         {
-            throw new InvalidOperationException("The authenticated customer ID is missing or invalid.");
+            throw new UnauthenticatedCustomerException();
         }
 
         var order = await orders.GetByIdAsync(customerId, id, cancellationToken);

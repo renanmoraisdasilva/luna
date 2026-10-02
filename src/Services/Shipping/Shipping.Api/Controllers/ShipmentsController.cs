@@ -4,6 +4,7 @@ using Luna.Authentication;
 using Luna.Shipping.Contracts;
 using Luna.Authentication.ServiceAuthentication;
 using Microsoft.AspNetCore.Authorization;
+using Luna.Contracts.Errors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Shipping.Api.Controllers;
@@ -48,7 +49,7 @@ public sealed class ShipmentsController(
     {
         if (!User.TryGetSubjectId(out var customerId))
         {
-            throw new InvalidOperationException("The authenticated customer ID is missing or invalid.");
+            throw new UnauthenticatedCustomerException();
         }
 
         var response = await getShipmentTracking.HandleAsync(shipmentId, customerId, cancellationToken);

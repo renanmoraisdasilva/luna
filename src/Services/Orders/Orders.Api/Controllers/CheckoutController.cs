@@ -2,6 +2,7 @@ using Luna.Authentication;
 using Luna.Orders.Application.Checkout;
 using Luna.Orders.Contracts.Checkout;
 using Microsoft.AspNetCore.Authorization;
+using Luna.Contracts.Errors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Orders.Api.Controllers;
@@ -18,7 +19,7 @@ public sealed class CheckoutController(
     {
         if (!User.TryGetSubjectId(out var customerId))
         {
-            throw new InvalidOperationException("The authenticated customer ID is missing or invalid.");
+            throw new UnauthenticatedCustomerException();
         }
 
         logger.LogInformation("Checkout API request accepted for customer {CustomerId}", customerId);

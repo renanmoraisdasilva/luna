@@ -26,6 +26,13 @@ public sealed class ExceptionHandlingMiddleware(
             var (statusCode, error) = exception switch
             {
                 CheckoutRejectedException rejected => (StatusCodes.Status422UnprocessableEntity, new ApiError(rejected.Code, rejected.Message)),
+
+                // No usable customer identity on the request. This is an authentication failure, so it must not
+                // be reported as a conflict with server state.
+                UnauthenticatedCustomerException =>
+                    (StatusCodes.Status401Unauthorized,
+                        new ApiError(UnauthenticatedCustomerException.ErrorCode, exception.Message)),
+
                 ArgumentException => (StatusCodes.Status400BadRequest, new ApiError("INVALID_REQUEST", exception.Message)),
                 KeyNotFoundException => (StatusCodes.Status404NotFound, new ApiError("CART_NOT_FOUND", exception.Message)),
 

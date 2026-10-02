@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FluentAssertions;
+using Luna.Contracts.Errors;
 using Luna.Orders.Api.Controllers;
 using Luna.Orders.Application.Carts;
 using Luna.Orders.Contracts.Carts;
@@ -13,7 +14,7 @@ namespace Luna.IntegrationTests.Orders;
 public sealed class CartsControllerUnitTests
 {
     [Fact]
-    public async Task Rejects_a_user_without_a_valid_customer_subject()
+    public async Task Rejects_a_user_without_a_valid_customer_subject_as_unauthenticated()
     {
         var controller = CreateController();
         controller.ControllerContext = new ControllerContext
@@ -26,8 +27,9 @@ public sealed class CartsControllerUnitTests
 
         var act = () => controller.Get(CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("The authenticated customer ID is missing or invalid.");
+        // A dedicated exception type rather than InvalidOperationException, so the middleware reports 401
+        // instead of a 409 that would read as a conflict with server state.
+        await act.Should().ThrowAsync<UnauthenticatedCustomerException>();
     }
 
     private static CartsController CreateController() => new(
