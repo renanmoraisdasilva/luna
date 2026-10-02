@@ -1,0 +1,55 @@
+version: 2
+
+updates:
+  # .NET 8 solution: roughly 20 direct packages plus their transitive closure. Nothing in the repository
+  # flags a CVE today, so this is the only mechanism that will surface one.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      # Patch and minor updates across the .NET stack arrive together and are safe to review as one set.
+      dotnet-dependencies:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - backend
+
+  # The frontend pins exact-ish versions of about 20 packages. Grouping keeps the PR count reviewable
+  # while still surfacing major upgrades individually.
+  - package-ecosystem: npm
+    directory: /src/Frontend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      frontend-patch-updates:
+        update-types:
+          - patch
+    labels:
+      - dependencies
+      - frontend
+
+  # service.Dockerfile pins the .NET SDK and ASP.NET runtime base images by digest. This is what turns
+  # those pins from "frozen forever" into "changed deliberately".
+  - package-ecosystem: docker
+    directory: /infrastructure
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - backend
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - ci

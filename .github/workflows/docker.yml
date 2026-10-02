@@ -10,10 +10,19 @@ permissions:
   contents: read
   packages: write
 
+# A publish run must never be cancelled partway: an image tagged with a commit SHA either exists or it
+# does not, and a half-finished push set is worse than a redundant one.
+concurrency:
+  group: docker-publish-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: Publish Luna images to GHCR
     runs-on: ubuntu-latest
+    # Seven images are built and pushed per successful CI run. Without a bound, a hung BuildKit step
+    # occupies a runner until GitHub's six-hour default expires.
+    timeout-minutes: 60
     if: github.event.workflow_run.conclusion == 'success'
 
     strategy:

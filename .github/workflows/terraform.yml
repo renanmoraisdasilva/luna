@@ -34,10 +34,16 @@ on:
 permissions:
   contents: read
 
+# Cancels a superseded run of the same ref.
+concurrency:
+  group: terraform-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   plan:
     name: Validate and plan against a throwaway emulator
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -82,6 +88,7 @@ jobs:
   apply:
     name: Apply against a throwaway emulator
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: github.event_name == 'workflow_dispatch'
     needs: plan
 

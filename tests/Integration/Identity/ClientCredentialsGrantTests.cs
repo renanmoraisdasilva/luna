@@ -131,4 +131,4 @@ public sealed class ClientCredentialsGrantTests(IdentityServerFixture fixture)
         response.IsSuccessStatusCode.Should().BeFalse();
     }
 
-    }
+}
