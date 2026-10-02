@@ -94,6 +94,7 @@ services:
       OpenIddict__Keys__SigningKeyPath: "${IDENTITY_SIGNING_KEY_PATH:-/run/secrets/identity/signing.pfx}"
       OpenIddict__Keys__Passphrase: "${IDENTITY_SIGNING_KEY_PASSWORD:?Set IDENTITY_SIGNING_KEY_PASSWORD in .env}"
       OpenIddict__Keys__EncryptionKeyPath: "${IDENTITY_ENCRYPTION_KEY_PATH:-/run/secrets/identity/encryption.pfx}"
+      Identity__RateLimiting__TokenRequestsPerMinute: "${IDENTITY_TOKEN_REQUESTS_PER_MINUTE:-10}"
     volumes:
       # The signing and encryption keys must outlive the container, otherwise every Identity restart invalidates
       # all outstanding access tokens and every other service's cached JWKS. Mounted read-only because the

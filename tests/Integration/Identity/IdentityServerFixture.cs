@@ -210,9 +210,20 @@ public sealed class IdentityServerFixture : IAsyncLifetime
         string email,
         string password,
         string clientId = LunaPublicClients.Storefront,
+        CancellationToken cancellationToken = default) =>
+        RequestPasswordTokenAsync(email, password, clientId, CreateClient(), cancellationToken);
+
+    /// <summary>
+    /// Posts a password grant through a caller-supplied client, so a test can drive a specific host rather than
+    /// the fixture's shared one.
+    /// </summary>
+    public static Task<HttpResponseMessage> RequestPasswordTokenAsync(
+        string email,
+        string password,
+        string clientId,
+        HttpClient client,
         CancellationToken cancellationToken = default)
     {
-        var client = CreateClient();
         return client.PostAsync(
             "/api/v1/identity/connect/token",
             new FormUrlEncodedContent(new Dictionary<string, string>

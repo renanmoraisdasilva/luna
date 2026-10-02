@@ -23,6 +23,18 @@ public static class IdentityServiceCollectionExtensions
             .AddEntityFrameworkStores<LunaIdentityDbContext>()
             .AddSignInManager();
 
+        // Lock out accounts after repeated failures so the password grant cannot be used to guess credentials
+        // at unlimited speed. The token endpoint's request rate is limited separately in
+        // AddTokenEndpointRateLimiting.
+        services.Configure<Microsoft.AspNetCore.Identity.IdentityOptions>(options =>
+        {
+            options.Lockout.AllowedForNewUsers = true;
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+        });
+
+        services.AddTokenEndpointRateLimiting(configuration);
+
         services.AddOpenIddict()
             .AddCore(options => options
                 .UseEntityFrameworkCore()

@@ -27,7 +27,17 @@ public sealed class TokenController(
         if (request.IsPasswordGrantType())
         {
             var user = await userManager.FindByEmailAsync(request.Username!);
-            if (user is null || !await signInManager.UserManager.CheckPasswordAsync(user, request.Password!))
+
+            // CheckPasswordSignInAsync with lockoutOnFailure records the failed attempt against the account, so
+            // repeated guesses for one account are throttled in addition to the per-address request rate limit.
+            // A locked-out account is refused without the password being checked at all.
+            if (user is null)
+            {
+                return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            }
+
+            var signIn = await signInManager.CheckPasswordSignInAsync(user, request.Password!, lockoutOnFailure: true);
+            if (!signIn.Succeeded || await userManager.IsLockedOutAsync(user))
             {
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }

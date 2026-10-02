@@ -54,6 +54,19 @@ Then set in `.env`:
 | `IDENTITY_ENCRYPTION_KEY_PATH` | Optional. Used for the encrypted JWKS document. |
 | `IDENTITY_ENCRYPTION_KEY_PASSWORD` | Optional passphrase for the encryption key. |
 
+### Token endpoint rate limiting
+
+The Identity token endpoint is the only unauthenticated surface on the
+authorization server, so it is rate limited per caller address and accounts are
+locked out after five failed password attempts. The limit is configured with:
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `IDENTITY_TOKEN_REQUESTS_PER_MINUTE` | `10` | Token requests allowed per caller per minute. |
+
+Both controls raise `429 Too Many Requests` rather than delaying the response.
+Only raise the limit if legitimate traffic is being refused.
+
 PKCS#12 (`.pfx`) and PEM are both accepted. PEM files are detected by content
 rather than by extension, so a `.pem` file holding a PKCS#12 bundle still loads.
 

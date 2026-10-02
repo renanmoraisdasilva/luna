@@ -13,6 +13,12 @@ public static class LunaAuthentication
 public static class LunaServiceClients
 {
     public const string Orders = "orders";
+
+    /// <summary>
+    /// Partition key used for requests that are not rate limited. Any distinct value works; naming it keeps the
+    /// intent readable at the call site.
+    /// </summary>
+    public const string NotLimited = "not-limited";
 }
 
 /// <summary>
