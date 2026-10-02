@@ -1,8 +1,8 @@
 using Luna.Authentication;
 using Luna.Orders.Application.Orders;
 using Luna.Orders.Contracts.Orders;
-using Microsoft.AspNetCore.Authorization;
 using Luna.Contracts.Errors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Orders.Api.Controllers;

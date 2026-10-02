@@ -3,8 +3,8 @@ using Luna.Shipping.Api.Authorization;
 using Luna.Authentication;
 using Luna.Shipping.Contracts;
 using Luna.Authentication.ServiceAuthentication;
-using Microsoft.AspNetCore.Authorization;
 using Luna.Contracts.Errors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Luna.Shipping.Api.Controllers;
