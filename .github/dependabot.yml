@@ -8,13 +8,27 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 10
+    # Five pending pull requests is reviewable. Ten is a backlog nobody reads, which defeats the point.
+    open-pull-requests-limit: 5
     groups:
       # Patch and minor updates across the .NET stack arrive together and are safe to review as one set.
       dotnet-dependencies:
         update-types:
           - minor
           - patch
+    ignore:
+      # A .NET 8 -> 10 move is a migration project, not a dependency bump. Every project must be retargeted,
+      # the published runtime image must change with it (the 10.0 aspnet image contains only the 10.0
+      # runtime, so it cannot start a net8.0 application), and EF Core 10 may generate different migrations
+      # than EF Core 8. Handle it deliberately rather than as weekly noise.
+      - dependency-name: "Microsoft.*"
+        update-types:
+          - version-update:semver-major
+      # FluentAssertions 8 changed to a commercial licence for commercial use. That is a purchasing decision,
+      # not a technical one, so it is not surfaced automatically.
+      - dependency-name: "FluentAssertions"
+        update-types:
+          - version-update:semver-major
     labels:
       - dependencies
       - backend
@@ -26,11 +40,22 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       frontend-patch-updates:
         update-types:
           - patch
+    ignore:
+      # Tailwind 4 replaces the JavaScript config with a CSS-first @theme block. Merged without migrating the
+      # configuration it fails silently: every custom token stops resolving and the classes quietly do nothing.
+      - dependency-name: "tailwindcss"
+        update-types:
+          - version-update:semver-major
+      # The gateway image and the local Node toolchain are both pinned to Node 22. Moving the base image
+      # across four majors is a deliberate platform change.
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
     labels:
       - dependencies
       - frontend
@@ -42,6 +67,17 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # The service image is pinned to the .NET 8 SDK and ASP.NET 8 runtime. The service Dockerfile builds and
+      # runs net8.0 assemblies, and the .NET 10 images carry only the 10.0 runtime, so bumping the tag without
+      # retargeting the solution produces an image that cannot start. The frontend image moves to a new Node
+      # major only when the local toolchain moves with it.
+      - dependency-name: "mcr.microsoft.com/dotnet/*"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "node"
+        update-types:
+          - version-update:semver-major
     labels:
       - dependencies
       - backend
