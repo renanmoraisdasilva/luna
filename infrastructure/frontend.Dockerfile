@@ -1,10 +1,10 @@
-FROM node:22-alpine AS dependencies
+FROM node:26-alpine AS dependencies
 WORKDIR /app
 RUN npm install -g npm@12.0.2
 COPY src/Frontend/package*.json ./
 RUN npm ci
 
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 RUN npm install -g npm@12.0.2
 COPY --from=dependencies /app/node_modules ./node_modules
@@ -25,7 +25,7 @@ ENV SHIPPING_API_INTERNAL_URL=$SHIPPING_API_INTERNAL_URL
 ENV NEXT_PUBLIC_SIGNOZ_URL=$NEXT_PUBLIC_SIGNOZ_URL
 RUN npm run build
 
-FROM node:22-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 RUN npm install -g npm@12.0.2
 ENV NODE_ENV=production
