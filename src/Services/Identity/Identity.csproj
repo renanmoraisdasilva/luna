@@ -14,7 +14,7 @@
     <PackageReference Include="OpenIddict.AspNetCore" Version="7.0.0" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="7.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.22">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
