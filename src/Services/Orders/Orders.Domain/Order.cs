@@ -39,6 +39,14 @@ public sealed class Order
     public string ShippingMethodCode { get; private set; } = string.Empty;
     public decimal ShippingCost { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+
+    /// <summary>
+    /// Concurrency token. Every fulfillment transition is a read-modify-write on this aggregate, so without
+    /// one, two operators acting at the same moment could both pass the state guards and both advance the
+    /// shipment. Matches the tokens already present on Stock, InventoryReservation and Payment.
+    /// </summary>
+    public byte[] RowVersion { get; private set; } = [];
+
     public IReadOnlyCollection<OrderItem> Items => items.AsReadOnly();
     public ShippingAddress ShippingAddress { get; private set; } = null!;
     public decimal Total => items.Sum(item => item.LineTotal) + ShippingCost;
