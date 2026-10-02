@@ -5,6 +5,12 @@ x-service-healthcheck: &service-healthcheck
   retries: 24
   start_period: 10s
 
+# Without ASPNETCORE_ENVIRONMENT the containers boot as Production, which makes Identity demand a
+# signing key at OpenIddict:Keys:SigningKeyPath and refuse to start. The local and CI stack has no
+# key material and is meant to run on ephemeral development certificates, so it says so explicitly.
+x-local-environment: &local-environment
+  ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Development}"
+
 x-telemetry-environment: &telemetry-environment
   Telemetry__Enabled: "${TELEMETRY_ENABLED:-true}"
   Telemetry__Environment: "${TELEMETRY_ENVIRONMENT:-Development}"
@@ -97,7 +103,7 @@ services:
       args: { PROJECT: src/Services/Identity/Identity.csproj }
     command: ["Identity.dll"]
     environment:
-      <<: *telemetry-environment
+      <<: [*local-environment, *telemetry-environment]
       ConnectionStrings__Database: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
       ServiceAuthentication__Clients__Orders__Secret: "${ORDERS_SERVICE_CLIENT_SECRET:?Set ORDERS_SERVICE_CLIENT_SECRET in .env}"
@@ -114,7 +120,7 @@ services:
       args: { PROJECT: src/Services/Catalog/Catalog.Api/Catalog.Api.csproj }
     command: ["Catalog.Api.dll"]
     environment:
-      <<: *telemetry-environment
+      <<: [*local-environment, *telemetry-environment]
       ConnectionStrings__Database: "Server=sqlserver;Database=CatalogDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     extra_hosts: *telemetry-hosts
@@ -130,7 +136,7 @@ services:
       args: { PROJECT: src/Services/Orders/Orders.Api/Orders.Api.csproj }
     command: ["Orders.Api.dll"]
     environment:
-      <<: *telemetry-environment
+      <<: [*local-environment, *telemetry-environment]
       ConnectionStrings__Database: "Server=sqlserver;Database=OrdersDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
       ServiceAuthentication__ClientId: orders
@@ -153,7 +159,7 @@ services:
       args: { PROJECT: src/Services/Payments/Payments.Api/Payments.Api.csproj }
     command: ["Payments.Api.dll"]
     environment:
-      <<: *telemetry-environment
+      <<: [*local-environment, *telemetry-environment]
       ConnectionStrings__Database: "Server=sqlserver;Database=PaymentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     extra_hosts: *telemetry-hosts
@@ -169,7 +175,7 @@ services:
       args: { PROJECT: src/Services/Inventory/Inventory.Api/Inventory.Api.csproj }
     command: ["Inventory.Api.dll"]
     environment:
-      <<: *telemetry-environment
+      <<: [*local-environment, *telemetry-environment]
       ConnectionStrings__Database: "Server=sqlserver;Database=InventoryDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     extra_hosts: *telemetry-hosts
@@ -185,7 +191,7 @@ services:
       args: { PROJECT: src/Services/Shipping/Shipping.Api/Shipping.Api.csproj }
     command: ["Shipping.Api.dll"]
     environment:
-      <<: *telemetry-environment
+      <<: [*local-environment, *telemetry-environment]
       ConnectionStrings__Database: "Server=sqlserver;Database=ShippingDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       OpenIddict__Issuer: http://identity:8080/
     extra_hosts: *telemetry-hosts
