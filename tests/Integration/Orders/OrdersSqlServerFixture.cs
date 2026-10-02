@@ -11,8 +11,7 @@ public sealed class OrdersSqlServerFixture : IAsyncLifetime
 {
     private const string Password = "Your_password123";
     private const string DatabaseName = "OrdersTests";
-    private readonly MsSqlContainer container = new MsSqlBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+    private readonly MsSqlContainer container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
         .WithPassword(Password)
         .Build();
     private Respawner respawner = null!;

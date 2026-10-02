@@ -18,8 +18,7 @@ public sealed class IdentityServerFixture : IAsyncLifetime
     public const string DatabaseName = "IdentityTests";
     public const string OrdersClientSecret = "integration-orders-client-secret";
 
-    private readonly MsSqlContainer container = new MsSqlBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+    private readonly MsSqlContainer container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
         .WithPassword(DatabasePassword)
         .Build();
 
