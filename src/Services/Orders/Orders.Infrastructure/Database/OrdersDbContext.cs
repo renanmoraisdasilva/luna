@@ -48,7 +48,7 @@ public sealed class OrdersDbContext(DbContextOptions<OrdersDbContext> options) :
             entity.Property(order => order.ShippingMethodCode).HasMaxLength(40).IsRequired();
             entity.Property(order => order.ShippingCost).HasPrecision(18, 2).IsRequired();
             entity.Property(order => order.CreatedAt).IsRequired();
-        entity.Property(order => order.RowVersion).IsRowVersion();
+            entity.Property(order => order.RowVersion).IsRowVersion();
             entity.HasIndex(order => new { order.CustomerId, order.CreatedAt });
             entity.HasIndex(order => new { order.CustomerId, order.IdempotencyKey }).IsUnique();
             entity.Navigation(order => order.Items).UsePropertyAccessMode(PropertyAccessMode.Field);
