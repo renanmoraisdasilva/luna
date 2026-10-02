@@ -2,7 +2,7 @@
 # in docker-compose.prod.yml. A tag can be repointed at different content at any time; a digest cannot, so the
 # same commit always builds from the same base image. Dependabot tracks the Docker ecosystem, so a digest bump
 # arrives as a reviewable pull request rather than silently changing what production runs.
-FROM mcr.microsoft.com/dotnet/sdk:8.0@sha256:7ff19b091200c3a3a1bf1eefa6abae9efd7995d8e3298e66aa0d6905872bf642 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:83e0db97c45d2e39b80123fe42940a23c423405a17f80b608a4b8768033d6392 AS build
 ARG PROJECT
 WORKDIR /src
 COPY . .
