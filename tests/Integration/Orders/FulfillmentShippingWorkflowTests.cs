@@ -137,6 +137,74 @@ public sealed class FulfillmentShippingWorkflowTests(
         persistedOrder.Status.Should().Be(OrderStatus.Shipped);
     }
 
+    [Fact]
+    public async Task Moving_a_shipment_in_transit_advances_the_shipment_but_not_the_order()
+    {
+        // The in-transit transition belongs to Shipping, not to Orders. OrderStatus has no InTransit member:
+        // the order moves Pending -> Confirmed -> Preparing -> Shipped -> Delivered, so an order that has been
+        // shipped stays Shipped while its shipment is in transit.
+        //
+        // MarkShipmentInTransitHandler therefore calls a guard (EnsureStatusForShipmentInTransit, which only
+        // asserts the order is Shipped) and makes no change to the aggregate, so it correctly has no
+        // SaveChangesAsync. Its sibling MarkShipmentDeliveredHandler does mutate the order and does save.
+        // This test pins that asymmetry down so a later reader does not "fix" it into an invented order
+        // transition that the domain does not model.
+        var order = await SeedConfirmedOrderAsync();
+        using var shippingFactory = new ShippingApiFactory(shippingFixture);
+        using var ordersFactory = new OrdersWithShippingFactory(ordersFixture, shippingFactory);
+        using var client = ordersFactory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AdminHeader, "true");
+
+        await client.PostAsync($"/api/v1/orders/fulfillment/{order.Id}/prepare", content: null);
+        var createResponse = await client.PostAsync($"/api/v1/orders/fulfillment/{order.Id}/shipment", content: null);
+        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        Guid shipmentId;
+        await using (var ordersDb = ordersFixture.CreateDbContext())
+        {
+            var persistedOrder = await ordersDb.Orders.FindAsync(order.Id);
+            shipmentId = persistedOrder!.ShipmentId!.Value;
+        }
+
+        var inTransitResponse = await client.PostAsync(
+            $"/api/v1/orders/fulfillment/shipments/{shipmentId}/in-transit",
+            content: null);
+        inTransitResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // The response reports the order status, which must still be Shipped.
+        var inTransit = await inTransitResponse.Content.ReadFromJsonAsync<FulfillmentCommandResponse>();
+        inTransit!.OrderStatus.Should().Be(nameof(OrderStatus.Shipped));
+
+        // The order row is unchanged: no transition, and nothing was written to it.
+        await using (var ordersDb = ordersFixture.CreateDbContext())
+        {
+            var reloadedOrder = await ordersDb.Orders.FindAsync(order.Id);
+            reloadedOrder!.Status.Should().Be(OrderStatus.Shipped);
+        }
+
+        // Shipping owns the in-transit transition, and that is where it is persisted.
+        await using (var shippingDb = shippingFixture.CreateDbContext())
+        {
+            var shipment = await shippingDb.Shipments.FindAsync(shipmentId);
+            shipment!.Status.Should().Be(ShipmentStatus.InTransit);
+        }
+
+        // A second in-transit attempt is refused by the Shipping aggregate, which requires Created. This is
+        // what stops two concurrent operator clicks from double-advancing the shipment, so Orders does not
+        // need its own concurrency token for this transition.
+        var repeatedResponse = await client.PostAsync(
+            $"/api/v1/orders/fulfillment/shipments/{shipmentId}/in-transit",
+            content: null);
+        repeatedResponse.IsSuccessStatusCode.Should().BeFalse(
+            "a shipment already in transit cannot be marked in transit again");
+
+        await using (var shippingDb = shippingFixture.CreateDbContext())
+        {
+            var shipment = await shippingDb.Shipments.FindAsync(shipmentId);
+            shipment!.Status.Should().Be(ShipmentStatus.InTransit);
+        }
+    }
+
     private async Task<Order> SeedConfirmedOrderAsync()
     {
         var orderId = Guid.NewGuid();
