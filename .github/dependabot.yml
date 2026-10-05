@@ -29,6 +29,15 @@ updates:
       - dependency-name: "FluentAssertions"
         update-types:
           - version-update:semver-major
+      # Every other major on this side too. Naming individual packages was not enough, because the ones that
+      # slip through are exactly the ones nobody anticipated. Measured on this solution: Serilog.AspNetCore 10
+      # pulls Microsoft.Extensions.* to 10.0.0 and trips NU1605 against the net8.0 pins, Swashbuckle 10 moves
+      # OpenApiDocument out of Microsoft.OpenApi.Models so the Identity document filter stops compiling, and
+      # Respawn 7 changes CreateAsync to require a DbConnection. All three break the build. Minors and patches
+      # still arrive, grouped, because those have been safe throughout.
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
     labels:
       - dependencies
       - backend
