@@ -138,11 +138,13 @@ jobs:
         working-directory: src/Frontend
         run: npm ci
 
-      # `npm audit` fails the step on a high or critical advisory. Nothing in the repository would
-      # otherwise ever flag a vulnerable frontend dependency.
+      # Production dependencies only, at npm's default audit level, so any advisory in shipped code
+      # fails the step. Dev tooling is excluded because it never reaches the browser and its
+      # transitive chains (for example braces through eslint-config-next) stay advisory-blocked
+      # upstream for long periods, which would otherwise keep this step red with no local action.
       - name: Audit frontend dependencies
         working-directory: src/Frontend
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev
 
       - name: Lint frontend
         working-directory: src/Frontend
