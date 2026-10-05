@@ -32,27 +32,49 @@ certificate, because the development certificate is not persisted: every restart
 would otherwise generate a different key and invalidate every issued token and
 every other service's cached JWKS.
 
-Generate a pair and store them outside the repository:
+Generate a pair. Export both files with an **empty passphrase** (`-passout pass:`),
+because `OpenIddictKeyOptions` carries a single `Passphrase` field that is used to
+decrypt both the signing and the encryption key. There is no second passphrase to
+configure, and setting one for only one of the two files fails the key load with no
+indication which variable was ignored.
 
 ```bash
 mkdir -p infrastructure/secrets/identity
-openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes \
-  -keyout infrastructure/secrets/identity/signing.key \
-  -out infrastructure/secrets/identity/signing.crt
-openssl pkcs12 -export -out infrastructure/secrets/identity/signing.pfx \
-  -inkey infrastructure/secrets/identity/signing.key \
-  -in infrastructure/secrets/identity/signing.crt -passout pass:"$PASSWORD"
+for name in signing encryption; do
+  openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes \
+    -keyout "infrastructure/secrets/identity/$name.key" \
+    -out "infrastructure/secrets/identity/$name.crt" \
+    -subj "/CN=luna-identity-$name"
+  openssl pkcs12 -export -out "infrastructure/secrets/identity/$name.pfx" \
+    -inkey "infrastructure/secrets/identity/$name.key" \
+    -in "infrastructure/secrets/identity/$name.crt" -passout pass:
+done
 ```
 
-Then set in `.env`:
+`IDENTITY_KEY_DIRECTORY` selects the host directory that is mounted read-only at
+`/run/secrets/identity`, and it must contain `signing.pfx` and `encryption.pfx`.
 
 | Variable | Notes |
 | --- | --- |
+| `IDENTITY_KEY_DIRECTORY` | Host directory mounted read-only at `/run/secrets/identity`. |
+| `IDENTITY_SIGNING_KEY_PASSWORD` | Optional. Leave unset for an empty passphrase, which is what the files above use. Set it only if both keys were exported with the same passphrase. |
 | `IDENTITY_SIGNING_KEY_PATH` | Defaults to `/run/secrets/identity/signing.pfx`. |
-| `IDENTITY_SIGNING_KEY_PASSWORD` | Passphrase for the PKCS#12 file. Required. |
-| `IDENTITY_KEY_DIRECTORY` | Host directory mounted read-only at `/run/secrets/identity`. Defaults to `./secrets/identity`. |
-| `IDENTITY_ENCRYPTION_KEY_PATH` | Optional. Used for the encrypted JWKS document. |
-| `IDENTITY_ENCRYPTION_KEY_PASSWORD` | Optional passphrase for the encryption key. |
+| `IDENTITY_ENCRYPTION_KEY_PATH` | Defaults to `/run/secrets/identity/encryption.pfx`. Used for the encrypted JWKS document. |
+
+#### The key directory must be outside the deploy checkout
+
+Set `IDENTITY_KEY_DIRECTORY` to a host path that a deploy never rewrites, such as
+`/opt/luna/secrets/identity`. The Compose default is `./secrets/identity`, which
+resolves inside the checkout that Dokploy deletes and re-clones on every deploy, and
+`infrastructure/secrets/` is gitignored because it holds private keys. The combination
+means a fresh clone produces an empty directory, and Identity then exits with code 139
+after roughly two seconds without logging the reason at the usual log level. That
+failure mode has now occurred twice: once in the Compose smoke check and once on the
+production host.
+
+On the production host the directory and both files are provisioned by the
+`luna_secrets` role in `server-infra`, which stores the base64 of each PKCS#12 file in
+an encrypted Ansible Vault and installs them root-owned with mode `0644`.
 
 ### Token endpoint rate limiting
 

@@ -92,7 +92,12 @@ services:
       OpenIddict__Issuer: http://identity:8080/
       ServiceAuthentication__Clients__Orders__Secret: "${ORDERS_SERVICE_CLIENT_SECRET:?Set ORDERS_SERVICE_CLIENT_SECRET in .env}"
       OpenIddict__Keys__SigningKeyPath: "${IDENTITY_SIGNING_KEY_PATH:-/run/secrets/identity/signing.pfx}"
-      OpenIddict__Keys__Passphrase: "${IDENTITY_SIGNING_KEY_PASSWORD:?Set IDENTITY_SIGNING_KEY_PASSWORD in .env}"
+      # OpenIddictKeyOptions carries a single Passphrase used to decrypt both the signing and the encryption key,
+      # so there is no second passphrase to configure. The default is empty rather than a required variable
+      # because an empty passphrase is a deliberate, supported choice: the .pfx files are protected by host
+      # file permissions instead. Set IDENTITY_SIGNING_KEY_PASSWORD to a non-empty value only if both keys were
+      # exported with the same passphrase.
+      OpenIddict__Keys__Passphrase: "${IDENTITY_SIGNING_KEY_PASSWORD:-}"
       OpenIddict__Keys__EncryptionKeyPath: "${IDENTITY_ENCRYPTION_KEY_PATH:-/run/secrets/identity/encryption.pfx}"
       Identity__RateLimiting__TokenRequestsPerMinute: "${IDENTITY_TOKEN_REQUESTS_PER_MINUTE:-10}"
     volumes:
