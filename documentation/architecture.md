@@ -75,6 +75,12 @@ registered in
 | `IShippingCheckoutClient` | Shipping | service token, scope `ShippingShipmentsWrite` |
 | `IShippingFulfillmentClient` | Shipping | service token, scope `ShippingShipmentsWrite` |
 
+**Checkout records each step before starting the next.** Because the services own separate databases, checkout is a saga with no transaction spanning it, and the order row is the only durable record of how far it got. `CheckoutHandler` therefore persists after every external step rather than only at the end: the order is written as `Pending`, then the inventory reservation id is saved once Inventory confirms, then the payment id is saved once Payments authorizes, and only then is the order confirmed. A crash part-way through therefore leaves a trail naming the reservation and the payment that exist in other services.
+
+`Order` enforces the ordering in the domain: both references may only be recorded while the order is `Pending`, and a payment cannot be recorded before a reservation.
+
+Two gaps are known and deliberately not yet closed. Nothing reconciles an order left `Pending` by a crash, and a retry with the same `Idempotency-Key` is refused with `CHECKOUT_IN_PROGRESS` rather than resuming. See [`lessons-learned.md`](lessons-learned.md) for the worked examples.
+
 **Fulfilment is not a service.** It is a module inside Orders — the queue, the
 prepare step, and the shipment command — surfaced through
 `FulfillmentController` in `Orders.Api`. It is called out here because the
