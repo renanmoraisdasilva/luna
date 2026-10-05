@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\Contracts\Luna.Contracts\Luna.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
     <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="7.7.1" />
     <PackageReference Include="OpenIddict.Validation.SystemNetHttp" Version="7.7.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
