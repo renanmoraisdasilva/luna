@@ -51,11 +51,15 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ authenticated: true });
   const secure = isSecureCookieRequired();
 
+  // accessTokenCookieName() and isSecureCookieRequired() read the same value now, so the prefix and the
+  // Secure attribute cannot disagree. This assertion documents that invariant rather than catching a
+  // configuration mistake: a __Host- cookie that is not Secure is refused by the browser on every origin
+  // except localhost, which presents as a silent logout rather than an error.
   const name = accessTokenCookieName();
-  if (name.startsWith('__Host-') && !secure) {
+  if (name.startsWith('__Host-') !== secure) {
     throw new Error(
-      'The session cookie uses the __Host- prefix, which requires a secure cookie. AUTH_COOKIE_SECURE=false ' +
-      'cannot be used in production.',
+      'The session cookie name and its Secure attribute disagree. Both derive from ' +
+      'isSecureCookieRequired(); this indicates a bug in lib/auth-cookie.',
     );
   }
 

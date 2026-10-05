@@ -4,11 +4,14 @@ const mocks = vi.hoisted(() => ({
   encryptAccessToken: vi.fn(),
   getAccessToken: vi.fn(),
   getIdentityUrl: vi.fn(),
+  secure: vi.fn(() => true),
 }));
 
+// The cookie name and the Secure attribute derive from one value in the real module, so the mock keeps
+// them consistent: a mocked __Host- name always reports Secure, and vice versa.
 vi.mock('../../../../lib/auth-cookie', () => ({
-  accessTokenCookieName: () => 'luna_access_token',
-  isSecureCookieRequired: () => true,
+  accessTokenCookieName: () => mocks.secure() ? '__Host-luna_access_token' : 'luna_access_token',
+  isSecureCookieRequired: () => mocks.secure(),
   encryptAccessToken: mocks.encryptAccessToken,
 }));
 
@@ -38,6 +41,8 @@ describe('auth API routes', () => {
     mocks.encryptAccessToken.mockReset();
     mocks.getAccessToken.mockReset();
     mocks.getIdentityUrl.mockReset();
+    mocks.secure.mockReset();
+    mocks.secure.mockReturnValue(true);
     vi.stubEnv('IDENTITY_API_INTERNAL_URL', 'http://identity');
     mocks.getIdentityUrl.mockReturnValue('http://identity');
     mocks.getAccessToken.mockResolvedValue('access-token');
@@ -75,9 +80,9 @@ describe('auth API routes', () => {
     expect(await jsonResponse(result)).toEqual({ message: 'Identity did not return an access token.' });
   });
 
-  it('encrypts the token and sets the session cookie', async () => {
+  it('encrypts the token and sets a Secure __Host- session cookie', async () => {
     mocks.encryptAccessToken.mockResolvedValue('encrypted-token');
-    vi.stubEnv('AUTH_COOKIE_SECURE', 'true');
+    mocks.secure.mockReturnValue(true);
     vi.mocked(fetch).mockResolvedValue(response(200, JSON.stringify({ access_token: 'raw-token', expires_in: 90 })));
 
     const result = await login(new Request('http://localhost/api/auth/login', { method: 'POST', body: '{}' }));
@@ -85,9 +90,26 @@ describe('auth API routes', () => {
     expect(result.status).toBe(200);
     expect(await jsonResponse(result)).toEqual({ authenticated: true });
     expect(mocks.encryptAccessToken).toHaveBeenCalledWith('raw-token');
-    expect(result.headers.get('set-cookie')).toContain('luna_access_token=encrypted-token');
+    expect(result.headers.get('set-cookie')).toContain('__Host-luna_access_token=encrypted-token');
     expect(result.headers.get('set-cookie')).toContain('Max-Age=90');
     expect(result.headers.get('set-cookie')).toContain('Secure');
+  });
+
+  it('drops the __Host- prefix when Secure is turned off for plain HTTP', async () => {
+    mocks.encryptAccessToken.mockResolvedValue('encrypted-token');
+    mocks.secure.mockReturnValue(false);
+    vi.mocked(fetch).mockResolvedValue(response(200, JSON.stringify({ access_token: 'raw-token', expires_in: 90 })));
+
+    const result = await login(new Request('http://localhost/api/auth/login', { method: 'POST', body: '{}' }));
+
+    // A browser refuses a __Host- cookie on any non-HTTPS origin except localhost, so prefixing a
+    // non-secure cookie discards it silently and every later request arrives without a token. This is the
+    // 200-on-login-then-401-on-/me failure this pairing prevents.
+    expect(result.status).toBe(200);
+    const cookie = result.headers.get('set-cookie') ?? '';
+    expect(cookie).toContain('luna_access_token=encrypted-token');
+    expect(cookie).not.toContain('__Host-');
+    expect(cookie).not.toContain('Secure');
   });
 
   it('logs out by deleting the access token cookie', async () => {

@@ -3,16 +3,26 @@ import { cookies } from 'next/headers';
 import type { CurrentUser } from '../types/auth';
 
 export async function getAccessToken(): Promise<string | null> {
-  const cookieValue = (await cookies()).get(accessTokenCookieName())?.value;
+  const name = accessTokenCookieName();
+  const cookieValue = (await cookies()).get(name)?.value;
 
   if (!cookieValue) {
     return null;
   }
 
   try {
-    const accessToken = await decryptAccessToken(cookieValue);
-    return accessToken;
-  } catch {
+    return await decryptAccessToken(cookieValue);
+  } catch (error) {
+    // Logged rather than swallowed. A failed decryption is otherwise
+    // indistinguishable from an absent cookie, so a wrong
+    // LUNA_COOKIE_ENCRYPTION_KEY, a rotated key, or a truncated cookie all
+    // surface as an unexplained 401 with no server-side record of why.
+    console.error(
+      `[auth] Failed to decrypt the access token cookie "${name}". ` +
+        'This usually means LUNA_COOKIE_ENCRYPTION_KEY changed or differs between instances, ' +
+        'which invalidates every existing session.',
+      error,
+    );
     return null;
   }
 }

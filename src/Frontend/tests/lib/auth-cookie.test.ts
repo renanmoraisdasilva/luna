@@ -11,7 +11,7 @@ describe('session cookie configuration', () => {
   });
 
   describe('accessTokenCookieName', () => {
-    it('uses the __Host- prefix in production', async () => {
+    it('uses the __Host- prefix when the cookie is secure', async () => {
       vi.stubEnv('NODE_ENV', 'production');
 
       const { accessTokenCookieName: name } = await import('../../lib/auth-cookie');
@@ -21,25 +21,40 @@ describe('session cookie configuration', () => {
       expect(name()).toBe('__Host-luna_access_token');
     });
 
-    it('omits the prefix outside production, because the prefix requires HTTPS', async () => {
+    it('keeps the prefix outside production when Secure is left at its default', async () => {
       vi.stubEnv('NODE_ENV', 'development');
 
-      const { accessTokenCookieName: name } = await import('../../lib/auth-cookie');
+      const { accessTokenCookieName: name, isSecureCookieRequired: secure } = await import('../../lib/auth-cookie');
 
+      // Unset is not 'false', so development defaults to a secure cookie and the prefix with it.
+      expect(secure()).toBe(true);
+      expect(name()).toBe('__Host-luna_access_token');
+    });
+
+    it('omits the prefix in production when Secure is turned off', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('AUTH_COOKIE_SECURE', 'false');
+
+      const { accessTokenCookieName: name, isSecureCookieRequired: secure } = await import('../../lib/auth-cookie');
+
+      // The regression this pins: a browser refuses a __Host- cookie on any non-HTTPS origin other than
+      // localhost, so prefixing a non-secure cookie logs the user out silently. The name and the Secure
+      // attribute are now derived from one value and cannot disagree.
+      expect(secure()).toBe(false);
       expect(name()).toBe('luna_access_token');
     });
   });
 
   describe('isSecureCookieRequired', () => {
-    it('is required in production regardless of the configured value', async () => {
+    it('can be turned off in production for a plain-HTTP local deployment', async () => {
       vi.stubEnv('NODE_ENV', 'production');
       vi.stubEnv('AUTH_COOKIE_SECURE', 'false');
 
       const { isSecureCookieRequired: secure } = await import('../../lib/auth-cookie');
 
-      // AUTH_COOKIE_SECURE=false is accepted as a value, but it cannot turn off Secure in production. This is
-      // the floor that stops an operator copying the example env file into production.
-      expect(secure()).toBe(true);
+      // Honoured in production as well as development. The operator is stating that TLS terminates
+      // somewhere the application cannot see, or that this build is reached over plain HTTP.
+      expect(secure()).toBe(false);
     });
 
     it('is required in production when the variable is absent entirely', async () => {
@@ -47,6 +62,8 @@ describe('session cookie configuration', () => {
 
       const { isSecureCookieRequired: secure } = await import('../../lib/auth-cookie');
 
+      // Absent means unset, which is not 'false', so Secure stays on. Copying an env file that omits
+      // the variable still gets a hardened cookie.
       expect(secure()).toBe(true);
     });
 
