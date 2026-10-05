@@ -115,14 +115,35 @@ public sealed class Order
         Status = OrderStatus.Confirmed;
     }
 
-    public void RecordCheckoutResult(Guid inventoryReservationId, Guid paymentId)
+    public void RecordInventoryReservation(Guid inventoryReservationId)
     {
-        if (inventoryReservationId == Guid.Empty || paymentId == Guid.Empty)
+        EnsureStatus(OrderStatus.Pending);
+
+        if (inventoryReservationId == Guid.Empty)
         {
-            throw new ArgumentException("Checkout result IDs are required.");
+            throw new ArgumentException("Inventory reservation ID is required.", nameof(inventoryReservationId));
         }
 
         InventoryReservationId = inventoryReservationId;
+    }
+
+    public void RecordPaymentAuthorization(Guid paymentId)
+    {
+        EnsureStatus(OrderStatus.Pending);
+
+        // Inventory is always reserved before payment is authorized, so a payment reference without a
+        // reservation reference means checkout recorded its steps out of order.
+        if (InventoryReservationId is null)
+        {
+            throw new InvalidOperationException(
+                $"Order {Id} must record its inventory reservation before the payment authorization.");
+        }
+
+        if (paymentId == Guid.Empty)
+        {
+            throw new ArgumentException("Payment ID is required.", nameof(paymentId));
+        }
+
         PaymentId = paymentId;
     }
 

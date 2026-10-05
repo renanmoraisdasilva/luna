@@ -151,30 +151,79 @@ public sealed class OrderTests
         order.ShippingQuoteId.Should().Be(quoteId);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void Record_checkout_result_requires_both_ids(bool emptyReservation)
+    [Fact]
+    public void Record_inventory_reservation_rejects_an_empty_reservation_id()
     {
-        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "checkout-result");
-        var reservationId = emptyReservation ? Guid.Empty : Guid.NewGuid();
-        var paymentId = emptyReservation ? Guid.NewGuid() : Guid.Empty;
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "empty-reservation");
 
-        var act = () => order.RecordCheckoutResult(reservationId, paymentId);
+        var act = () => order.RecordInventoryReservation(Guid.Empty);
 
-        act.Should().Throw<ArgumentException>().WithMessage("Checkout result IDs are required.");
+        act.Should().Throw<ArgumentException>();
         order.InventoryReservationId.Should().BeNull();
+    }
+
+    [Fact]
+    public void Record_payment_authorization_rejects_an_empty_payment_id()
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "empty-payment");
+        order.RecordInventoryReservation(Guid.NewGuid());
+
+        var act = () => order.RecordPaymentAuthorization(Guid.Empty);
+
+        act.Should().Throw<ArgumentException>();
         order.PaymentId.Should().BeNull();
     }
 
     [Fact]
-    public void Record_checkout_result_persists_both_references()
+    public void Record_payment_authorization_requires_the_reservation_first()
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "out-of-order");
+
+        var act = () => order.RecordPaymentAuthorization(Guid.NewGuid());
+
+        act.Should().Throw<InvalidOperationException>();
+        order.PaymentId.Should().BeNull();
+    }
+
+    [Fact]
+    public void Recording_the_reservation_survives_without_the_payment_being_recorded()
+    {
+        // This is the state a checkout is left in if the process dies between reserving inventory and
+        // authorizing payment. The reservation reference has to be durable on its own, otherwise the stock
+        // is held with no record of which order holds it.
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "partial-progress");
+        var reservationId = Guid.NewGuid();
+
+        order.RecordInventoryReservation(reservationId);
+
+        order.Status.Should().Be(OrderStatus.Pending);
+        order.InventoryReservationId.Should().Be(reservationId);
+        order.PaymentId.Should().BeNull();
+    }
+
+    [Fact]
+    public void Each_step_refuses_to_record_once_the_order_is_confirmed()
+    {
+        var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "already-confirmed");
+        order.RecordInventoryReservation(Guid.NewGuid());
+        order.RecordPaymentAuthorization(Guid.NewGuid());
+        order.Confirm();
+
+        order.Invoking(item => item.RecordInventoryReservation(Guid.NewGuid()))
+            .Should().Throw<InvalidOperationException>();
+        order.Invoking(item => item.RecordPaymentAuthorization(Guid.NewGuid()))
+            .Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Records_both_references_across_the_steps()
     {
         var order = Order.Create(CustomerId, ValidItems(), Address(), "STANDARD", 0, "checkout-result-valid");
         var reservationId = Guid.NewGuid();
         var paymentId = Guid.NewGuid();
 
-        order.RecordCheckoutResult(reservationId, paymentId);
+        order.RecordInventoryReservation(reservationId);
+        order.RecordPaymentAuthorization(paymentId);
 
         order.InventoryReservationId.Should().Be(reservationId);
         order.PaymentId.Should().Be(paymentId);

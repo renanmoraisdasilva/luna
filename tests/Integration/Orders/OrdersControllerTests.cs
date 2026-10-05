@@ -85,8 +85,9 @@ public sealed class OrdersControllerTests(OrdersSqlServerFixture fixture) : IAsy
             "STANDARD",
             5,
             Guid.NewGuid().ToString());
+        order.RecordInventoryReservation(Guid.NewGuid());
+        order.RecordPaymentAuthorization(Guid.NewGuid());
         order.Confirm();
-        order.RecordCheckoutResult(Guid.NewGuid(), Guid.NewGuid());
         db.Orders.Add(order);
         await db.SaveChangesAsync();
         return order;

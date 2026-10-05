@@ -200,8 +200,9 @@ public sealed class FulfillmentShippingWorkflowTests(
             "integration-checkout",
             orderId,
             quoteId);
+        order.RecordInventoryReservation(Guid.NewGuid());
+        order.RecordPaymentAuthorization(Guid.NewGuid());
         order.Confirm();
-        order.RecordCheckoutResult(Guid.NewGuid(), Guid.NewGuid());
 
         await using (var ordersDb = ordersFixture.CreateDbContext())
         {

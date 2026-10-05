@@ -136,8 +136,9 @@ public sealed class FulfillmentQueueTests(OrdersSqlServerFixture fixture) : IAsy
 
         if (status is not OrderStatus.Pending)
         {
+            order.RecordInventoryReservation(Guid.NewGuid());
+            order.RecordPaymentAuthorization(Guid.NewGuid());
             order.Confirm();
-            order.RecordCheckoutResult(Guid.NewGuid(), Guid.NewGuid());
         }
 
         if (status is OrderStatus.Preparing)

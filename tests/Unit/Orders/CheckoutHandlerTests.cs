@@ -76,7 +76,8 @@ public sealed class CheckoutHandlerTests
             9.99m,
             idempotencyKey,
             Guid.NewGuid());
-        existingOrder.RecordCheckoutResult(Guid.NewGuid(), Guid.NewGuid());
+        existingOrder.RecordInventoryReservation(Guid.NewGuid());
+        existingOrder.RecordPaymentAuthorization(Guid.NewGuid());
         existingOrder.Confirm();
         var repository = new FakeOrderRepository { ExistingOrder = existingOrder };
         var inventory = new FakeInventoryClient();
@@ -92,6 +93,58 @@ public sealed class CheckoutHandlerTests
         response.PaymentId.Should().Be(existingOrder.PaymentId!.Value);
         inventory.ReservedOrderId.Should().BeNull();
         payments.AuthorizeCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Interrupted_before_confirming_still_records_the_reservation_and_the_payment()
+    {
+        // Checkout writes the order four times: once when it is created, once per completed external step,
+        // and once to confirm. Failing the fourth write is the wedge where payment has been authorized but the
+        // order was never confirmed. Before each step was persisted on its own, that state left nothing behind
+        // to recover from.
+        var customerId = Guid.NewGuid();
+        var repository = new FakeOrderRepository { FailOnSaveNumber = 4 };
+        var inventory = new FakeInventoryClient();
+        var payments = new FakePaymentsClient(true);
+        var handler = CreateHandler(customerId, new FakeCatalogClient(), new FakeShippingClient(), inventory, payments, repository);
+
+        var act = () => handler.HandleAsync(
+            new CheckoutCommand(customerId, ValidRequest(), "interrupted-checkout"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>("the confirming write is what failed");
+
+        repository.SavedStates.Should().Contain(state =>
+            state.InventoryReservationId == inventory.ReservationId && state.Status == OrderStatus.Pending);
+        repository.SavedStates.Should().Contain(state =>
+            state.PaymentId == payments.PaymentId && state.Status == OrderStatus.Pending);
+    }
+
+    [Fact]
+    public async Task Interrupted_before_payment_still_records_the_reservation()
+    {
+        // The other wedge: the process dies between reserving inventory and authorizing payment. The stock is
+        // held by Inventory, so the order has to record which reservation it is holding.
+        var customerId = Guid.NewGuid();
+        var repository = new FakeOrderRepository { FailOnSaveNumber = 3 };
+        var inventory = new FakeInventoryClient();
+        var handler = CreateHandler(
+            customerId,
+            new FakeCatalogClient(),
+            new FakeShippingClient(),
+            inventory,
+            new FakePaymentsClient(true),
+            repository);
+
+        var act = () => handler.HandleAsync(
+            new CheckoutCommand(customerId, ValidRequest(), "interrupted-before-payment"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>("the payment write is what failed");
+
+        repository.SavedStates.Should().Contain(state =>
+            state.InventoryReservationId == inventory.ReservationId && state.Status == OrderStatus.Pending);
+        repository.SavedStates.Should().OnlyContain(state => state.PaymentId == null);
     }
 
     [Fact]
@@ -227,15 +280,40 @@ public sealed class CheckoutHandlerTests
         public Task<CartResponse?> GetCartAsync(Guid customerId, CancellationToken cancellationToken) => Task.FromResult<CartResponse?>(cart);
     }
 
+    private sealed record SavedOrderState(OrderStatus Status, Guid? InventoryReservationId, Guid? PaymentId);
+
     private sealed class FakeOrderRepository : IOrderWriteRepository
     {
+        private int saveCount;
+
         public Order? Order { get; private set; }
         public Order? ExistingOrder { get; init; }
+        public List<SavedOrderState> SavedStates { get; } = [];
+        public int FailOnSaveNumber { get; init; }
+
         public Task<Order?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken) => Task.FromResult<Order?>(null);
         public Task<Order?> GetByShipmentIdAsync(Guid shipmentId, CancellationToken cancellationToken) => Task.FromResult<Order?>(null);
         public Task<Order?> GetByIdempotencyKeyAsync(Guid customerId, string idempotencyKey, CancellationToken cancellationToken) => Task.FromResult(ExistingOrder);
         public Task AddAsync(Order order, CancellationToken cancellationToken) { Order = order; return Task.CompletedTask; }
-        public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task SaveChangesAsync(CancellationToken cancellationToken)
+        {
+            saveCount++;
+
+            // Thrown before recording, so SavedStates only ever holds writes that actually reached the
+            // database. That is what makes it usable as evidence of what a crash would leave behind.
+            if (FailOnSaveNumber == saveCount)
+            {
+                throw new InvalidOperationException("The database was unreachable.");
+            }
+
+            if (Order is not null)
+            {
+                SavedStates.Add(new SavedOrderState(Order.Status, Order.InventoryReservationId, Order.PaymentId));
+            }
+
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeCatalogClient : ICatalogCheckoutClient
@@ -273,13 +351,14 @@ public sealed class CheckoutHandlerTests
 
     private sealed class FakePaymentsClient(bool authorized) : IPaymentsCheckoutClient
     {
+        public Guid PaymentId { get; } = Guid.NewGuid();
         public int AuthorizeCalls { get; private set; }
         public decimal AuthorizedAmount { get; private set; }
         public Task<PaymentAuthorizationSnapshot> AuthorizeAsync(Guid orderId, decimal amount, string currency, string paymentMethod, CancellationToken cancellationToken)
         {
             AuthorizeCalls++;
             AuthorizedAmount = amount;
-            return Task.FromResult(new PaymentAuthorizationSnapshot(Guid.NewGuid(), orderId, authorized ? "Authorized" : "Failed", authorized));
+            return Task.FromResult(new PaymentAuthorizationSnapshot(PaymentId, orderId, authorized ? "Authorized" : "Failed", authorized));
         }
     }
 }

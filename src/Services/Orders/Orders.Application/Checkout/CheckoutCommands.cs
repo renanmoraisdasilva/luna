@@ -64,8 +64,12 @@ public sealed class CheckoutHandler(
         await orderRepository.SaveChangesAsync(cancellationToken);
 
         var reservation = await ReserveInventoryAsync(order, cart, cancellationToken);
+        await RecordInventoryReservationAsync(order, reservation, cancellationToken);
+
         var payment = await AuthorizePaymentAsync(order, reservation, command.Request, cancellationToken);
-        await ConfirmOrderAsync(order, reservation, payment, cancellationToken);
+        await RecordPaymentAuthorizationAsync(order, payment, cancellationToken);
+
+        await ConfirmOrderAsync(order, cancellationToken);
         logger.LogInformation("Order confirmed for checkout {OrderId}", order.Id);
 
         return CreateResponse(order, reservation, payment, command.Request);
@@ -272,13 +276,37 @@ public sealed class CheckoutHandler(
         throw new CheckoutRejectedException(code, message, innerException);
     }
 
-    private async Task ConfirmOrderAsync(
+    private async Task RecordInventoryReservationAsync(
         Order order,
         InventoryReservationSnapshot reservation,
+        CancellationToken cancellationToken)
+    {
+        // Each external step is persisted the moment it succeeds, rather than all of them at the end. If the
+        // process dies part-way through checkout, the order still records which steps completed, so the
+        // reservation and the payment can be found and unwound instead of being orphaned in other services.
+        logger.LogInformation(
+            "Recording inventory reservation {ReservationId} for order {OrderId}",
+            reservation.ReservationId,
+            order.Id);
+        order.RecordInventoryReservation(reservation.ReservationId);
+        await orderRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task RecordPaymentAuthorizationAsync(
+        Order order,
         PaymentAuthorizationSnapshot payment,
         CancellationToken cancellationToken)
     {
-        order.RecordCheckoutResult(reservation.ReservationId, payment.PaymentId);
+        logger.LogInformation(
+            "Recording payment authorization {PaymentId} for order {OrderId}",
+            payment.PaymentId,
+            order.Id);
+        order.RecordPaymentAuthorization(payment.PaymentId);
+        await orderRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ConfirmOrderAsync(Order order, CancellationToken cancellationToken)
+    {
         order.Confirm();
         await orderRepository.SaveChangesAsync(cancellationToken);
     }
