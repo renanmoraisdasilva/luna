@@ -481,21 +481,28 @@ Scenarios include:
 
 ## Project Status
 
-**Current position: Phase 0 complete; Phase 1 implementation substantially complete and in closure; Phase 2 specified with the Floci messaging direction accepted and the emulator verified locally, but no Phase 2 service code yet; the initial Luna Ops workflow and observability foundation are delivered ahead of the original sequence.**
+**Current position: Phase 0 complete; Phase 1 complete (closed 2026-10-14); Phase 2 specified with the Floci messaging direction accepted and the emulator verified locally, but no Phase 2 service code yet; the initial Luna Ops workflow and observability foundation are delivered ahead of the original sequence.**
 
 Luna is being built incrementally. Architecture and implementation decisions may change as new requirements and failure scenarios are introduced. The repository is intentionally a work in progress.
 
 ### Recorded quality gate
 
-Coverage is measured and enforced in CI as of 2026-10-01. The numbers below are the first measured values; they
-replace the previous state, where no coverage number was recorded anywhere in the repository and the
-thresholds in `scripts/test-coverage.sh` and `vitest.config.mjs` were never evaluated by anything.
+Coverage is measured and enforced in CI. The gate was first recorded on 2026-10-01, when no coverage number
+previously existed anywhere in the repository and the thresholds in `scripts/test-coverage.sh` and
+`vitest.config.mjs` were never evaluated by anything. The numbers below were re-measured during the Phase 1
+closure review on 2026-10-14 and are the values enforced by CI today.
 
 | Metric | Measured | Gate | Enforced by |
 | --- | --- | --- | --- |
-| Backend branch coverage | 87.8% | 80% | `scripts/check-backend-coverage.mjs`, called from `ci.yml` |
-| Frontend branch coverage | 94.9% | 90% | `vitest run --coverage` |
-| Frontend statements | 93.7% | — | reported in the CI summary |
+| Backend branch coverage | 81.0% (2026-10-14) | 80% | `scripts/check-backend-coverage.mjs`, called from `ci.yml` |
+| Frontend branch coverage | 92.4% (2026-10-14) | 90% | `vitest run --coverage` |
+| Frontend statements | 91.2% (2026-10-14) | — | reported in the CI summary |
+
+The backend number moved down from the first measurement (87.8% on 2026-10-01) because the checkout-saga
+work landed after that recording and added branches faster than the suites covered them. The gate still
+passes, but the headroom above it is now about one point rather than eight, which raises the value of the
+Wave 3/4 test work described below: the next uncovered error and recovery path is enough to turn the gate
+red.
 
 Backend coverage merges the unit and integration suites through ReportGenerator. Integration coverage is
 collected because that is where repositories, checkout orchestration, and controllers are actually exercised;
@@ -526,7 +533,7 @@ and that no controller names a `DbContext` or an Infrastructure repository.
 
 Phase 0 is complete: the six services, independent persistence, EF Core migration startup, Docker Compose environment, health endpoints, OpenAPI documentation, centralized tests, Next.js gateway, and CI/container publishing foundations are in place.
 
-Test counts as of 2026-10-01: 226 unit tests, 115 integration tests, 147 frontend tests. The integration suite
+Test counts as of 2026-10-14: 231 unit tests, 147 integration tests, 162 frontend tests. The integration suite
 is Docker-dependent and requires SQL Server containers through Testcontainers.
 
 Phase 1 is substantially implemented through the synchronous customer commerce path. The catalog storefront supports server-rendered active products, search, category filtering, URL-based pagination, product details, and image galleries. Authenticated customers can use the cart, checkout, order history, order details, account pages, and the Identity/OpenIddict session boundary. Orders coordinates Catalog, Shipping, Inventory, and Payments through authenticated service clients; Inventory provides concurrency-safe reservations and release; Payments provides deterministic authorization with concurrency protection; and Orders persists price/shipping snapshots, fulfillment state, and checkout idempotency.
@@ -535,14 +542,14 @@ The initial Luna Ops workflow is also implemented: operators can review and filt
 
 The project also has a delivered observability foundation ahead of the original phase sequence: OpenTelemetry instrumentation, OTLP collection, SigNoz local infrastructure, host metrics, a tracked service-health dashboard, checkout stage logging, health checks, and a frontend SigNoz link. This is not yet the Phase 9 Operations Console or Phase 11 failure-injection tooling.
 
-Phase 1 closure is still pending the implementation review; the recorded quality gate is now in place. The complete checkout and compensation failure matrix is now proven across real service boundaries: successful checkout across Catalog, Shipping, Inventory, and Payments, insufficient inventory without payment attempt, payment failure with reservation release, shipment creation failure that leaves the order `Preparing` with a successful subsequent attempt, and repeated idempotent checkout requests replaying a single order, reservation, payment, and quote. Customer order details read customer-scoped shipment identifiers, status, and tracking events from Shipping, and real Orders/Shipping HTTP lifecycle tests cover fulfillment through delivery plus invalid and duplicate shipment transitions. The Docker-dependent integration suite passes locally, and the frontend build, Compose smoke checks, and coverage are now recorded together in the quality gate above. Frontend checkout error-state coverage is present and is no longer a closure blocker.
+Phase 1 was closed on 2026-10-14 with an implementation review that verified every acceptance criterion in the phase-1 specification against the code and ran the full quality gate in one execution: .NET format, Release build, the unit and integration suites with coverage and the 80% backend branch gate, frontend lint, tests with the 90% branch gate, the production build, and the Compose smoke checks (production config validation, stack build, all seven health endpoints, shop page, teardown). The checkout and compensation failure matrix described above, the Orders/Shipping lifecycle tests, and customer-scoped tracking all re-passed in that run. Two SQL Server Testcontainers readiness timeouts were the only integration failures, were confirmed environmental, and passed on rerun. The review found and closed three gaps: the customer order timeline was missing the "Payment authorized" stage required by SPEC-FE-007, cart mutations could surface raw Axios messages or fail silently contrary to SPEC-FE-004, and a new `sprintf-js` advisory behind `swagger-ui-react` had held the `npm audit --omit=dev` gate red for every pull request since 2026-10-07; `swagger-ui-react` moved to devDependencies and the audit gate is clean again.
 
 ### Phase position
 
 | Phase | Position | Notes |
 | --- | --- | --- |
 | 0 | Complete | Foundation, service boundaries, infrastructure, CI, and baseline security are implemented. |
-| 1 | In closure | Synchronous commerce path, customer tracking, the Orders/Shipping lifecycle proof, and the real-boundary checkout failure matrix are implemented; the quality gate is recorded and enforced in CI, and the closure review remains. |
+| 1 | Complete | Closed 2026-10-14: the synchronous commerce path, customer tracking, the Orders/Shipping lifecycle proof, the real-boundary checkout failure matrix, and the recorded quality gate were all verified against the specification in the closure review. |
 | 2 | Specified, infrastructure started | The Phase 2 specification and architecture are accepted. Floci (EventBridge + SQS + SES) replaces the earlier RabbitMQ plan and the earlier LocalStack choice, and the Ops command queue is deferred to Phase 3. The emulator and its UI are wired into the local Compose stack, and the bus, queues, DLQs, rules, and sender identity are declared in Terraform and verified against the emulator; the producers and the Notification service do not exist yet. |
 | 3-7 | Not started | Simulation, reliability, outbox, fuller payment lifecycle, and Fulfillment extraction remain future work. |
 | 8 | Foundation delivered | Telemetry and local SigNoz are implemented; operational dashboards and workflows remain later work. |
@@ -550,6 +557,6 @@ Phase 1 closure is still pending the implementation review; the recorded quality
 
 ### Next steps
 
-1. Close Phase 1 with an implementation review, then continue Phase 2 by adding the event producers and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required. The emulator runs locally and the messaging resources are managed by Terraform.
+1. Phase 2 is next: add the event producers and the Notification service around the completed synchronous commerce workflow, while preserving synchronous HTTP where an immediate response is required. The emulator runs locally and the messaging resources are managed by Terraform; the implementation checklist lives in `documentation/dev_phases/phase-2/spec.md`.
 
 Asynchronous consumers, retries, dead-letter queues, the transactional outbox, and distributed recovery remain future work. Observability should be used while implementing those phases so the new failure behavior is visible from its first version.

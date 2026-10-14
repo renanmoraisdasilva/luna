@@ -196,13 +196,30 @@ production dependencies**. Scoping the gate to production would have caught ever
 - An audit gate that cannot go green trains people to ignore it. Scope it to what actually ships.
 - Do not weaken a security gate silently. Write down what it no longer covers and why.
 
+The same pattern recurred on 2026-10-07, when `npm audit --omit=dev` went red on every pull request: a new
+advisory, GHSA-hp3w-g68c-fv3c, marked **every published `sprintf-js` version** (range `<=1.1.3`) as vulnerable,
+with no patched release upstream. The only production path to it ran through `swagger-ui-react → remarkable →
+argparse → sprintf-js`, so no non-breaking update could clear it. Measuring showed the same conclusion as
+`braces`: no patch exists, so the fix was a dependency-classification policy decision — see the retraction
+under section 6 — and `npm audit fix` cleared the one genuinely fixable advisory (`source-map-js`).
+
 ---
 
 ## 6. A public API surface can hide behind a dev-only dependency
 
-`swagger-ui-react` must stay in `dependencies` even though it is only used to render the OpenAPI UI.
-Moving it to `devDependencies` breaks `next build`, because the route is statically analysed at build time.
-The code is dev-only in *behaviour* but not in *bundling*.
+**Retracted 2026-10-14 by measurement.** This section previously claimed that moving `swagger-ui-react` to
+`devDependencies` breaks `next build`, because the route is statically analysed at build time. That claim
+was theoretical and is wrong. Measured on 2026-10-14: `next build` succeeds with `swagger-ui-react` in
+`devDependencies`, because both CI and the frontend Dockerfile build stage run `npm ci`, which installs
+devDependencies, and Next bundles the import regardless of how npm classifies it; the runtime image is
+`.next/standalone` and installs nothing. The full gate — lint, tests, production build, Compose image build —
+passed after the move.
+
+The move happened because a `sprintf-js` advisory with no upstream fix (see section 5) sat behind
+`swagger-ui-react` and held the `npm audit --omit=dev` gate red for every pull request from 2026-10-07.
+Classification here is a gate-scoping decision, not a bundling fact: the explorer code still compiles into
+the swagger page's chunk. The page returns 404 unless `ENABLE_API_EXPLORER=true` and an admin session, and
+the production Compose configuration forces the flag off, so the chunk is never reachable in production.
 
 Separately, `OperationsSidebar.tsx` still links to `/swagger`. Since Swagger is now gated to Development and
 to admins, that link is dead in production and has not been removed.

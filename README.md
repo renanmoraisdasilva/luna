@@ -148,11 +148,11 @@ The full architecture, including the token flows and where the data lives, is in
   live operations console.
 - **OpenIddict authentication** with role-based access; the operations console is
   gated on `Admin` by a real authorization policy, not just a hidden link.
-- **93 test files** — 57 backend, 36 frontend.
+- **100 test files** — 62 backend (27 unit, 35 integration), 38 frontend.
 - **3 CI workflows** covering validation, Docker image publishing, and Terraform
   plan/apply.
 
-Phase 1 is in closure. Phase 2 — messaging and asynchronous workflows — is the
+Phase 1 is complete. Phase 2 — messaging and asynchronous workflows — is the
 next one.
 
 ---
