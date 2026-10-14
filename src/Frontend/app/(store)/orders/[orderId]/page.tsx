@@ -12,7 +12,8 @@ import type { ShipmentTracking } from '../../../../lib/api/shipping';
 type OrderDetailsProps = { params: Promise<{ orderId: string }> };
 
 const timeline = [
-  { key: 'Confirmed', label: 'Order placed' },
+  { key: 'OrderPlaced', label: 'Order placed' },
+  { key: 'PaymentAuthorized', label: 'Payment authorized' },
   { key: 'Preparing', label: 'Preparing' },
   { key: 'Shipped', label: 'Shipped' },
   { key: 'Delivered', label: 'Delivered' },
@@ -29,9 +30,10 @@ function shipmentStatusLabel(status: string) {
 }
 
 function timelineIndex(status: string) {
-  if (status === 'Delivered') return 3;
-  if (status === 'Shipped') return 2;
-  if (status === 'Preparing') return 1;
+  if (status === 'Delivered') return 4;
+  if (status === 'Shipped') return 3;
+  if (status === 'Preparing') return 2;
+  if (status === 'Confirmed') return 1;
   return 0;
 }
 
@@ -43,9 +45,9 @@ function formatAddress(order: Order) {
 function ShipmentTimeline({ order, tracking }: { order: Order; tracking: ShipmentTracking | null }) {
   const activeIndex = timelineIndex(order.status);
   return <div className="space-y-xl">
-    <div className="relative grid grid-cols-4 items-start">
-      <div className="absolute left-[12.5%] right-[12.5%] top-2.5 border-t-2 border-dashed border-border-standard" aria-hidden="true" />
-      <div className="absolute left-[12.5%] top-2.5 h-0.5 bg-primary transition-all" style={{ width: `${Math.max(0, activeIndex / 3 * 75)}%` }} aria-hidden="true" />
+    <div className="relative grid grid-cols-5 items-start">
+      <div className="absolute left-[10%] right-[10%] top-2.5 border-t-2 border-dashed border-border-standard" aria-hidden="true" />
+      <div className="absolute left-[10%] top-2.5 h-0.5 bg-primary transition-all" style={{ width: `${Math.max(0, activeIndex / 4 * 80)}%` }} aria-hidden="true" />
       {timeline.map((step, index) => {
         const complete = index < activeIndex;
         const active = index === activeIndex;

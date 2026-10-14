@@ -230,16 +230,24 @@
                 .timeline-step.step-3 .timeline-status-dot {
                         animation: step-3-state 3s ease-in-out forwards;
                 }
-                .timeline-step.step-3 .timeline-pulse {
-                        animation: step-3-pulse 3s ease-in-out forwards;
+                .timeline-step.step-3 .timeline-icon {
+                        animation: step-3-icon 3s ease-in-out forwards;
+                }
+                .timeline-step.step-4 .timeline-status-dot {
+                        animation: step-4-state 3s ease-in-out forwards;
+                }
+                .timeline-step.step-4 .timeline-pulse {
+                        animation: step-4-pulse 3s ease-in-out forwards;
                 }
                 @keyframes shipment-progress {
                         0% { transform: translateY(-50%) scaleX(0); }
-                        25% { transform: translateY(-50%) scaleX(0.33); }
-                        33% { transform: translateY(-50%) scaleX(0.33); }
-                        58% { transform: translateY(-50%) scaleX(0.66); }
-                        66% { transform: translateY(-50%) scaleX(0.66); }
-                        100% { transform: translateY(-50%) scaleX(0.66); }
+                        20% { transform: translateY(-50%) scaleX(0.25); }
+                        28% { transform: translateY(-50%) scaleX(0.25); }
+                        40% { transform: translateY(-50%) scaleX(0.5); }
+                        48% { transform: translateY(-50%) scaleX(0.5); }
+                        58% { transform: translateY(-50%) scaleX(0.75); }
+                        66% { transform: translateY(-50%) scaleX(0.75); }
+                        100% { transform: translateY(-50%) scaleX(0.75); }
                 }
                 @keyframes step-1-state {
                         0%, 12% { background: #ffffff; border-color: #d1d5db; }
@@ -259,9 +267,17 @@
                 }
                 @keyframes step-3-state {
                         0%, 52% { background: #ffffff; border-color: #d1d5db; }
+                        60%, 100% { background: #0f1e31; border-color: #0f1e31; }
+                }
+                @keyframes step-3-icon {
+                        0%, 52% { opacity: 0; transform: scale(0.4); }
+                        60%, 100% { opacity: 1; transform: scale(1); }
+                }
+                @keyframes step-4-state {
+                        0%, 52% { background: #ffffff; border-color: #d1d5db; }
                         60%, 100% { background: #ffffff; border-color: #0f1e31; }
                 }
-                @keyframes step-3-pulse {
+                @keyframes step-4-pulse {
                         0%, 45% { opacity: 0; transform: scale(0.2); }
                         60%, 100% { opacity: 1; transform: scale(1); }
                 }
@@ -272,7 +288,9 @@
                         .timeline-step.step-2 .timeline-status-dot,
                         .timeline-step.step-2 .timeline-icon,
                         .timeline-step.step-3 .timeline-status-dot,
-                        .timeline-step.step-3 .timeline-pulse { animation: none; }
+                        .timeline-step.step-3 .timeline-icon,
+                        .timeline-step.step-4 .timeline-status-dot,
+                        .timeline-step.step-4 .timeline-pulse { animation: none; }
                 }
     </style>
 </head>
@@ -313,11 +331,11 @@
 <div class="bg-surface-card border border-border-standard rounded-lg p-xl shadow-sm">
 <h2 class="font-product-title text-product-title mb-xl text-on-surface">Track Shipment</h2>
 <!-- Horizontal Timeline -->
-<div class="relative grid grid-cols-4 items-center w-full">
+<div class="relative grid grid-cols-5 items-center w-full">
 <!-- Pending Progress Line -->
-<div class="absolute top-[12px] left-[12.5%] w-[75%] border-t-2 border-dashed border-border-standard z-0 translate-y-[-50%]"></div>
+<div class="absolute top-[12px] left-[10%] w-[80%] border-t-2 border-dashed border-border-standard z-0 translate-y-[-50%]"></div>
 <!-- Active Progress Line -->
-<div class="absolute top-[12px] left-[12.5%] w-[75%] h-0.5 bg-primary z-0 shipment-progress-line"></div>
+<div class="absolute top-[12px] left-[10%] w-[80%] h-0.5 bg-primary z-0 shipment-progress-line"></div>
 <!-- Step 1: Order Placed (Completed) -->
 <div class="timeline-step step-1">
 <div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm">
@@ -325,21 +343,28 @@
 </div>
 <span class="font-status-pill text-status-pill mt-sm text-on-surface text-center bg-surface-card px-sm">Order placed</span>
 </div>
-<!-- Step 2: Preparing (Completed) -->
+<!-- Step 2: Payment Authorized (Completed) -->
 <div class="timeline-step step-2">
+<div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm">
+<span class="timeline-icon material-symbols-outlined text-[16px] text-on-primary" data-icon="check">check</span>
+</div>
+<span class="font-status-pill text-status-pill mt-sm text-on-surface text-center bg-surface-card px-sm">Payment authorized</span>
+</div>
+<!-- Step 3: Preparing (Completed) -->
+<div class="timeline-step step-3">
 <div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm">
 <span class="timeline-icon material-symbols-outlined text-[16px] text-on-primary" data-icon="check">check</span>
 </div>
 <span class="font-status-pill text-status-pill mt-sm text-on-surface text-center bg-surface-card px-sm">Preparing</span>
 </div>
-<!-- Step 3: Shipped (Active) -->
-<div class="timeline-step step-3">
+<!-- Step 4: Shipped (Active) -->
+<div class="timeline-step step-4">
 <div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm relative">
 <div class="timeline-pulse"></div>
 </div>
 <span class="font-status-pill text-status-pill mt-sm text-primary font-bold text-center bg-surface-card px-sm">Shipped</span>
 </div>
-<!-- Step 4: Delivered (Pending) -->
+<!-- Step 5: Delivered (Pending) -->
 <div class="timeline-step">
 <div class="timeline-status-dot w-xl h-xl rounded-full shadow-sm bg-surface-card" style="border-color: #d1d5db; background: #ffffff;"></div>
 <span class="font-status-pill text-status-pill mt-sm text-on-surface-variant text-center bg-surface-card px-sm">Delivered</span>

@@ -30,11 +30,13 @@ export default function ProductPurchase({ product }: { product: CatalogProduct }
             <Icon name="add" />
           </button>
         </div>
-        <AddToCartButton
-          productId={product.id}
-          quantity={quantity}
-          className="flex h-control min-w-0 flex-1 items-center justify-center gap-sm rounded-button bg-primary py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:bg-primary-container hover:text-on-primary-container active:scale-[0.98]"
-        />
+        <div className="flex flex-1 flex-col gap-sm">
+          <AddToCartButton
+            productId={product.id}
+            quantity={quantity}
+            className="flex h-control min-w-0 w-full items-center justify-center gap-sm rounded-button bg-primary py-sm font-label-caps text-label-caps uppercase text-on-primary transition-colors hover:bg-primary-container hover:text-on-primary-container active:scale-[0.98]"
+          />
+        </div>
       </div>
     </div>
   );

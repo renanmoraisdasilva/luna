@@ -53,5 +53,29 @@ describe('AddToCartButton', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add to Cart' }));
 
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/login?returnUrl=%2Fshop%2Fproducts%2Fproduct-1%3Fsearch%3Dkeyboard'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows the backend message when adding the item fails', async () => {
+    vi.mocked(addCartItem).mockRejectedValue({
+      response: { status: 500, data: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred.' } },
+    });
+
+    renderButton({ productId: 'product-1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Cart' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('An unexpected error occurred.'));
+    expect(mocks.push).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Add to Cart' })).toBeInTheDocument();
+  });
+
+  it('falls back to a friendly message when the failure carries no structured body', async () => {
+    vi.mocked(addCartItem).mockRejectedValue(new Error('Request failed with status code 500'));
+
+    renderButton({ productId: 'product-1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Cart' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('We could not add this item to your cart.'));
+    expect(screen.queryByText('Request failed with status code 500')).not.toBeInTheDocument();
   });
 });

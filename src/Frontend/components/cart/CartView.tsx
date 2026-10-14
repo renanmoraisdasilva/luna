@@ -9,6 +9,7 @@ import Icon from '../layout/Icon';
 import { getProduct } from '../../lib/api/catalog';
 import { changeCartItemQuantity, getCart, removeCartItem } from '../../lib/api/orders';
 import type { CartItem } from '../../lib/api/orders';
+import { getApiErrorMessage } from '../../lib/api/errors';
 import { formatCurrency } from '../../lib/formatters/currency';
 
 function getErrorStatus(error: unknown): number | undefined {
@@ -152,7 +153,7 @@ export default function CartView() {
             </article>
           ))}
           {hasUnavailableProduct ? <p className="font-status-pill text-status-pill text-status-error" role="alert">One or more products are no longer available. Remove them before checkout.</p> : null}
-          {mutationError ? <p className="font-status-pill text-status-pill text-status-error" role="alert">{mutationError instanceof Error ? mutationError.message : 'We could not update your cart.'}</p> : null}
+          {mutationError ? <p className="font-status-pill text-status-pill text-status-error" role="alert">{getApiErrorMessage(mutationError, 'We could not update your cart.')}</p> : null}
         </div>
         <aside className="w-full lg:w-[380px]">
           <div className="sticky top-[100px] rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm">

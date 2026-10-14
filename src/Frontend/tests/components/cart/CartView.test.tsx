@@ -62,14 +62,27 @@ describe('CartView', () => {
     await waitFor(() => expect(getCart).toHaveBeenCalledTimes(2));
   });
 
-  it('shows an error when changing quantity fails', async () => {
+  it('never surfaces a raw exception message when changing quantity fails', async () => {
     vi.mocked(changeCartItemQuantity).mockRejectedValueOnce(new Error('Cart update failed.'));
 
     renderCart();
     await waitFor(() => expect(screen.getByText('Keyboard')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Increase quantity for Keyboard' }));
 
-    await waitFor(() => expect(screen.getByText('Cart update failed.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('We could not update your cart.')).toBeInTheDocument());
+    expect(screen.queryByText('Cart update failed.')).not.toBeInTheDocument();
+  });
+
+  it('shows the backend message when a cart mutation is rejected with a structured error', async () => {
+    vi.mocked(changeCartItemQuantity).mockRejectedValueOnce({
+      response: { status: 409, data: { code: 'CART_CONFLICT', message: 'That item changed in your cart. Refresh and try again.' } },
+    });
+
+    renderCart();
+    await waitFor(() => expect(screen.getByText('Keyboard')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Increase quantity for Keyboard' }));
+
+    await waitFor(() => expect(screen.getByText('That item changed in your cart. Refresh and try again.')).toBeInTheDocument());
   });
 
   it('redirects to login when loading the cart is unauthorized', async () => {
