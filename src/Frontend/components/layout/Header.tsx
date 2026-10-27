@@ -35,7 +35,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 z-50 flex h-4xl w-full justify-center border-b border-[#e5e7eb] bg-[#fbf9fa] shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+    <header className="fixed top-0 z-50 flex h-4xl w-full justify-center border-b border-[#e5e7eb] bg-background shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
       <div className="relative mx-auto flex h-full w-full max-w-[1280px] items-center justify-between px-lg md:px-xl">
         <Link className="font-display text-display font-bold text-primary" href="/shop">
           Luna
@@ -45,7 +45,7 @@ export default function Header() {
             <Link
               className={pathname === link.href || pathname.startsWith(`${link.href}/`)
                 ? 'flex h-full items-center border-b-2 border-on-background pt-xs font-bold text-on-background'
-                : 'flex h-full items-center text-[#6b7280] transition-colors duration-200 hover:text-[#253347]'}
+                : 'flex h-full items-center text-[#6b7280] transition-colors duration-200 hover:text-primary-container'}
               href={link.href}
               key={link.href}
             >

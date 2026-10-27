@@ -53,7 +53,7 @@ export default async function CheckoutPage() {
   const { cart, products, shippingMethods } = await getCheckoutData();
   return (
     <>
-      <main className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-grow flex-col gap-xl px-lg py-3xl md:px-xl">
+      <main className="mx-auto flex min-h-screen w-full max-w-[1280px] grow flex-col gap-xl px-lg py-3xl md:px-xl">
         <div>
           <p className="font-label-caps text-label-caps uppercase tracking-widest text-secondary">Secure checkout</p>
           <h1 className="mt-sm font-headline-lg text-headline-lg-mobile text-on-background md:text-headline-lg">Complete your order</h1>

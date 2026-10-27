@@ -32,7 +32,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <>
-      <main className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-grow flex-col gap-xl px-lg py-3xl md:px-xl">
+      <main className="mx-auto flex min-h-screen w-full max-w-[1280px] grow flex-col gap-xl px-lg py-3xl md:px-xl">
         <section className="flex flex-col gap-sm">
           <h1 className="font-headline-lg text-headline-lg-mobile text-on-background md:text-headline-lg">Shop</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">Browse our collection of professional hardware and accessories.</p>

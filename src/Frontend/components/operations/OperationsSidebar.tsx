@@ -27,7 +27,7 @@ export default function OperationsSidebar() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col justify-between border-r border-border-standard bg-surface-card shadow-sm lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col justify-between border-r border-border-standard bg-surface-card shadow-xs lg:flex">
         <div className="flex flex-col">
           <div className="flex h-4xl items-center justify-between bg-primary px-lg">
             <div className="flex items-center gap-sm">

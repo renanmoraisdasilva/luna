@@ -40,12 +40,12 @@ export default function LoginForm({ returnUrl = '/' }: { returnUrl?: string }) {
     : null;
 
   return (
-    <div className="relative z-10 w-full max-w-[440px] rounded bg-surface-card p-lg shadow-sm sm:p-xl">
+    <div className="relative z-10 w-full max-w-[440px] rounded-sm bg-surface-card p-lg shadow-xs sm:p-xl">
       <form className="flex flex-col gap-xl" onSubmit={handleSubmit(handleLogin)} noValidate>
         <div className="flex flex-col gap-xs text-left">
           <label className="font-label-caps text-label-caps uppercase tracking-wider text-on-surface" htmlFor="email">Email address</label>
           <input
-            className="h-control rounded border border-transparent bg-surface-base px-md font-body-md text-body-md text-on-surface outline-none transition-all focus:border-border-standard focus:bg-surface-card"
+            className="h-control rounded-sm border border-transparent bg-surface-base px-md font-body-md text-body-md text-on-surface outline-hidden transition-all focus:border-border-standard focus:bg-surface-card"
             id="email"
             placeholder="jane.doe@example.com"
             type="email"
@@ -63,7 +63,7 @@ export default function LoginForm({ returnUrl = '/' }: { returnUrl?: string }) {
           </div>
           <div className="relative flex items-center">
             <input
-              className="h-control w-full rounded border border-transparent bg-surface-base px-md pr-16 font-body-md text-body-md text-on-surface outline-none transition-all focus:border-border-standard focus:bg-surface-card"
+              className="h-control w-full rounded-sm border border-transparent bg-surface-base px-md pr-16 font-body-md text-body-md text-on-surface outline-hidden transition-all focus:border-border-standard focus:bg-surface-card"
               id="password"
               placeholder="••••••••"
               type={showPassword ? 'text' : 'password'}
@@ -83,7 +83,7 @@ export default function LoginForm({ returnUrl = '/' }: { returnUrl?: string }) {
           <input className="h-4 w-4 accent-primary" type="checkbox" name="remember" />
           Remember this device
         </label>
-        <button className="flex h-control w-full items-center justify-center rounded bg-primary font-product-title text-product-title text-on-primary transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={loginMutation.isPending}>
+        <button className="flex h-control w-full items-center justify-center rounded-sm bg-primary font-product-title text-product-title text-on-primary transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={loginMutation.isPending}>
           {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
         </button>
       </form>

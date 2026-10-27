@@ -1,7 +1,99 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@100..900&family=Manrope:wght@400;600;700;800&family=Material+Symbols+Outlined:FILL,wght,GRAD@0..1,100..700,0..200&display=swap');
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@100..900&family=Manrope:wght@400;600;700;800&family=Material+Symbols+Outlined:FILL,wght,GRAD@0..1,100..700,0..200&display=swap')
+layer(base);
+@import 'tailwindcss';
+
+@theme {
+  --color-background: #fbf9fa;
+  --color-surface-card: #ffffff;
+  --color-surface-container: #efedef;
+  --color-surface-container-high: #eae7e9;
+  --color-surface-container-low: #f5f3f5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-base: #f8fafc;
+  --color-surface-variant: #e4e2e4;
+  --color-primary: #0f1e31;
+  --color-primary-container: #253347;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #8d9bb3;
+  --color-secondary: #515f74;
+  --color-on-background: #1b1b1d;
+  --color-on-surface: #1b1b1d;
+  --color-on-surface-variant: #44474c;
+  --color-status-success: #10b981;
+  --color-status-error: #dc2626;
+  --color-status-warning: #f59e0b;
+  --color-error-container: #ffdad6;
+  --color-border-standard: #e2e8f0;
+  --color-border-subtle: #f1f5f9;
+  --color-outline: #75777d;
+  --color-outline-variant: #c5c6cd;
+
+  --radius-button: 0.25rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  --spacing-control: 40px;
+
+  --font-display: Inter, sans-serif;
+  --font-label-caps: Inter, sans-serif;
+  --font-status-pill: Inter, sans-serif;
+  --font-headline-lg: Inter, sans-serif;
+  --font-product-title: Inter, sans-serif;
+  --font-body-md: Inter, sans-serif;
+
+  --text-display: 48px;
+  --text-display--line-height: 56px;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 700;
+  --text-label-caps: 12px;
+  --text-label-caps--line-height: 16px;
+  --text-label-caps--letter-spacing: 0.05em;
+  --text-label-caps--font-weight: 600;
+  --text-status-pill: 13px;
+  --text-status-pill--line-height: 16px;
+  --text-status-pill--font-weight: 500;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-lg-mobile: 28px;
+  --text-headline-lg-mobile--line-height: 36px;
+  --text-headline-lg-mobile--letter-spacing: -0.02em;
+  --text-headline-lg-mobile--font-weight: 700;
+  --text-product-title: 20px;
+  --text-product-title--line-height: 28px;
+  --text-product-title--letter-spacing: -0.01em;
+  --text-product-title--font-weight: 600;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 html { scrollbar-gutter: stable; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }

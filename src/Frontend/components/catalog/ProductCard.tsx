@@ -16,7 +16,7 @@ export default function ProductCard({ product }: { product: CatalogProduct }) {
           <div className="flex h-full items-center justify-center font-label-caps text-label-caps uppercase text-on-surface-variant">No image</div>
         )}
       </div>
-      <div className="flex flex-grow flex-col p-lg">
+      <div className="flex grow flex-col p-lg">
         <Link className="mb-xs font-product-title text-product-title text-on-surface hover:text-primary" href={`/shop/products/${product.id}`}>
           {product.name}
         </Link>

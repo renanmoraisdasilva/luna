@@ -19,8 +19,8 @@ function statusClass(status: string) {
 function OrderCard({ order }: { order: OrderSummary }) {
   const date = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(order.createdAt));
   return (
-    <article className="flex flex-col items-start justify-between gap-lg rounded-lg border border-border-standard bg-surface-card p-lg transition-all hover:border-outline hover:shadow-sm md:flex-row md:items-center">
-      <div className="flex min-w-0 flex-grow flex-col gap-sm">
+    <article className="flex flex-col items-start justify-between gap-lg rounded-lg border border-border-standard bg-surface-card p-lg transition-all hover:border-outline hover:shadow-xs md:flex-row md:items-center">
+      <div className="flex min-w-0 grow flex-col gap-sm">
         <div className="flex flex-wrap items-center gap-md">
           <h2 className="font-product-title text-product-title text-on-surface">Order #{order.id}</h2>
           <span className={`inline-flex items-center gap-xs rounded-full px-md py-xs font-status-pill text-status-pill ${statusClass(order.status)}`}>
@@ -34,7 +34,7 @@ function OrderCard({ order }: { order: OrderSummary }) {
           <span className="font-bold text-on-surface">{formatCurrency(order.total)}</span>
         </div>
       </div>
-      <Link className="flex h-control w-full items-center justify-center rounded-button border border-border-standard bg-surface-card px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface shadow-sm transition-colors hover:bg-surface-container-low md:w-auto" href={`/orders/${order.id}`}>View order</Link>
+      <Link className="flex h-control w-full items-center justify-center rounded-button border border-border-standard bg-surface-card px-lg py-sm font-label-caps text-label-caps uppercase text-on-surface shadow-xs transition-colors hover:bg-surface-container-low md:w-auto" href={`/orders/${order.id}`}>View order</Link>
     </article>
   );
 }
@@ -46,7 +46,7 @@ export default async function OrdersPage() {
 
   return (
     <>
-      <main className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[1280px] flex-grow flex-col gap-xl px-lg py-3xl md:px-xl">
+      <main className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[1280px] grow flex-col gap-xl px-lg py-3xl md:px-xl">
         <h1 className="font-headline-lg text-headline-lg-mobile text-on-background md:text-headline-lg">My orders</h1>
         {orders.length > 0 ? <div className="flex flex-col gap-xl">{orders.map((order) => <OrderCard key={order.id} order={order} />)}</div> : <section className="rounded-lg border border-border-standard bg-surface-card p-2xl text-center"><h2 className="font-product-title text-product-title text-primary">No orders yet</h2><p className="mt-sm font-body-md text-body-md text-on-surface-variant">Your completed purchases will appear here.</p><Link className="mt-xl inline-flex h-control items-center rounded-button bg-primary px-xl py-sm font-label-caps text-label-caps uppercase text-on-primary" href="/shop">Start shopping</Link></section>}
       </main>

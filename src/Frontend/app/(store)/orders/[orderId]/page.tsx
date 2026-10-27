@@ -52,7 +52,7 @@ function ShipmentTimeline({ order, tracking }: { order: Order; tracking: Shipmen
         const complete = index < activeIndex;
         const active = index === activeIndex;
         return <div className="relative z-10 flex flex-col items-center" key={step.key}>
-          <div className={`flex h-xl w-xl items-center justify-center rounded-full border-4 border-white shadow-sm ${complete || active ? 'bg-primary' : 'bg-surface-card ring-1 ring-border-standard'}`}>
+          <div className={`flex h-xl w-xl items-center justify-center rounded-full border-4 border-white shadow-xs ${complete || active ? 'bg-primary' : 'bg-surface-card ring-1 ring-border-standard'}`}>
             {complete ? <span className="timeline-check" aria-hidden="true" /> : active ? <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" /> : null}
           </div>
           <span className={`mt-sm bg-surface-card px-sm text-center font-status-pill text-status-pill ${active ? 'font-bold text-primary' : 'text-on-surface-variant'}`}>{step.label}</span>
@@ -67,7 +67,7 @@ function ShipmentTimeline({ order, tracking }: { order: Order; tracking: Shipmen
 }
 
 function DetailCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section className="rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm"><h2 className="mb-lg border-b border-border-standard pb-sm font-product-title text-product-title text-on-surface">{title}</h2>{children}</section>;
+  return <section className="rounded-lg border border-border-standard bg-surface-card p-xl shadow-xs"><h2 className="mb-lg border-b border-border-standard pb-sm font-product-title text-product-title text-on-surface">{title}</h2>{children}</section>;
 }
 
 export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
@@ -86,7 +86,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
 
   return (
     <>
-      <main className="mx-auto flex w-full max-w-[1280px] flex-grow flex-col gap-xl px-lg py-3xl md:px-xl">
+      <main className="mx-auto flex w-full max-w-[1280px] grow flex-col gap-xl px-lg py-3xl md:px-xl">
         <div className="flex flex-col items-start justify-between gap-lg md:flex-row md:items-center">
           <div><Link className="mb-sm inline-block font-label-caps text-label-caps uppercase text-secondary hover:text-primary" href="/orders">Back to orders</Link><h1 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg">Order #{order.id}</h1></div>
           <PrintButton />
@@ -96,7 +96,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
           <div className="space-y-lg md:col-span-2">
             <DetailCard title="Track shipment"><ShipmentTimeline order={order} tracking={tracking} /></DetailCard>
             <DetailCard title="Activity log"><ul className="space-y-lg">{[{ label: order.status === 'PaymentFailed' ? 'Payment failed' : 'Payment processed', date: activityDate }, { label: 'Order received', date: activityDate }].map((activity) => <li className="flex items-start gap-md" key={activity.label}><span className="mt-xs h-3 w-3 rounded-full border-2 border-outline" aria-hidden="true" /><div><p className="font-body-md text-body-md text-on-surface">{activity.label}</p><p className="mt-xs font-label-caps text-label-caps text-on-surface-variant">{activity.date}</p></div></li>)}</ul></DetailCard>
-            <DetailCard title="Items in your order"><div className="space-y-lg">{order.items.map((item) => { const image = products[item.productId]?.images[0]; return <article className="flex gap-lg rounded-lg border border-border-standard bg-surface-base p-lg" key={item.productId}><div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-low">{image ? <Image className="h-full w-full object-cover" src={image.imageUrl} alt={image.altText || item.productName} width={96} height={96} /> : <span className="flex h-full items-center justify-center font-label-caps text-label-caps uppercase text-on-surface-variant">Luna</span>}</div><div className="flex min-w-0 flex-grow justify-between gap-lg"><div><h3 className="font-body-md text-body-md font-bold text-on-surface">{item.productName}</h3><p className="mt-xs font-label-caps text-label-caps text-on-surface-variant">Qty: {item.quantity}</p></div><p className="whitespace-nowrap text-right font-body-md text-body-md font-medium text-on-surface">{formatCurrency(item.lineTotal)}</p></div></article>; })}</div></DetailCard>
+            <DetailCard title="Items in your order"><div className="space-y-lg">{order.items.map((item) => { const image = products[item.productId]?.images[0]; return <article className="flex gap-lg rounded-lg border border-border-standard bg-surface-base p-lg" key={item.productId}><div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">{image ? <Image className="h-full w-full object-cover" src={image.imageUrl} alt={image.altText || item.productName} width={96} height={96} /> : <span className="flex h-full items-center justify-center font-label-caps text-label-caps uppercase text-on-surface-variant">Luna</span>}</div><div className="flex min-w-0 grow justify-between gap-lg"><div><h3 className="font-body-md text-body-md font-bold text-on-surface">{item.productName}</h3><p className="mt-xs font-label-caps text-label-caps text-on-surface-variant">Qty: {item.quantity}</p></div><p className="whitespace-nowrap text-right font-body-md text-body-md font-medium text-on-surface">{formatCurrency(item.lineTotal)}</p></div></article>; })}</div></DetailCard>
           </div>
 
           <div className="space-y-lg">

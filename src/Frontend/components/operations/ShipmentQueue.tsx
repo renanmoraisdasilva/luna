@@ -84,7 +84,7 @@ export default function ShipmentQueue() {
   const commandPending = inTransitMutation.isPending || deliveredMutation.isPending;
 
   return (
-    <main className="mx-auto flex w-full max-w-[1280px] flex-grow flex-col gap-xl px-lg py-3xl md:px-xl">
+    <main className="mx-auto flex w-full max-w-[1280px] grow flex-col gap-xl px-lg py-3xl md:px-xl">
       <div className="flex flex-col justify-between gap-lg md:flex-row md:items-end">
         <div className="flex flex-col gap-xs">
           <div className="flex items-center gap-sm font-label-caps text-label-caps uppercase tracking-wider text-secondary"><span>Logistics</span><span className="text-secondary/40">/</span><span className="font-semibold text-primary">Shipments</span></div>
@@ -94,7 +94,7 @@ export default function ShipmentQueue() {
         <div className="relative w-full md:w-80">
           <Icon name="search" className="absolute left-md top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-outline" />
           <label className="sr-only" htmlFor="shipment-search">Search shipments</label>
-          <input id="shipment-search" className="h-control w-full rounded-button border border-border-standard bg-surface-card py-xs pl-3xl pr-md font-body-md text-body-md text-on-surface shadow-sm placeholder:text-outline focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Search tracking, order, or customer..." type="search" value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }} />
+          <input id="shipment-search" className="h-control w-full rounded-button border border-border-standard bg-surface-card py-xs pl-3xl pr-md font-body-md text-body-md text-on-surface shadow-xs placeholder:text-outline focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary" placeholder="Search tracking, order, or customer..." type="search" value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }} />
         </div>
       </div>
 
@@ -105,11 +105,11 @@ export default function ShipmentQueue() {
         <Metric label="Delivered" value={countFor('Delivered')} icon="precision" tone="success" />
       </section>
 
-      <section className="overflow-hidden rounded-lg border border-border-standard bg-surface-card shadow-sm" aria-labelledby="shipments-heading">
+      <section className="overflow-hidden rounded-lg border border-border-standard bg-surface-card shadow-xs" aria-labelledby="shipments-heading">
         <div className="flex flex-col justify-between gap-md border-b border-border-standard p-lg sm:flex-row sm:items-center">
           <h2 id="shipments-heading" className="sr-only">Shipment list</h2>
           <div className="flex max-w-full gap-xs overflow-x-auto rounded-button bg-surface-container-low p-xs">
-            {filters.map((filter) => <button key={filter} className={`flex shrink-0 items-center gap-xs rounded-button px-md py-sm font-label-caps text-label-caps transition-colors ${activeFilter === filter ? 'bg-primary text-on-primary shadow-sm' : 'text-secondary hover:bg-surface-container hover:text-on-surface'}`} type="button" onClick={() => changeFilter(filter)} aria-pressed={activeFilter === filter}><span>{filter === 'All' ? 'All' : statusLabel(filter)}</span><span className={`rounded-lg px-xs py-[1px] text-[10px] ${activeFilter === filter ? 'bg-primary-container text-on-primary' : 'bg-surface-container text-secondary'}`}>{countFor(filter)}</span></button>)}
+            {filters.map((filter) => <button key={filter} className={`flex shrink-0 items-center gap-xs rounded-button px-md py-sm font-label-caps text-label-caps transition-colors ${activeFilter === filter ? 'bg-primary text-on-primary shadow-xs' : 'text-secondary hover:bg-surface-container hover:text-on-surface'}`} type="button" onClick={() => changeFilter(filter)} aria-pressed={activeFilter === filter}><span>{filter === 'All' ? 'All' : statusLabel(filter)}</span><span className={`rounded-lg px-xs py-px text-[10px] ${activeFilter === filter ? 'bg-primary-container text-on-primary' : 'bg-surface-container text-secondary'}`}>{countFor(filter)}</span></button>)}
           </div>
           <button className="self-end rounded-lg p-xs text-secondary transition-colors hover:bg-surface-container-low hover:text-on-surface sm:self-auto" type="button" title="Refresh shipments" onClick={() => shipmentsQuery.refetch()}><Icon name="refresh" className="h-5 w-5" /></button>
         </div>
@@ -126,7 +126,7 @@ export default function ShipmentQueue() {
                 <td className="px-lg py-lg"><div className="flex flex-col"><span className="font-status-pill text-status-pill font-semibold text-on-surface">{shipment.customerName}</span><span className="font-label-caps text-label-caps text-secondary">{shipment.destination}</span></div></td>
                 <td className="whitespace-nowrap px-lg py-lg font-status-pill text-status-pill text-secondary">{formatDate(shipment.createdAt)}</td>
                 <td className="px-lg py-lg"><span className={`inline-flex items-center gap-xs rounded-full px-sm py-xs font-status-pill text-status-pill font-medium ${statusClass(shipment.status)}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{statusLabel(shipment.status)}</span></td>
-                <td className="px-xl py-lg text-right">{shipment.availableAction === 'None' ? <span className="px-md font-body-md text-outline">-</span> : <button className="rounded-button bg-primary px-md py-sm font-label-caps text-label-caps font-medium text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60" type="button" disabled={commandPending} onClick={() => runAction(shipment.shipmentId, shipment.availableAction)}>{(inTransitMutation.isPending && inTransitMutation.variables === shipment.shipmentId) ? 'Updating...' : (deliveredMutation.isPending && deliveredMutation.variables === shipment.shipmentId) ? 'Updating...' : shipment.availableAction === 'MarkInTransit' ? 'Mark In Transit' : 'Mark Delivered'}</button>}</td>
+                <td className="px-xl py-lg text-right">{shipment.availableAction === 'None' ? <span className="px-md font-body-md text-outline">-</span> : <button className="rounded-button bg-primary px-md py-sm font-label-caps text-label-caps font-medium text-on-primary shadow-xs transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60" type="button" disabled={commandPending} onClick={() => runAction(shipment.shipmentId, shipment.availableAction)}>{(inTransitMutation.isPending && inTransitMutation.variables === shipment.shipmentId) ? 'Updating...' : (deliveredMutation.isPending && deliveredMutation.variables === shipment.shipmentId) ? 'Updating...' : shipment.availableAction === 'MarkInTransit' ? 'Mark In Transit' : 'Mark Delivered'}</button>}</td>
               </tr>)}
             </tbody>
           </table>
@@ -140,5 +140,5 @@ export default function ShipmentQueue() {
 }
 
 function Metric({ label, value, icon, tone = 'default' }: { label: string; value: number; icon: 'inventory' | 'assignment' | 'shopping-bag' | 'precision'; tone?: 'default' | 'success' }) {
-  return <article className="relative flex min-h-[147px] flex-col justify-between overflow-hidden rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm"><div className="flex items-center justify-between"><span className="font-label-caps text-label-caps uppercase tracking-wider text-secondary">{label}</span><Icon name={icon} className={tone === 'success' ? 'h-5 w-5 text-status-success' : 'h-5 w-5 text-secondary'} /></div><span className="font-display text-display tracking-tight text-primary">{value}</span><div className="h-1 w-full overflow-hidden rounded-full bg-surface-container"><div className={`h-full w-full rounded-full ${tone === 'success' ? 'bg-status-success' : 'bg-primary'}`} /></div></article>;
+  return <article className="relative flex min-h-[147px] flex-col justify-between overflow-hidden rounded-lg border border-border-standard bg-surface-card p-xl shadow-xs"><div className="flex items-center justify-between"><span className="font-label-caps text-label-caps uppercase tracking-wider text-secondary">{label}</span><Icon name={icon} className={tone === 'success' ? 'h-5 w-5 text-status-success' : 'h-5 w-5 text-secondary'} /></div><span className="font-display text-display tracking-tight text-primary">{value}</span><div className="h-1 w-full overflow-hidden rounded-full bg-surface-container"><div className={`h-full w-full rounded-full ${tone === 'success' ? 'bg-status-success' : 'bg-primary'}`} /></div></article>;
 }

@@ -42,7 +42,7 @@ export default function CatalogToolbar({
       <div className="flex w-full flex-col items-start gap-lg md:flex-row md:items-center lg:w-auto">
         <form className="relative w-full md:w-[280px]" onSubmit={handleSubmit}>
           <Icon name="search" className="absolute left-md top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant" />
-          <input key={search} className="h-control w-full rounded border border-outline-variant bg-surface-container-lowest py-sm pl-3xl pr-md font-body-md text-body-md text-on-surface outline-none transition-shadow focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Search products..." type="search" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
+          <input key={search} className="h-control w-full rounded-sm border border-outline-variant bg-surface-container-lowest py-sm pl-3xl pr-md font-body-md text-body-md text-on-surface outline-hidden transition-shadow focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Search products..." type="search" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
         </form>
         <div className="hide-scrollbar flex w-full gap-sm overflow-x-auto pb-xs md:w-auto md:pb-0">
           <Link

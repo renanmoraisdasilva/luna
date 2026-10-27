@@ -31,7 +31,7 @@ const Field = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputEl
   return (
     <div className="flex flex-col gap-xs">
       <label className="font-label-caps text-label-caps uppercase tracking-wider text-on-surface" htmlFor={id}>{label}</label>
-      <input ref={ref} className="h-control rounded border border-outline-variant bg-surface-card px-md font-body-md text-body-md text-on-surface outline-none transition-colors focus:border-primary" id={id} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} {...props} />
+      <input ref={ref} className="h-control rounded-sm border border-outline-variant bg-surface-card px-md font-body-md text-body-md text-on-surface outline-hidden transition-colors focus:border-primary" id={id} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} {...props} />
       {error ? <p className="font-status-pill text-status-pill text-status-error" id={`${id}-error`} role="alert">{error}</p> : null}
     </div>
   );
@@ -100,7 +100,7 @@ export default function CheckoutForm({ cart, products, shippingMethods, email }:
           <h2 className="font-product-title text-product-title text-on-surface">Shipping method</h2>
           <div className="mt-lg space-y-md">
             {shippingMethods.length === 0 ? <p className="font-body-md text-body-md text-on-surface-variant">Shipping methods are temporarily unavailable.</p> : shippingMethods.map((method) => (
-              <label className="flex cursor-pointer items-start gap-md rounded border border-outline-variant p-md transition-colors has-[:checked]:border-primary has-[:checked]:bg-surface-container-low" key={method.id}>
+              <label className="flex cursor-pointer items-start gap-md rounded-sm border border-outline-variant p-md transition-colors has-checked:border-primary has-checked:bg-surface-container-low" key={method.id}>
                 <input className="mt-1 h-4 w-4 accent-primary" type="radio" value={method.code} {...register('shippingMethodCode')} />
                 <span className="flex flex-1 justify-between gap-md font-body-md text-body-md text-on-surface"><span><span className="block font-semibold">{method.name}</span><span className="text-on-surface-variant">Arrives in {method.estimatedDeliveryDays} days</span></span><span className="font-semibold">{formatCurrency(method.cost)}</span></span>
               </label>
@@ -110,12 +110,12 @@ export default function CheckoutForm({ cart, products, shippingMethods, email }:
         </section>
       </div>
       <aside className="w-full lg:w-[380px]">
-        <div className="sticky top-[100px] rounded-lg border border-border-standard bg-surface-card p-xl shadow-sm">
+        <div className="sticky top-[100px] rounded-lg border border-border-standard bg-surface-card p-xl shadow-xs">
           <h2 className="mb-lg font-product-title text-product-title text-on-surface">Order summary</h2>
           <div className="space-y-lg border-b border-border-standard pb-lg">
             {cart.items.map((item) => {
               const product = products[item.productId];
-              return <div className="flex gap-md" key={item.productId}>{product?.images[0] ? <Image className="h-16 w-16 rounded border border-border-standard object-cover" src={product.images[0].imageUrl} alt={product.images[0].altText || product.name} width={64} height={64} /> : null}<div className="min-w-0 flex-1 font-body-md text-body-md"><p className="truncate text-on-surface">{product?.name ?? 'Product unavailable'}</p><p className="text-on-surface-variant">Qty {item.quantity}</p></div><span className="font-body-md text-body-md text-on-surface">{product ? formatCurrency(product.currentPrice * item.quantity) : 'Unavailable'}</span></div>;
+              return <div className="flex gap-md" key={item.productId}>{product?.images[0] ? <Image className="h-16 w-16 rounded-sm border border-border-standard object-cover" src={product.images[0].imageUrl} alt={product.images[0].altText || product.name} width={64} height={64} /> : null}<div className="min-w-0 flex-1 font-body-md text-body-md"><p className="truncate text-on-surface">{product?.name ?? 'Product unavailable'}</p><p className="text-on-surface-variant">Qty {item.quantity}</p></div><span className="font-body-md text-body-md text-on-surface">{product ? formatCurrency(product.currentPrice * item.quantity) : 'Unavailable'}</span></div>;
             })}
           </div>
           <div className="mt-lg space-y-md font-body-md text-body-md text-on-surface-variant"><div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div><div className="flex justify-between"><span>Shipping</span><span>{formatCurrency(shipping)}</span></div></div>

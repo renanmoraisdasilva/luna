@@ -13,7 +13,7 @@ export default function ProductPurchase({ product }: { product: CatalogProduct }
     <div className="flex flex-col gap-xl">
       <div className="flex flex-col gap-sm">
         <span className="inline-flex w-max items-center gap-xs rounded-full border border-outline-variant bg-surface-container-low px-md py-xs font-status-pill text-status-pill text-status-success">
-          <span className="h-[8px] w-[8px] rounded-full bg-status-success" />
+          <span className="h-sm w-sm rounded-full bg-status-success" />
           Available
         </span>
         <h1 className="font-display text-display text-on-background">{product.name}</h1>
@@ -25,7 +25,7 @@ export default function ProductPurchase({ product }: { product: CatalogProduct }
           <button className="flex h-full items-center justify-center border-r border-outline-variant px-md text-on-surface transition-colors hover:bg-surface-container-low" type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity">
             <Icon name="remove" />
           </button>
-          <span className="flex h-full w-[64px] items-center justify-center px-xl text-center font-body-md text-body-md text-on-surface">{quantity}</span>
+          <span className="flex h-full w-4xl items-center justify-center px-xl text-center font-body-md text-body-md text-on-surface">{quantity}</span>
           <button className="flex h-full items-center justify-center border-l border-outline-variant px-md text-on-surface transition-colors hover:bg-surface-container-low" type="button" onClick={() => setQuantity((value) => value + 1)} aria-label="Increase quantity">
             <Icon name="add" />
           </button>

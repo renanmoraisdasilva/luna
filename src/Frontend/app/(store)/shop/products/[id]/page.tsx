@@ -20,7 +20,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <>
-      <main className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-grow flex-col gap-xl px-lg py-3xl md:px-xl">
+      <main className="mx-auto flex min-h-screen w-full max-w-[1280px] grow flex-col gap-xl px-lg py-3xl md:px-xl">
         <nav aria-label="Breadcrumb" className="flex w-full items-center gap-sm font-label-caps text-label-caps text-on-surface-variant">
           <Link className="transition-colors hover:text-primary" href="/shop">Home</Link>
           <Icon name="chevron-right" className="h-4 w-4" />
