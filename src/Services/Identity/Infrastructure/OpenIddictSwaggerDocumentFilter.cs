@@ -1,4 +1,5 @@
-using Microsoft.OpenApi.Models;
+using System.Net.Http;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Luna.Identity.Infrastructure;
@@ -7,35 +8,46 @@ public sealed class OpenIddictSwaggerDocumentFilter : IDocumentFilter
 {
     public void Apply(OpenApiDocument document, DocumentFilterContext context)
     {
-        document.Paths.Add("/.well-known/openid-configuration", new OpenApiPathItem
-        {
-            Operations =
-            {
-                [OperationType.Get] = new OpenApiOperation
-                {
-                    Tags = [new OpenApiTag { Name = "OpenIddict" }],
-                    Summary = "Get OpenID Connect discovery metadata",
-                    Responses =
-                    {
-                        ["200"] = new OpenApiResponse { Description = "Discovery metadata" },
-                    },
-                },
-            },
-        });
+        document.Tags ??= new HashSet<OpenApiTag>();
+        document.Tags.Add(new OpenApiTag { Name = "OpenIddict" });
 
-        document.Paths.Add("/.well-known/jwks", new OpenApiPathItem
+        AddGetOperation(
+            document,
+            "/.well-known/openid-configuration",
+            "Get OpenID Connect discovery metadata",
+            "Discovery metadata");
+
+        AddGetOperation(
+            document,
+            "/.well-known/jwks",
+            "Get token signing public keys",
+            "JSON Web Key Set");
+    }
+
+    private static void AddGetOperation(
+        OpenApiDocument document,
+        string path,
+        string summary,
+        string responseDescription)
+    {
+        var operation = new OpenApiOperation
         {
-            Operations =
+            Tags = new HashSet<OpenApiTagReference>
             {
-                [OperationType.Get] = new OpenApiOperation
-                {
-                    Tags = [new OpenApiTag { Name = "OpenIddict" }],
-                    Summary = "Get token signing public keys",
-                    Responses =
-                    {
-                        ["200"] = new OpenApiResponse { Description = "JSON Web Key Set" },
-                    },
-                },
+                new("OpenIddict", document),
+            },
+            Summary = summary,
+            Responses = new OpenApiResponses
+            {
+                ["200"] = new OpenApiResponse { Description = responseDescription },
+            },
+        };
+
+        document.Paths.Add(path, new OpenApiPathItem
+        {
+            Operations = new Dictionary<HttpMethod, OpenApiOperation>
+            {
+                [HttpMethod.Get] = operation,
             },
         });
     }

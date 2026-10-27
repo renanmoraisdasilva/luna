@@ -29,7 +29,7 @@ public static class OpenIddictKeyLoader
         try
         {
             return IsPkcs12(bytes)
-                ? new X509Certificate2(bytes, passphrase, X509KeyStorageFlags.EphemeralKeySet)
+                ? X509CertificateLoader.LoadPkcs12(bytes, passphrase, X509KeyStorageFlags.EphemeralKeySet)
                 : X509Certificate2.CreateFromPemFile(path, passphrase);
         }
         catch (Exception exception) when (exception is CryptographicException or ArgumentException)

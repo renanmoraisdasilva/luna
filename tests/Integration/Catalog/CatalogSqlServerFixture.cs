@@ -22,14 +22,21 @@ public sealed class CatalogSqlServerFixture : IAsyncLifetime
 
         await using var db = CreateDbContext();
         await db.Database.MigrateAsync();
-        respawner = await Respawner.CreateAsync(ConnectionString, new RespawnerOptions
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        respawner = await Respawner.CreateAsync(connection, new RespawnerOptions
         {
             DbAdapter = DbAdapter.SqlServer,
             TablesToIgnore = ["__EFMigrationsHistory"]
         });
     }
 
-    public Task ResetAsync() => respawner.ResetAsync(ConnectionString);
+    public async Task ResetAsync()
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        await respawner.ResetAsync(connection);
+    }
 
     public CatalogDbContext CreateDbContext()
     {

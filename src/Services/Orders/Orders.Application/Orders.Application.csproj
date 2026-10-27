@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Luna.Orders.Application</RootNamespace>
@@ -8,6 +8,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Orders.Domain\Orders.Domain.csproj" />
     <ProjectReference Include="..\Orders.Contracts\Orders.Contracts.csproj" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
   </ItemGroup>
 </Project>

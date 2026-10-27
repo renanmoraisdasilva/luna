@@ -246,11 +246,11 @@ survives.
 
 Measuring the NuGet majors rather than guessing produced three distinct kinds of problem:
 
-| Package | What actually happens |
+| Package | What actually happened |
 | --- | --- |
-| Respawn 7 | `CreateAsync` no longer accepts a connection string, it requires a `DbConnection`. Seven call sites break. |
-| Serilog.AspNetCore 10 | Pulls `Microsoft.Extensions.*` to 10.0.0 and fails with `NU1605` downgrade errors against the net8.0 pins. Requires the .NET 10 migration. |
-| Swashbuckle 10 | OpenAPI v2 moves `OpenApiDocument` out of `Microsoft.OpenApi.Models`; the Identity document filter stops compiling. |
+| Respawn 7 | `CreateAsync` no longer accepted a connection string; it required a `DbConnection`. Seven call sites broke. |
+| Serilog.AspNetCore 10 | Pulled `Microsoft.Extensions.*` to 10.0.0 and failed with `NU1605` downgrade errors against the net8.0 pins. It required the .NET 10 migration. |
+| Swashbuckle 10 | OpenAPI v2 moved `OpenApiDocument` out of `Microsoft.OpenApi.Models`; the Identity document filter stopped compiling. |
 | .NET 10 base images | `mcr.microsoft.com/dotnet/aspnet:10.0` contains only the 10.0 runtime. A `net8.0` application cannot start on it. |
 
 The first attempt ignored majors by naming packages: `Microsoft.*` and `FluentAssertions`. That was not
@@ -258,8 +258,17 @@ enough. Serilog, Swashbuckle, Respawn, and `xunit.runner.visualstudio` all slipp
 packages that get through are the ones nobody anticipated. The rule is now a wildcard on both the NuGet
 and npm sides, with the specific rationale kept in comments. Minors and patches still arrive grouped.
 
+All four were resolved on 2026-10-27 by the .NET 10 migration. The solution targets `net10.0`; Respawn 7
+receives an opened `SqlConnection`; Swashbuckle 10 uses the OpenAPI v2 `Microsoft.OpenApi` namespace and
+its `HttpMethod`/`OpenApiTagReference` types; Serilog.AspNetCore 10 and EF Core 10 are in place; and the
+service image is digest-pinned to the .NET 10 SDK and ASP.NET 10 runtime. The runtime image reports
+`Microsoft.AspNetCore.App 10.0.14`.
+
 One correction worth recording: **Tailwind 4 was closed as unsafe to auto-merge, and it would not have
-fixed the `braces` advisory anyway.** Both statements were measured, not assumed.
+fixed the `braces` advisory anyway.** Both statements were measured, not assumed. Tailwind 4 was later
+migrated deliberately with the official upgrade tool: the theme moved into `@theme` in `app/globals.css`,
+the legacy class renames were applied across the templates, and the generated stylesheet was checked for
+the custom colour, spacing, font, and radius tokens before the build was accepted.
 
 ---
 

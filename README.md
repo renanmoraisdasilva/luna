@@ -142,7 +142,7 @@ The full architecture, including the token flows and where the data lives, is in
 
 ## What is built today
 
-- **6 backend services** on .NET 8, across 29 projects, plus a Next.js frontend.
+- **6 backend services** on .NET 10, across 29 projects, plus a Next.js frontend.
 - **6 SQL Server databases**, one per service, migrated on startup.
 - **A five-step fulfillment pipeline** with domain-guarded transitions and a
   live operations console.

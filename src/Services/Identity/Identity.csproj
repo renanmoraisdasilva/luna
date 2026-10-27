@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Luna.Identity</RootNamespace>
@@ -8,24 +8,24 @@
   <ItemGroup>
     <ProjectReference Include="../../Contracts/Luna.Contracts/Luna.Contracts.csproj" />
     <ProjectReference Include="../../Shared/Luna.Observability/Luna.Observability.csproj" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.31" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.31" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
     <PackageReference Include="OpenIddict.AspNetCore" Version="7.7.2" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.7.2" />
     <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="7.7.2" />
     <!--
-      OpenIddict 7.7.2 pulls in the 8.0.1/8.0.4 crypto packages transitively, which carry
+      OpenIddict 7.7.2 pulls in older crypto packages transitively, which carry
       published advisories (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7, GHSA-r955-8q5j-3h83,
       GHSA-7hqp-7c5m-4vq6, GHSA-vrv5-2jg9-4mmr, GHSA-c399-9853-6jmj). Referencing the patched
-      8.0.x releases explicitly overrides the transitive versions.
+      10.0.14 package explicitly overrides the transitive version. The Xml package is supplied
+      by the .NET 10 shared framework, so it needs no explicit reference.
     -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.31">
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
   </ItemGroup>
 </Project>

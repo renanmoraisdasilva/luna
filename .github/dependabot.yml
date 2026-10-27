@@ -1,7 +1,7 @@
 version: 2
 
 updates:
-  # .NET 8 solution: roughly 20 direct packages plus their transitive closure. Nothing in the repository
+  # .NET 10 solution: roughly 20 direct packages plus their transitive closure. Nothing in the repository
   # flags a CVE today, so this is the only mechanism that will surface one.
   - package-ecosystem: nuget
     directory: /
@@ -17,10 +17,10 @@ updates:
           - minor
           - patch
     ignore:
-      # A .NET 8 -> 10 move is a migration project, not a dependency bump. Every project must be retargeted,
-      # the published runtime image must change with it (the 10.0 aspnet image contains only the 10.0
-      # runtime, so it cannot start a net8.0 application), and EF Core 10 may generate different migrations
-      # than EF Core 8. Handle it deliberately rather than as weekly noise.
+      # A future .NET major move is a migration project, not a dependency bump. Every project must be
+      # retargeted, the published runtime image must change with it (the newer aspnet image contains only
+      # the newer runtime, so it cannot start an older-targeted application), and EF Core may generate
+      # different migrations. Handle it deliberately rather than as weekly noise.
       - dependency-name: "Microsoft.*"
         update-types:
           - version-update:semver-major
@@ -30,10 +30,8 @@ updates:
         update-types:
           - version-update:semver-major
       # Every other major on this side too. Naming individual packages was not enough, because the ones that
-      # slip through are exactly the ones nobody anticipated. Measured on this solution: Serilog.AspNetCore 10
-      # pulls Microsoft.Extensions.* to 10.0.0 and trips NU1605 against the net8.0 pins, Swashbuckle 10 moves
-      # OpenApiDocument out of Microsoft.OpenApi.Models so the Identity document filter stops compiling, and
-      # Respawn 7 changes CreateAsync to require a DbConnection. All three break the build. Minors and patches
+      # slip through are exactly the ones nobody anticipated. Majors are migrations: they can change runtime
+      # targets, licensing, and public APIs in ways a grouped pull request cannot express. Minors and patches
       # still arrive, grouped, because those have been safe throughout.
       - dependency-name: "*"
         update-types:
@@ -55,11 +53,6 @@ updates:
         update-types:
           - patch
     ignore:
-      # Tailwind 4 replaces the JavaScript config with a CSS-first @theme block. Merged without migrating the
-      # configuration it fails silently: every custom token stops resolving and the classes quietly do nothing.
-      - dependency-name: "tailwindcss"
-        update-types:
-          - version-update:semver-major
       # The gateway image and the local Node toolchain are both pinned to Node 22. Moving the base image
       # across four majors is a deliberate platform change.
       - dependency-name: "*"
@@ -77,10 +70,10 @@ updates:
       interval: weekly
       day: monday
     ignore:
-      # The service image is pinned to the .NET 8 SDK and ASP.NET 8 runtime. The service Dockerfile builds and
-      # runs net8.0 assemblies, and the .NET 10 images carry only the 10.0 runtime, so bumping the tag without
-      # retargeting the solution produces an image that cannot start. The frontend image moves to a new Node
-      # major only when the local toolchain moves with it.
+      # The service image is pinned to the .NET 10 SDK and ASP.NET 10 runtime. The service Dockerfile builds
+      # and runs net10.0 assemblies, and a newer image carries only the newer runtime, so bumping the tag
+      # without retargeting the solution produces an image that cannot start. The frontend image moves to a
+      # new Node major only when the local toolchain moves with it.
       - dependency-name: "mcr.microsoft.com/dotnet/*"
         update-types:
           - version-update:semver-major

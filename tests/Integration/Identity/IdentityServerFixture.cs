@@ -49,7 +49,9 @@ public sealed class IdentityServerFixture : IAsyncLifetime
             await warmup.GetAsync("/health");
         }
 
-        respawner = await Respawner.CreateAsync(ConnectionString, new RespawnerOptions
+        await using var respawnConnection = new SqlConnection(ConnectionString);
+        await respawnConnection.OpenAsync();
+        respawner = await Respawner.CreateAsync(respawnConnection, new RespawnerOptions
         {
             DbAdapter = DbAdapter.SqlServer,
             TablesToIgnore = ["__EFMigrationsHistory"],
@@ -86,7 +88,9 @@ public sealed class IdentityServerFixture : IAsyncLifetime
 
     public async Task ResetAsync()
     {
-        await respawner.ResetAsync(ConnectionString);
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        await respawner.ResetAsync(connection);
 
         Factory.Dispose();
         factory = new IdentityServerFactory(this);
